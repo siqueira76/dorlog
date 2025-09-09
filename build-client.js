@@ -101,6 +101,49 @@ async function buildClient() {
       console.log('✅ 404.html criado automaticamente');
     }
     
+    // Copy PWA assets (manifest, service worker, icons)
+    const pwaCopyTasks = [
+      { src: 'manifest.json', desc: 'PWA Manifest' },
+      { src: 'sw.js', desc: 'Service Worker' },
+      { src: 'offline.html', desc: 'Página Offline' },
+      { src: 'browserconfig.xml', desc: 'Browser Config' }
+    ];
+    
+    for (const task of pwaCopyTasks) {
+      try {
+        const sourcePath = resolve(__dirname, 'client/public', task.src);
+        const destPath = resolve(__dirname, 'dist/public', task.src);
+        await fs.copyFile(sourcePath, destPath);
+        console.log(`✅ ${task.desc} copiado`);
+      } catch (error) {
+        console.log(`⚠️  ${task.desc} não encontrado:`, task.src);
+      }
+    }
+    
+    // Copy icons directory
+    try {
+      await fs.cp(
+        resolve(__dirname, 'client/public/icons'),
+        resolve(__dirname, 'dist/public/icons'),
+        { recursive: true }
+      );
+      console.log('✅ Ícones PWA copiados');
+    } catch (error) {
+      console.log('⚠️  Diretório de ícones não encontrado');
+    }
+    
+    // Copy screenshots directory
+    try {
+      await fs.cp(
+        resolve(__dirname, 'client/public/screenshots'),
+        resolve(__dirname, 'dist/public/screenshots'),
+        { recursive: true }
+      );
+      console.log('✅ Screenshots copiados');
+    } catch (error) {
+      console.log('⚠️  Screenshots não encontrados (opcional)');
+    }
+    
     // Verificar e corrigir paths no index.html se necessário
     const indexPath = resolve(__dirname, 'dist/public/index.html');
     let indexContent = await fs.readFile(indexPath, 'utf-8');
