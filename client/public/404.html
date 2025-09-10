@@ -13,9 +13,15 @@
       // Store the intended route in sessionStorage so the React app can read it
       var route = currentPath.replace(basePath, '');
       
+      // Normalizar route - remover barra inicial se houver
+      if (route.startsWith('/')) {
+        route = route.slice(1);
+      }
+      
       if (route && route !== '' && route !== 'index.html') {
-        // Store the intended path for the React app to read
+        // Store the intended path for the React app to read (com barra inicial)
         sessionStorage.setItem('dorlog_intended_path', '/' + route);
+        console.log('404.html - Stored intended path:', '/' + route);
       }
       
       // Always redirect to the main app
