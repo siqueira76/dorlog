@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Router, Route, Switch } from 'wouter';
+import { Router, Route, Switch, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 // Simplified component for initial redirect - GitHub Pages compatible
 function InitialRedirect() {
   const { currentUser, loading } = useAuth();
+  const [, navigate] = useLocation();
   
   useEffect(() => {
     if (!loading) {
@@ -20,12 +21,12 @@ function InitialRedirect() {
         pathname: window.location.pathname
       });
       
-      // Handle intended path from 404 redirect using history API instead of location.href
+      // Handle intended path from 404 redirect using Wouter navigation
       const intendedPath = sessionStorage.getItem('dorlog_intended_path');
       if (intendedPath) {
         sessionStorage.removeItem('dorlog_intended_path');
-        console.log('🔄 Restoring intended path via history:', intendedPath);
-        window.history.replaceState(null, '', intendedPath);
+        console.log('🔄 Restoring intended path via Wouter navigate:', intendedPath);
+        navigate(intendedPath, { replace: true });
         return;
       }
       
@@ -41,12 +42,11 @@ function InitialRedirect() {
       
       if (isAtRoot) {
         const targetPath = currentUser ? '/home' : '/login';
-        const fullPath = basename + targetPath;
-        console.log('🔄 Redirecting from root to:', { targetPath, fullPath, basename });
-        window.history.replaceState(null, '', fullPath);
+        console.log('🔄 Redirecting from root to:', { targetPath, basename });
+        navigate(targetPath, { replace: true });
       }
     }
-  }, [currentUser, loading]);
+  }, [currentUser, loading, navigate]);
   
   if (loading) {
     return (

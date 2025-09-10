@@ -5,49 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DorLog - Redirecionando...</title>
   <script>
-    // GitHub Pages SPA redirect script for DorLog - ENHANCED DEBUGGING VERSION
+    // GitHub Pages SPA redirect script for DorLog
     (function() {
-      console.log('🔧 404.html DEBUG: Script iniciado');
-      console.log('🔧 404.html DEBUG: URL completa:', window.location.href);
-      
       var currentPath = window.location.pathname;
       var basePath = '/dorlog/';
       
-      console.log('🔧 404.html DEBUG: currentPath =', currentPath);
-      console.log('🔧 404.html DEBUG: basePath =', basePath);
-      console.log('🔧 404.html DEBUG: window.location.origin =', window.location.origin);
-      
       // Store the intended route in sessionStorage so the React app can read it
-      // CORREÇÃO: Extrair route considerando que o currentPath pode não ter basePath
+      // Handle both normal and GitHub Pages scenarios
       var route;
       if (currentPath.startsWith(basePath)) {
-        // Cenário normal: /dorlog/pagina-teste → pagina-teste
+        // Normal scenario: /dorlog/pagina-teste → pagina-teste
         route = currentPath.replace(basePath, '');
-        console.log('🔧 404.html DEBUG: route extraída (cenário normal) =', route);
       } else {
-        // Cenário GitHub Pages: /pagina-teste → pagina-teste (já sem dorlog)
+        // GitHub Pages scenario: /pagina-teste → pagina-teste (already without dorlog)
         route = currentPath.startsWith('/') ? currentPath.slice(1) : currentPath;
-        console.log('🔧 404.html DEBUG: route extraída (cenário GitHub Pages) =', route);
       }
-      console.log('🔧 404.html DEBUG: route final =', route);
-      console.log('🔧 404.html DEBUG: tipo do route:', typeof route);
       
       if (route && route !== '' && route !== 'index.html') {
         var intendedPath = '/' + route;
-        console.log('🔧 404.html DEBUG: Salvando intended path:', intendedPath);
-        // Store the intended path for the React app to read (com barra inicial)
+        // Store the intended path for the React app to read
         sessionStorage.setItem('dorlog_intended_path', intendedPath);
-        console.log('🔧 404.html DEBUG: sessionStorage salvo:', sessionStorage.getItem('dorlog_intended_path'));
-      } else {
-        console.log('🔧 404.html DEBUG: Não salvando route (vazio ou index.html)');
       }
       
       // Always redirect to the main app
       var finalUrl = window.location.origin + basePath;
-      console.log('🔧 404.html DEBUG: URL final construída:', finalUrl);
-      console.log('🔧 404.html DEBUG: window.location.origin + basePath =', window.location.origin, '+', basePath, '=', finalUrl);
-      
-      console.log('🔧 404.html DEBUG: Executando redirecionamento para:', finalUrl);
       window.location.replace(finalUrl);
     })();
   </script>
