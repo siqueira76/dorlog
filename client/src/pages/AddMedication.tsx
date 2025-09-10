@@ -287,7 +287,7 @@ export default function AddMedication() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setLocation('doctors/add')}
+                    onClick={() => setLocation('/doctors/add')}
                     className="w-full mt-2"
                   >
                     Cadastrar Médico

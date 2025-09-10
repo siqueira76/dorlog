@@ -185,7 +185,7 @@ export default function Medications() {
   };
 
   const handleAddMedication = () => {
-    setLocation('medications/add');
+    setLocation('/medications/add');
   };
 
   const handleEditMedication = (medication: Medication) => {
