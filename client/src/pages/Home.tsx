@@ -216,7 +216,7 @@ export default function Home() {
             variant="outline"
             className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200 hover:border-blue-300 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all duration-300 ease-out h-28 flex-col space-y-3 rounded-2xl p-5 animate-in slide-in-from-bottom-4 fade-in-0 duration-500 delay-[150ms]"
             data-testid="button-take-medication"
-            onClick={() => setLocation('medications')}
+            onClick={() => setLocation('/medications')}
           >
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:scale-110 group-active:scale-95 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ease-out">
               <Pill className="h-7 w-7 text-white group-hover:animate-bounce group-hover:-rotate-12 transition-all duration-300 ease-out" />
@@ -322,7 +322,7 @@ export default function Home() {
                   size="sm"
                   className="text-muted-foreground hover:text-foreground"
                   data-testid="button-view-reports"
-                  onClick={() => setLocation('reports')}
+                  onClick={() => setLocation('/reports')}
                 >
                   Ver histórico completo
                 </Button>

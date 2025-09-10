@@ -95,7 +95,7 @@ export default function Register() {
     setIsSubmitting(true);
     try {
       await register(formData.email, formData.password, formData.name);
-      setLocation('home');
+      setLocation('/home');
     } catch (error) {
       // Error handling is done in the auth context
     } finally {
@@ -232,7 +232,7 @@ export default function Register() {
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => setLocation('login')}
+                  onClick={() => setLocation('/login')}
                   className="text-primary font-medium hover:text-primary/80 p-0"
                   data-testid="link-login"
                 >

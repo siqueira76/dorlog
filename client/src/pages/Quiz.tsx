@@ -692,7 +692,7 @@ export default function QuizPage() {
       });
 
       // Voltar para a home usando o router interno
-      setLocation('home');
+      setLocation('/home');
     } catch (error) {
       console.error('❌ Erro ao salvar quiz:', error);
       toast({
@@ -833,7 +833,7 @@ export default function QuizPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocation('home')}
+            onClick={() => setLocation('/home')}
             data-testid="button-back-home"
             className="h-8 px-2"
           >

@@ -78,7 +78,7 @@ export default function AddDoctor() {
       });
 
       // Navigate back to doctors page
-      setLocation('doctors');
+      setLocation('/doctors');
       
       // Force refresh the doctors page by adding a query parameter
       window.location.reload();
@@ -103,7 +103,7 @@ export default function AddDoctor() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocation('doctors')}
+            onClick={() => setLocation('/doctors')}
             className="mr-2 p-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -224,7 +224,7 @@ export default function AddDoctor() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setLocation('doctors')}
+                onClick={() => setLocation('/doctors')}
                 className="flex-1 rounded-xl"
                 disabled={isSubmitting}
               >

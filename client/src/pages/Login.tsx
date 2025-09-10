@@ -57,7 +57,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(formData.email, formData.password);
-      setLocation('home');
+      setLocation('/home');
     } catch (error) {
       // Error handling is done in the auth context
     } finally {
@@ -68,7 +68,7 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       await loginWithGoogle();
-      setLocation('home');
+      setLocation('/home');
     } catch (error) {
       // Error handling is done in the auth context
     }
@@ -214,7 +214,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => setLocation('register')}
+                  onClick={() => setLocation('/register')}
                   className="text-primary font-medium hover:text-primary/80 p-0"
                   data-testid="link-register"
                 >
