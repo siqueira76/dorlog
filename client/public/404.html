@@ -18,16 +18,19 @@
       console.log('🔧 404.html DEBUG: window.location.origin =', window.location.origin);
       
       // Store the intended route in sessionStorage so the React app can read it
-      var route = currentPath.replace(basePath, '');
-      console.log('🔧 404.html DEBUG: route após replace =', route);
-      console.log('🔧 404.html DEBUG: tipo do route:', typeof route);
-      
-      // Normalizar route - remover barra inicial se houver
-      if (route.startsWith('/')) {
-        console.log('🔧 404.html DEBUG: Route tem barra inicial, removendo');
-        route = route.slice(1);
-        console.log('🔧 404.html DEBUG: Route após slice =', route);
+      // CORREÇÃO: Extrair route considerando que o currentPath pode não ter basePath
+      var route;
+      if (currentPath.startsWith(basePath)) {
+        // Cenário normal: /dorlog/pagina-teste → pagina-teste
+        route = currentPath.replace(basePath, '');
+        console.log('🔧 404.html DEBUG: route extraída (cenário normal) =', route);
+      } else {
+        // Cenário GitHub Pages: /pagina-teste → pagina-teste (já sem dorlog)
+        route = currentPath.startsWith('/') ? currentPath.slice(1) : currentPath;
+        console.log('🔧 404.html DEBUG: route extraída (cenário GitHub Pages) =', route);
       }
+      console.log('🔧 404.html DEBUG: route final =', route);
+      console.log('🔧 404.html DEBUG: tipo do route:', typeof route);
       
       if (route && route !== '' && route !== 'index.html') {
         var intendedPath = '/' + route;
