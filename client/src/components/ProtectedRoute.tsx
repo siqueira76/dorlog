@@ -18,7 +18,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!currentUser) {
-    return <Redirect to="/login" replace />;
+    return <Redirect to="login" replace />;
   }
 
   return <>{children}</>;
