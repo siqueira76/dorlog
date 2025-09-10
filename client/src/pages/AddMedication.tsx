@@ -167,7 +167,7 @@ export default function AddMedication() {
       });
 
       // Navigate back to medications page
-      setLocation('/medications');
+      setLocation('medications');
       
       // Force refresh the medications page
       window.location.reload();
@@ -192,7 +192,7 @@ export default function AddMedication() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocation('/medications')}
+            onClick={() => setLocation('medications')}
             className="mr-2 p-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -287,7 +287,7 @@ export default function AddMedication() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setLocation('/doctors/add')}
+                    onClick={() => setLocation('doctors/add')}
                     className="w-full mt-2"
                   >
                     Cadastrar Médico
@@ -377,7 +377,7 @@ export default function AddMedication() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setLocation('/medications')}
+                onClick={() => setLocation('medications')}
                 className="flex-1 rounded-xl"
                 disabled={isSubmitting}
               >

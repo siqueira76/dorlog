@@ -741,7 +741,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
           {currentUser?.isSubscriptionActive ? (
             <Button
-              onClick={() => setLocation('/reports/monthly')}
+              onClick={() => setLocation('reports/monthly')}
               className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
               data-testid="button-generate-pdf-report"
             >
@@ -1166,7 +1166,7 @@ export default function Reports() {
                 variant="outline"
                 className="w-full rounded-xl"
                 data-testid="button-generate-monthly-report"
-                onClick={() => setLocation('/reports/monthly')}
+                onClick={() => setLocation('reports/monthly')}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Gerar Relatório Mensal

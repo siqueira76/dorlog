@@ -36,7 +36,7 @@ export default function Doctors() {
   const { toast } = useToast();
 
   const handleAddDoctor = () => {
-    setLocation('/doctors/add');
+    setLocation('doctors/add');
   };
 
   const handleEditDoctor = (doctor: Doctor) => {
