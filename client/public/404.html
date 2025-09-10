@@ -5,27 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DorLog - Redirecionando...</title>
   <script>
-    // GitHub Pages SPA redirect script for DorLog
+    // GitHub Pages SPA redirect script for DorLog - ENHANCED DEBUGGING VERSION
     (function() {
+      console.log('🔧 404.html DEBUG: Script iniciado');
+      console.log('🔧 404.html DEBUG: URL completa:', window.location.href);
+      
       var currentPath = window.location.pathname;
       var basePath = '/dorlog/';
       
+      console.log('🔧 404.html DEBUG: currentPath =', currentPath);
+      console.log('🔧 404.html DEBUG: basePath =', basePath);
+      console.log('🔧 404.html DEBUG: window.location.origin =', window.location.origin);
+      
       // Store the intended route in sessionStorage so the React app can read it
       var route = currentPath.replace(basePath, '');
+      console.log('🔧 404.html DEBUG: route após replace =', route);
+      console.log('🔧 404.html DEBUG: tipo do route:', typeof route);
       
       // Normalizar route - remover barra inicial se houver
       if (route.startsWith('/')) {
+        console.log('🔧 404.html DEBUG: Route tem barra inicial, removendo');
         route = route.slice(1);
+        console.log('🔧 404.html DEBUG: Route após slice =', route);
       }
       
       if (route && route !== '' && route !== 'index.html') {
+        var intendedPath = '/' + route;
+        console.log('🔧 404.html DEBUG: Salvando intended path:', intendedPath);
         // Store the intended path for the React app to read (com barra inicial)
-        sessionStorage.setItem('dorlog_intended_path', '/' + route);
-        console.log('404.html - Stored intended path:', '/' + route);
+        sessionStorage.setItem('dorlog_intended_path', intendedPath);
+        console.log('🔧 404.html DEBUG: sessionStorage salvo:', sessionStorage.getItem('dorlog_intended_path'));
+      } else {
+        console.log('🔧 404.html DEBUG: Não salvando route (vazio ou index.html)');
       }
       
       // Always redirect to the main app
-      window.location.replace(window.location.origin + basePath);
+      var finalUrl = window.location.origin + basePath;
+      console.log('🔧 404.html DEBUG: URL final construída:', finalUrl);
+      console.log('🔧 404.html DEBUG: window.location.origin + basePath =', window.location.origin, '+', basePath, '=', finalUrl);
+      
+      console.log('🔧 404.html DEBUG: Executando redirecionamento para:', finalUrl);
+      window.location.replace(finalUrl);
     })();
   </script>
 </head>
