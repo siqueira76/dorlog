@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DorLog - Redirecionando...</title>
+  <script>
+    // GitHub Pages SPA redirect script for DorLog
+    (function() {
+      var currentPath = window.location.pathname;
+      var basePath = '/dorlog/';
+      
+      // Store the intended route in sessionStorage so the React app can read it
+      var route = currentPath.replace(basePath, '');
+      
+      if (route && route !== '' && route !== 'index.html') {
+        // Store the intended path for the React app to read
+        sessionStorage.setItem('dorlog_intended_path', '/' + route);
+      }
+      
+      // Always redirect to the main app
+      window.location.replace(window.location.origin + basePath);
+    })();
+  </script>
+</head>
+<body>
+  <div style="text-align: center; padding-top: 50px;">
+    <h2>Redirecionando...</h2>
+    <p>Você está sendo redirecionado para o DorLog.</p>
+  </div>
+</body>
+</html>
