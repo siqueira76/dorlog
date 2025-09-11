@@ -51,15 +51,15 @@ export default function Medications() {
 
   // Helper function to save medication to report_diario when taken
   const saveMedicationToReportDiario = async (medication: Medication, reminderHora: string) => {
-    if (!firebaseUser?.email) {
+    if (!firebaseUser?.uid) {
       throw new Error('Usuário não autenticado');
     }
 
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
     
-    // Document ID format: userId_YYYY-MM-DD
-    const reportDocId = `${firebaseUser.email}_${today}`;
+    // Document ID format: userId_YYYY-MM-DD (using Firebase UID)
+    const reportDocId = `${firebaseUser.uid}_${today}`;
     const reportRef = doc(db, 'report_diario', reportDocId);
 
     console.log('💊 Salvando medicamento no report_diario:', {
@@ -165,7 +165,8 @@ export default function Medications() {
         
         const newReportData = {
           data: Timestamp.fromDate(now),
-          usuarioId: firebaseUser.email,
+          usuarioId: firebaseUser.uid,
+          userEmail: firebaseUser.email, // Keep email for reference
           medicamentos: [newMedicationData],
           quizzes: [], // Initialize empty quizzes array
           criadoEm: Timestamp.fromDate(now),

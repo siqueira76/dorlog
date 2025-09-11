@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, Timestamp, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Interface para identificadores de usuário
@@ -55,40 +55,147 @@ export interface ReportData {
  * Resolve os identificadores do usuário (email e Firebase UID)
  * para permitir busca híbrida entre collections com formatos diferentes
  */
-async function resolveUserIdentifiers(emailUserId: string): Promise<UserIdentifiers> {
+async function resolveUserIdentifiers(emailOrUid: string): Promise<UserIdentifiers> {
   // Verificar cache primeiro
-  if (userIdentifierCache.has(emailUserId)) {
-    const cached = userIdentifierCache.get(emailUserId)!;
-    console.log(`🔄 Cache hit para ${emailUserId}: ${cached.firebaseUID ? 'UID encontrado' : 'UID não encontrado'}`);
+  if (userIdentifierCache.has(emailOrUid)) {
+    const cached = userIdentifierCache.get(emailOrUid)!;
+    console.log(`🔄 Cache hit para ${emailOrUid}: ${cached.firebaseUID ? 'UID encontrado' : 'UID não encontrado'}`);
     return cached;
   }
   
-  console.log(`🔍 Resolvendo identificadores para ${emailUserId}...`);
+  console.log(`🔍 Resolvendo identificadores para ${emailOrUid}...`);
   
   try {
-    // Buscar Firebase UID correspondente ao email na collection usuarios
-    const userQuery = query(collection(db, 'usuarios'), where('email', '==', emailUserId));
-    const userSnapshot = await getDocs(userQuery);
+    let identifiers: UserIdentifiers;
     
-    const identifiers: UserIdentifiers = {
-      email: emailUserId,
-      firebaseUID: userSnapshot.docs[0]?.id || null
-    };
+    // CASO 1: Input é email → buscar Firebase UID
+    if (emailOrUid.includes('@')) {
+      const userQuery = query(collection(db, 'usuarios'), where('email', '==', emailOrUid));
+      const userSnapshot = await getDocs(userQuery);
+      
+      identifiers = {
+        email: emailOrUid,
+        firebaseUID: userSnapshot.docs[0]?.id || null
+      };
+    }
+    // CASO 2: Input é Firebase UID → buscar email
+    else {
+      try {
+        const userDoc = await getDoc(doc(db, 'usuarios', emailOrUid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const email = userData.email || userData.userEmail;
+          identifiers = {
+            email: email || emailOrUid, // Fallback se email não existe
+            firebaseUID: emailOrUid
+          };
+        } else {
+          // UID não encontrado, usar como fallback
+          identifiers = {
+            email: emailOrUid,
+            firebaseUID: emailOrUid
+          };
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao buscar usuário por UID:`, error);
+        identifiers = {
+          email: emailOrUid,
+          firebaseUID: emailOrUid
+        };
+      }
+    }
     
     // Armazenar no cache
-    userIdentifierCache.set(emailUserId, identifiers);
+    userIdentifierCache.set(emailOrUid, identifiers);
     
     console.log(`✅ Identificadores resolvidos: email=${identifiers.email}, UID=${identifiers.firebaseUID || 'não encontrado'}`);
     return identifiers;
     
   } catch (error) {
-    console.warn(`⚠️ Erro ao resolver identificadores para ${emailUserId}:`, error);
+    console.warn(`⚠️ Erro ao resolver identificadores para ${emailOrUid}:`, error);
     const fallbackIdentifiers: UserIdentifiers = {
-      email: emailUserId,
+      email: emailOrUid,
       firebaseUID: null
     };
-    userIdentifierCache.set(emailUserId, fallbackIdentifiers);
+    userIdentifierCache.set(emailOrUid, fallbackIdentifiers);
     return fallbackIdentifiers;
+  }
+}
+
+/**
+ * Busca medicamentos usando Firebase UID diretamente (otimizada)
+ */
+async function fetchUserMedicationsOptimized(userId: string): Promise<any[]> {
+  console.log(`💊 Iniciando busca otimizada de medicamentos para ${userId}...`);
+  
+  const medicationsData: any[] = [];
+  
+  try {
+    // Direct query using Firebase UID
+    const optimizedQuery = query(collection(db, 'medicamentos'), where('usuarioId', '==', userId));
+    const results = await getDocs(optimizedQuery);
+    
+    results.forEach((doc) => {
+      const medicamento = doc.data();
+      medicationsData.push({
+        nome: medicamento.nome || 'Medicamento não especificado',
+        posologia: medicamento.posologia || 'Posologia não especificada',
+        frequencia: medicamento.frequencia || 'Não especificada',
+        medicoId: medicamento.medicoId || '',
+        source: 'uid_optimized'
+      });
+    });
+    
+    if (results.size > 0) {
+      console.log(`✅ Encontrados ${results.size} medicamento(s) com query otimizada`);
+      return medicationsData;
+    } else {
+      // CRITICAL FIX: Fallback to hybrid when no results found (not just on exceptions)
+      console.log(`ℹ️ Nenhum medicamento encontrado com query otimizada, tentando fallback híbrido...`);
+      return await fetchUserMedicationsHybrid(userId);
+    }
+  } catch (error) {
+    console.warn(`⚠️ Query otimizada falhou, tentando fallback híbrido:`, error);
+    return await fetchUserMedicationsHybrid(userId);
+  }
+}
+
+/**
+ * Busca médicos usando Firebase UID diretamente (otimizada)
+ */
+async function fetchUserDoctorsOptimized(userId: string): Promise<any[]> {
+  console.log(`👨‍⚕️ Iniciando busca otimizada de médicos para ${userId}...`);
+  
+  const doctorsData: any[] = [];
+  
+  try {
+    // Direct query using Firebase UID
+    const optimizedQuery = query(collection(db, 'medicos'), where('usuarioId', '==', userId));
+    const results = await getDocs(optimizedQuery);
+    
+    results.forEach((doc) => {
+      const medico = doc.data();
+      doctorsData.push({
+        id: doc.id,
+        nome: medico.nome || 'Nome não informado',
+        especialidade: medico.especialidade || 'Especialidade não informada',
+        crm: medico.crm || 'CRM não informado',
+        contato: medico.contato || medico.telefone || '',
+        source: 'uid_optimized'
+      });
+    });
+    
+    if (results.size > 0) {
+      console.log(`✅ Encontrados ${results.size} médico(s) com query otimizada`);
+      return doctorsData;
+    } else {
+      // CRITICAL FIX: Fallback to hybrid when no results found (not just on exceptions)
+      console.log(`ℹ️ Nenhum médico encontrado com query otimizada, tentando fallback híbrido...`);
+      return await fetchUserDoctorsHybrid(userId);
+    }
+  } catch (error) {
+    console.warn(`⚠️ Query otimizada falhou, tentando fallback híbrido:`, error);
+    return await fetchUserDoctorsHybrid(userId);
   }
 }
 
@@ -721,20 +828,23 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
     let validDays = new Set<string>();
     let crisisCount = 0;
 
-    // 1. Buscar dados de report_diario
-    console.log('📊 Buscando dados de report_diario...');
+    // 1. Buscar dados de report_diario com query otimizada
+    console.log('📊 Buscando dados de report_diario com query otimizada...');
     const reportDiarioRef = collection(db, 'report_diario');
     
     for (const dateRange of dateRanges) {
-      const q = query(reportDiarioRef);
-      const querySnapshot = await getDocs(q);
+      // NEW: Optimized query using Firebase UID directly
+      const optimizedQuery = query(
+        reportDiarioRef,
+        where('usuarioId', '==', userId)
+      );
+      
+      try {
+        const querySnapshot = await getDocs(optimizedQuery);
+        console.log(`🎯 Query otimizada retornou ${querySnapshot.docs.length} documentos para o período`);
 
-      querySnapshot.forEach((doc) => {
-        const docId = doc.id;
-        const data = doc.data();
-
-        // Verificar se o documento pertence ao usuário
-        if (docId.startsWith(`${userId}_`) || data.usuarioId === userId || data.email === userId) {
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
           const docData = data.data;
           
           // Verificar se está dentro do período
@@ -760,20 +870,60 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
               }
             }
           }
-        }
-      });
+        });
+      } catch (error) {
+        console.warn('⚠️ Query otimizada falhou, tentando fallback para dados migrados...', error);
+        
+        // FALLBACK: Use full scan for migration period
+        const fallbackQuery = query(reportDiarioRef);
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        
+        fallbackSnapshot.forEach((doc) => {
+          const docId = doc.id;
+          const data = doc.data();
+
+          // Verificar se o documento pertence ao usuário (estratégia híbrida para compatibilidade)
+          if (docId.startsWith(`${userId}_`) || data.usuarioId === userId || data.email === userId) {
+            const docData = data.data;
+            
+            // Verificar se está dentro do período
+            if (docData && docData.toDate) {
+              const docDate = docData.toDate();
+              if (docDate >= dateRange.start && docDate <= dateRange.end) {
+                const dayKey = docDate.toISOString().split('T')[0];
+                validDays.add(dayKey);
+                
+                // Processar quizzes com normalização melhorada
+                const normalizedQuizzes = normalizeQuizData(data.quizzes);
+                if (normalizedQuizzes.length > 0) {
+                  console.log(`📝 Processando ${normalizedQuizzes.length} quiz(es) para ${dayKey} (fallback)`);
+                  const counters = { totalPainSum, totalPainCount, crisisCount };
+                  processQuizzesWithSemanticMapping(normalizedQuizzes, dayKey, reportData, counters);
+                  
+                  // Atualizar os valores dos contadores
+                  totalPainSum = counters.totalPainSum;
+                  totalPainCount = counters.totalPainCount;
+                  
+                  // Atualizar contadores
+                  crisisCount += normalizedQuizzes.filter(q => q.tipo === 'emergencial').length;
+                }
+              }
+            }
+          }
+        });
+      }
     }
 
-    // 2. Buscar medicamentos com lookup híbrido de médicos
-    console.log('💊 === INICIANDO BUSCA HÍBRIDA DE MEDICAMENTOS ===');
+    // 2. Buscar medicamentos com query otimizada
+    console.log('💊 === INICIANDO BUSCA OTIMIZADA DE MEDICAMENTOS ===');
     try {
-      const medicationsData = await fetchUserMedicationsHybrid(userId);
+      const medicationsData = await fetchUserMedicationsOptimized(userId);
       
-      // Se há medicamentos, buscar os nomes dos médicos usando busca híbrida
+      // Se há medicamentos, buscar os nomes dos médicos usando query otimizada
       if (medicationsData.length > 0) {
         console.log(`🔍 Buscando nomes de médicos para ${medicationsData.length} medicamento(s)...`);
         
-        const doctorsData = await fetchUserDoctorsHybrid(userId);
+        const doctorsData = await fetchUserDoctorsOptimized(userId);
         const medicosMap = new Map<string, string>();
         
         doctorsData.forEach(doctor => {

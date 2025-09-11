@@ -10,6 +10,8 @@ import { fetchUserReportData } from './firestoreDataService';
 import { EnhancedReportAnalysisService, EnhancedReportData } from './enhancedReportAnalysisService';
 import { generateEnhancedReportHTML, EnhancedReportTemplateData } from './enhancedHtmlTemplate';
 import { uploadReportToStorage, generateReportId, generatePasswordHash } from './firebaseStorageService';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export interface EnhancedReportOptions extends UnifiedReportOptions {
   useEnhancedAnalysis?: boolean;
@@ -54,7 +56,7 @@ export class EnhancedUnifiedReportService {
         return {
           success: false,
           error: 'Acesso negado: funcionalidade exclusiva para usuários Premium',
-          analysisType: 'access_denied',
+          analysisType: 'standard',
           nlpProcessed: false,
           chartsGenerated: false,
           alertsGenerated: 0
@@ -97,9 +99,24 @@ export class EnhancedUnifiedReportService {
         }
       }
       
-      // 5. Preparar dados do template enhanced
+      // 5. Preparar dados do template enhanced  
+      // CRITICAL FIX: Resolve UID to email for proper display
+      let userEmail = options.userId;
+      try {
+        if (!options.userId.includes('@')) {
+          // It's a Firebase UID, resolve to email
+          const userDoc = await getDoc(doc(db, 'usuarios', options.userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userEmail = userData.email || userData.userEmail || options.userId;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao resolver email do usuário, usando UID:', error);
+      }
+      
       const templateData: EnhancedReportTemplateData = {
-        userEmail: options.userId,
+        userEmail: userEmail, // Proper email display
         periodsText: options.periodsText,
         reportData: enhancedData,
         reportId,

@@ -15,7 +15,7 @@ export default function QuizPage() {
   const [, params] = useRoute('/quiz/:quizId');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { currentUser } = useAuth();
+  const { currentUser, firebaseUser } = useAuth();
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
@@ -682,7 +682,7 @@ export default function QuizPage() {
       if (completedSession.quizId === 'emergencial') {
         console.log('🔄 Invalidando cache de episódios de crise...');
         queryClient.invalidateQueries({
-          queryKey: ['crisis-episodes', currentUser?.email]
+          queryKey: ['crisis-episodes', firebaseUser?.uid]
         });
       }
 
@@ -706,15 +706,15 @@ export default function QuizPage() {
   };
 
   const saveQuizToReportDiario = async (completedSession: QuizSession) => {
-    if (!currentUser?.email) {
+    if (!firebaseUser?.uid) {
       throw new Error('Usuário não autenticado');
     }
 
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
     
-    // Document ID format: userId_YYYY-MM-DD
-    const reportDocId = `${currentUser.email}_${today}`;
+    // Document ID format: userId_YYYY-MM-DD (using Firebase UID)
+    const reportDocId = `${firebaseUser.uid}_${today}`;
     const reportRef = doc(db, 'report_diario', reportDocId);
 
     // Prepare quiz data according to the Firebase structure shown in the image
@@ -765,7 +765,8 @@ export default function QuizPage() {
         // Create new document
         const newReportData = {
           data: Timestamp.fromDate(now),
-          usuarioId: currentUser.email,
+          usuarioId: firebaseUser.uid,
+          userEmail: currentUser?.email || firebaseUser.email, // Keep email for reference
           quizzes: [quizData],
           criadoEm: Timestamp.fromDate(now),
           ultimaAtualizacao: Timestamp.fromDate(now)
