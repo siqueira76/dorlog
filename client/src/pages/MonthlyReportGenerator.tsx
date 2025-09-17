@@ -126,7 +126,7 @@ export default function MonthlyReportGenerator(): JSX.Element {
   };
 
   const handleShareWhatsApp = async () => {
-    if (!hasValidSelection() || !firebaseUser?.email) {
+    if (!hasValidSelection() || !firebaseUser?.uid) {
       toast({
         title: "Erro",
         description: "Usuário não autenticado ou período não selecionado",
@@ -148,7 +148,7 @@ export default function MonthlyReportGenerator(): JSX.Element {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: firebaseUser.email,
+          userId: firebaseUser.uid,
           periods: periods,
           periodsText: getSelectedPeriodsText()
         }),
@@ -306,7 +306,7 @@ _Este relatório foi gerado automaticamente pelo aplicativo DorLog._`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: firebaseUser.email,
+          userId: firebaseUser.uid,
           periods: periods,
           periodsText: getSelectedPeriodsText()
         }),

@@ -223,8 +223,8 @@ export default function Reports() {
         const docId = doc.id;
         const data = doc.data();
         
-        // Verificar se o documento pertence ao usuário atual
-        if (docId.startsWith(`${currentUser.email}_`) || data.usuarioId === currentUser.email || data.email === currentUser.email) {
+        // Verificar se o documento pertence ao usuário atual (usando UID normalizado)
+        if (data.usuarioId === currentUser.id) {
           
           // Verificar se o documento está dentro dos últimos 30 dias
           const docData = data.data;
@@ -529,8 +529,8 @@ export default function Reports() {
         const docId = doc.id;
         const data = doc.data();
         
-        // Verificar se o documento pertence ao usuário atual
-        if (docId.startsWith(`${currentUser.email}_`) || data.usuarioId === currentUser.email || data.email === currentUser.email) {
+        // Verificar se o documento pertence ao usuário atual (usando UID normalizado)
+        if (data.usuarioId === currentUser.id) {
           // Verificar se o documento está dentro dos últimos 30 dias
           const docData = data.data;
           if (docData && typeof docData.toDate === 'function' && docData >= thirtyDaysAgoTimestamp) {
@@ -605,8 +605,8 @@ export default function Reports() {
         const docId = doc.id;
         const data = doc.data();
         
-        // Verificar se o documento pertence ao usuário atual
-        if (docId.startsWith(`${currentUser.email}_`) || data.usuarioId === currentUser.email || data.email === currentUser.email) {
+        // Verificar se o documento pertence ao usuário atual (usando UID normalizado)
+        if (data.usuarioId === currentUser.id) {
           // Verificar se o documento está dentro dos últimos 30 dias
           const docData = data.data;
           if (docData && typeof docData.toDate === 'function' && docData >= thirtyDaysAgoTimestamp) {
