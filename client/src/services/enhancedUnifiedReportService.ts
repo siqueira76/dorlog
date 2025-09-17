@@ -101,7 +101,7 @@ export class EnhancedUnifiedReportService {
       
       // 5. Preparar dados do template enhanced  
       // Resolve UID to email for proper display using centralized function
-      const userEmail = await this.resolveUIDToEmail(options.userId);
+      const userEmail = await EnhancedUnifiedReportService.resolveUIDToEmail(options.userId);
       
       const templateData: EnhancedReportTemplateData = {
         userEmail: userEmail, // Proper email display

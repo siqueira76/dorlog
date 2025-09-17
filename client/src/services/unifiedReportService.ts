@@ -100,8 +100,11 @@ export class UnifiedReportService {
       });
       
       // 4. Prepare enhanced template data
+      // Resolve UID to email for proper display in template
+      const userEmail = await UnifiedReportService.resolveUIDToEmail(options.userId);
+      
       const templateData: EnhancedReportTemplateData = {
-        userEmail: options.userId,
+        userEmail: userEmail,
         periodsText: options.periodsText,
         reportData,
         reportId,
@@ -213,8 +216,11 @@ export class UnifiedReportService {
     const reportId = generateReportId(options.userId);
     const reportData = await fetchUserReportData(options.userId, options.periods);
     
+    // Resolve UID to email for proper display in template
+    const userEmail = await UnifiedReportService.resolveUIDToEmail(options.userId);
+    
     const templateData: EnhancedReportTemplateData = {
-      userEmail: options.userId,
+      userEmail: userEmail,
       periodsText: options.periodsText,
       reportData,
       reportId
