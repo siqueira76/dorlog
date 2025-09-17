@@ -872,45 +872,8 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
           }
         });
       } catch (error) {
-        console.warn('⚠️ Query otimizada falhou, tentando fallback para dados migrados...', error);
-        
-        // FALLBACK: Use full scan for migration period
-        const fallbackQuery = query(reportDiarioRef);
-        const fallbackSnapshot = await getDocs(fallbackQuery);
-        
-        fallbackSnapshot.forEach((doc) => {
-          const docId = doc.id;
-          const data = doc.data();
-
-          // Verificar se o documento pertence ao usuário (estratégia híbrida para compatibilidade)
-          if (docId.startsWith(`${userId}_`) || data.usuarioId === userId || data.email === userId) {
-            const docData = data.data;
-            
-            // Verificar se está dentro do período
-            if (docData && docData.toDate) {
-              const docDate = docData.toDate();
-              if (docDate >= dateRange.start && docDate <= dateRange.end) {
-                const dayKey = docDate.toISOString().split('T')[0];
-                validDays.add(dayKey);
-                
-                // Processar quizzes com normalização melhorada
-                const normalizedQuizzes = normalizeQuizData(data.quizzes);
-                if (normalizedQuizzes.length > 0) {
-                  console.log(`📝 Processando ${normalizedQuizzes.length} quiz(es) para ${dayKey} (fallback)`);
-                  const counters = { totalPainSum, totalPainCount, crisisCount };
-                  processQuizzesWithSemanticMapping(normalizedQuizzes, dayKey, reportData, counters);
-                  
-                  // Atualizar os valores dos contadores
-                  totalPainSum = counters.totalPainSum;
-                  totalPainCount = counters.totalPainCount;
-                  
-                  // Atualizar contadores
-                  crisisCount += normalizedQuizzes.filter(q => q.tipo === 'emergencial').length;
-                }
-              }
-            }
-          }
-        });
+        console.error('❌ Erro na query de report_diario:', error);
+        // Pós-migração: não há necessidade de fallback - todos os dados usam Firebase UID
       }
     }
 
