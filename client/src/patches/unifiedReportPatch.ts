@@ -81,16 +81,45 @@ export const patchApiCallsUnified = () => {
 };
 
 /**
- * Check if unified report service is ready
+ * Check if unified report service is ready with enhanced validation
  */
 export const checkUnifiedReportReadiness = (): boolean => {
-  const config = UnifiedReportService.checkConfiguration();
-  
-  if (config.isReady) {
-    console.log('✅ Serviço de relatório unificado pronto');
+  try {
+    // 1. Check Firebase configuration
+    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const hasFirebaseConfig = Boolean(projectId && apiKey && projectId !== 'demo-project');
+    
+    if (!hasFirebaseConfig) {
+      console.warn('⚠️ Configuração Firebase incompleta:', {
+        projectId: projectId ? '✓ Configurado' : '❌ Ausente',
+        apiKey: apiKey ? '✓ Configurado' : '❌ Ausente'
+      });
+      return false;
+    }
+    
+    // 2. Check UnifiedReportService configuration
+    const config = UnifiedReportService.checkConfiguration();
+    
+    if (!config.isReady) {
+      console.warn('⚠️ Problemas na configuração do serviço unificado:', config.issues);
+      return false;
+    }
+    
+    // 3. Check environment compatibility
+    const isValidEnvironment = typeof window !== 'undefined' && 
+                              typeof fetch !== 'undefined';
+    
+    if (!isValidEnvironment) {
+      console.warn('⚠️ Ambiente inválido para sistema unificado');
+      return false;
+    }
+    
+    console.log('✅ Sistema unificado pronto com identificadores normalizados');
     return true;
-  } else {
-    console.warn('⚠️ Problemas na configuração do serviço unificado:', config.issues);
+    
+  } catch (error) {
+    console.error('❌ Verificação de prontidão falhou:', error);
     return false;
   }
 };
