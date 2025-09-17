@@ -56,15 +56,31 @@
     <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('✅ SW registrado:', registration.scope);
-            })
-            .catch((error) => {
-              console.log('❌ SW falhou:', error);
+        // Only register service worker in production
+        if (import.meta.env && import.meta.env.MODE === 'production') {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then((registration) => {
+                console.log('✅ SW registrado:', registration.scope);
+              })
+              .catch((error) => {
+                console.log('❌ SW falhou:', error);
+              });
+          });
+        } else {
+          // In development, unregister any existing service workers and clear caches
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              registrations.forEach(registration => registration.unregister());
             });
-        });
+            if ('caches' in window) {
+              caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+              });
+            }
+            console.log('🧹 SW desabilitado em desenvolvimento');
+          });
+        }
       }
     </script>
     
