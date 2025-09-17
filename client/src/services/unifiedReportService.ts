@@ -33,7 +33,9 @@ export class UnifiedReportService {
    */
   static async checkPremiumAccess(userId: string): Promise<boolean> {
     try {
-      const subscriptionRef = doc(db, 'assinaturas', userId);
+      // Resolve UID to email for subscription check (assinaturas collection uses email as key)
+      const userEmail = await this.resolveUIDToEmail(userId);
+      const subscriptionRef = doc(db, 'assinaturas', userEmail);
       const subscriptionSnap = await getDoc(subscriptionRef);
       
       if (!subscriptionSnap.exists()) {
@@ -146,6 +148,23 @@ export class UnifiedReportService {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
         executionTime
       };
+    }
+  }
+  
+  /**
+   * Resolve Firebase UID para email usando a coleção usuarios
+   */
+  private static async resolveUIDToEmail(uid: string): Promise<string> {
+    try {
+      const userDoc = await getDoc(doc(db, 'usuarios', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.email || userData.userEmail || uid;
+      }
+      return uid; // Fallback seguro
+    } catch (error) {
+      console.warn('⚠️ Erro ao resolver email do usuário, usando UID:', error);
+      return uid; // Fallback seguro
     }
   }
   

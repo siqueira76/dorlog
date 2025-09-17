@@ -100,20 +100,8 @@ export class EnhancedUnifiedReportService {
       }
       
       // 5. Preparar dados do template enhanced  
-      // CRITICAL FIX: Resolve UID to email for proper display
-      let userEmail = options.userId;
-      try {
-        if (!options.userId.includes('@')) {
-          // It's a Firebase UID, resolve to email
-          const userDoc = await getDoc(doc(db, 'usuarios', options.userId));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            userEmail = userData.email || userData.userEmail || options.userId;
-          }
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao resolver email do usuário, usando UID:', error);
-      }
+      // Resolve UID to email for proper display using centralized function
+      const userEmail = await this.resolveUIDToEmail(options.userId);
       
       const templateData: EnhancedReportTemplateData = {
         userEmail: userEmail, // Proper email display
@@ -277,6 +265,23 @@ export class EnhancedUnifiedReportService {
         storageAvailable: baseCheck.isReady
       }
     };
+  }
+  
+  /**
+   * Resolve Firebase UID para email usando a coleção usuarios
+   */
+  private static async resolveUIDToEmail(uid: string): Promise<string> {
+    try {
+      const userDoc = await getDoc(doc(db, 'usuarios', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.email || userData.userEmail || uid;
+      }
+      return uid; // Fallback seguro
+    } catch (error) {
+      console.warn('⚠️ Erro ao resolver email do usuário, usando UID:', error);
+      return uid; // Fallback seguro
+    }
   }
   
   /**
