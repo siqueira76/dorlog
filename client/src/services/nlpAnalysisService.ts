@@ -94,8 +94,25 @@ export interface NLPAnalysisResult {
   clinicalRelevance: number; // 0-10
 }
 
+// 🚀 OTIMIZAÇÃO FASE 1: Cache persistente e logging inteligente
+interface ModelCache {
+  [key: string]: {
+    model: any;
+    timestamp: number;
+    version: string;
+  };
+}
+
+// Sistema de logging otimizado para NLP
+let NLP_VERBOSE_LOGGING = false;
+const nlpLog = (message: string, ...args: any[]) => {
+  if (NLP_VERBOSE_LOGGING) {
+    console.log(message, ...args);
+  }
+};
+
 /**
- * Classe principal para análise NLP
+ * Classe principal para análise NLP com cache persistente otimizado
  */
 export class NLPAnalysisService {
   private sentimentPipeline: TextClassificationPipeline | null = null;
@@ -105,6 +122,9 @@ export class NLPAnalysisService {
   private initialized = false;
   private environmentInfo = detectEnvironment();
   private environmentConfig: EnvironmentConfig;
+  private modelCache: ModelCache = {};
+  private static readonly CACHE_EXPIRY_HOURS = 24;
+  private static readonly CACHE_VERSION = '2.0';
   
   constructor() {
     this.environmentConfig = getEnvironmentConfig(this.environmentInfo);
@@ -151,11 +171,21 @@ export class NLPAnalysisService {
     if (this.initialized || this.isLoading) return;
     
     this.isLoading = true;
-    console.log('🧠 Inicializando modelos NLP (modo otimizado)...');
+    console.log('⚡ Inicializando modelos NLP com CACHE OTIMIZADO...');
 
     try {
-      // Carregar apenas modelo de sentimento inicialmente (mais leve)
-      console.log('📥 Carregando modelo de análise de sentimento...');
+      // 🚀 OTIMIZAÇÃO: Tentar carregar do cache primeiro
+      const cachedModel = this.getCachedModel('sentiment');
+      if (cachedModel) {
+        console.log('✅ Modelo de sentimento carregado do CACHE');
+        this.sentimentPipeline = cachedModel.model;
+        this.initialized = true;
+        this.isLoading = false;
+        return;
+      }
+
+      // Carregar do Hugging Face Hub se não estiver em cache
+      nlpLog('📥 Carregando modelo de análise de sentimento...');
       
       const initPromise = this.initializeSentimentModel();
       const timeoutPromise = new Promise<never>((_, reject) => 
@@ -164,9 +194,12 @@ export class NLPAnalysisService {
       
       await Promise.race([initPromise, timeoutPromise]);
       
+      // 🚀 OTIMIZAÇÃO: Salvar no cache para uso futuro
+      this.setCachedModel('sentiment', this.sentimentPipeline!);
+      
       this.initialized = true;
-      console.log('✅ Modelo de sentimento inicializado com sucesso');
-      console.log('ℹ️ Outros modelos serão carregados conforme necessário');
+      console.log('✅ Modelo de sentimento inicializado e CACHEADO com sucesso');
+      nlpLog('ℹ️ Outros modelos serão carregados conforme necessário');
       
     } catch (error) {
       console.error('❌ Erro ao inicializar modelo NLP:', error);
@@ -578,6 +611,85 @@ export class NLPAnalysisService {
   }
 
   /**
+   * 🚀 OTIMIZAÇÃO FASE 1: Análise em LOTE de múltiplos textos
+   * Processa vários textos simultaneamente para máxima performance
+   */
+  async analyzeBatch(texts: string[]): Promise<NLPAnalysisResult[]> {
+    if (!texts || texts.length === 0) {
+      return [];
+    }
+
+    console.log(`⚡ Iniciando análise NLP em LOTE de ${texts.length} textos...`);
+    const batchStartTime = Date.now();
+
+    try {
+      // Filtrar textos válidos
+      const validTexts = texts.filter(text => text && text.trim().length >= 3);
+      console.log(`📝 Processando ${validTexts.length} textos válidos em paralelo...`);
+
+      // Processar todos os textos em paralelo usando Promise.all
+      const results = await Promise.all(
+        validTexts.map(async (text, index) => {
+          try {
+            // Executar análises EM PARALELO por texto
+            const [sentiment, entities, summary] = await Promise.all([
+              this.analyzeSentiment(text),
+              this.extractMedicalEntities(text),
+              text.length > 100 ? this.summarizeText(text) : Promise.resolve(undefined)
+            ]);
+
+            // Análises síncronas (rápidas)
+            const urgencyLevel = this.detectUrgencyLevel(text);
+            const clinicalRelevance = this.assessClinicalRelevance(text);
+
+            // Mapear estado emocional
+            const emotions: EmotionalState[] = [{
+              primary: sentiment.label === 'POSITIVE' ? 'calmo' : 
+                      sentiment.label === 'NEGATIVE' ? 'preocupado' : 'neutro',
+              intensity: sentiment.score * 10,
+              confidence: sentiment.score
+            }];
+
+            return {
+              sentiment,
+              summary,
+              emotions,
+              entities,
+              urgencyLevel,
+              clinicalRelevance
+            };
+          } catch (error) {
+            console.error(`❌ Erro na análise do texto ${index + 1}:`, error);
+            return {
+              sentiment: { label: 'NEUTRAL' as const, score: 0.5, confidence: 'LOW' as const },
+              emotions: [{ primary: 'neutro', intensity: 5, confidence: 0.5 }],
+              entities: [],
+              urgencyLevel: 5,
+              clinicalRelevance: 5
+            };
+          }
+        })
+      );
+
+      const batchTime = Date.now() - batchStartTime;
+      console.log(`⚡ PERFORMANCE: Lote de ${texts.length} textos processado em ${batchTime}ms (${Math.round(batchTime/texts.length)}ms/texto)`);
+      
+      return results;
+      
+    } catch (error) {
+      console.error('❌ Erro na análise em lote:', error);
+      // Retornar resultados básicos para todos os textos
+      return texts.map(() => ({
+        sentiment: { label: 'NEUTRAL' as const, score: 0.5, confidence: 'LOW' as const },
+        emotions: [{ primary: 'neutro', intensity: 5, confidence: 0.5 }],
+        entities: [],
+        urgencyLevel: 5,
+        clinicalRelevance: 5
+      }));
+    }
+  }
+
+  /**
    * Análise completa de um texto
    */
   async analyzeText(text: string): Promise<NLPAnalysisResult> {
@@ -818,6 +930,55 @@ export class NLPAnalysisService {
   /**
    * Libera recursos dos modelos (para economia de memória)
    */
+  /**
+   * 🚀 OTIMIZAÇÃO: Recupera modelo do cache local
+   */
+  private getCachedModel(modelType: string): { model: any; timestamp: number; version: string } | null {
+    try {
+      const cacheKey = `nlp_model_${modelType}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      
+      if (!cachedData) return null;
+      
+      const parsed = JSON.parse(cachedData);
+      const hoursSinceCache = (Date.now() - parsed.timestamp) / (1000 * 60 * 60);
+      
+      // Verificar expiração e versão
+      if (hoursSinceCache > NLPAnalysisService.CACHE_EXPIRY_HOURS || 
+          parsed.version !== NLPAnalysisService.CACHE_VERSION) {
+        localStorage.removeItem(cacheKey);
+        return null;
+      }
+      
+      nlpLog(`⚡ Cache hit: ${modelType} (${hoursSinceCache.toFixed(1)}h atrás)`);
+      return parsed;
+      
+    } catch (error) {
+      nlpLog(`❌ Erro ao recuperar cache: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * 🚀 OTIMIZAÇÃO: Salva modelo no cache local
+   */
+  private setCachedModel(modelType: string, model: any): void {
+    try {
+      const cacheKey = `nlp_model_${modelType}`;
+      const cacheData = {
+        model,
+        timestamp: Date.now(),
+        version: NLPAnalysisService.CACHE_VERSION
+      };
+      
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      nlpLog(`⚡ Modelo ${modelType} salvo no cache`);
+      
+    } catch (error) {
+      nlpLog(`❌ Erro ao salvar cache: ${error}`);
+    }
+  }
+
   dispose(): void {
     this.sentimentPipeline = null;
     this.summaryPipeline = null;

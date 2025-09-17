@@ -147,11 +147,19 @@ function normalizeQuizData(quizzes: any): any[] {
   return [];
 }
 
+// ⚡ OTIMIZAÇÃO FASE 1: Sistema de logging inteligente
+let ENABLE_VERBOSE_LOGGING = false;
+const debugLog = (message: string, ...args: any[]) => {
+  if (ENABLE_VERBOSE_LOGGING) {
+    console.log(message, ...args);
+  }
+};
+
 /**
  * Mapeamento semântico das perguntas dos quizzes baseado em conteúdo e tipo
  */
 function getQuestionSemanticType(questionId: string, quizType: string, answer: any): string {
-  console.log(`🔭 DEBUG: Analisando Q${questionId} (${quizType}): ${JSON.stringify(answer)} [${typeof answer}]`);
+  debugLog(`🔭 DEBUG: Analisando Q${questionId} (${quizType}): ${JSON.stringify(answer)} [${typeof answer}]`);
   
   // Tratar respostas de evacuação (sim/não)
   if (typeof answer === 'string') {
@@ -661,18 +669,26 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
       }
     }
 
-    // 2. Buscar medicamentos com query otimizada
-    console.log('💊 Buscando medicamentos do usuário...');
+    // 🚀 OTIMIZAÇÃO FASE 1: Executar queries de medicamentos e médicos em PARALELO
+    console.log('⚡ Buscando medicamentos e médicos EM PARALELO...');
+    const parallelStartTime = Date.now();
+    
     try {
-      const medicationsData = await fetchUserMedications(userId);
+      // Executar ambas as queries simultaneamente
+      const [medicationsData, doctorsData] = await Promise.all([
+        fetchUserMedications(userId),
+        fetchUserDoctors(userId)
+      ]);
       
-      // Se há medicamentos, buscar os nomes dos médicos usando query otimizada
+      const parallelTime = Date.now() - parallelStartTime;
+      console.log(`⚡ PERFORMANCE: Queries paralelas executadas em ${parallelTime}ms`);
+      console.log(`📊 Resultados: ${medicationsData.length} medicamentos, ${doctorsData.length} médicos`);
+      
+      // Processar medicamentos com lookup de médicos otimizado
       if (medicationsData.length > 0) {
-        console.log(`🔍 Buscando nomes de médicos para ${medicationsData.length} medicamento(s)...`);
+        console.log(`🔍 Processando ${medicationsData.length} medicamento(s) com lookup otimizado...`);
         
-        const doctorsData = await fetchUserDoctors(userId);
         const medicosMap = new Map<string, string>();
-        
         doctorsData.forEach(doctor => {
           medicosMap.set(doctor.id, doctor.nome);
         });
@@ -690,20 +706,12 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
           });
         });
         
-        console.log(`✅ SUCESSO: ${reportData.medications.length} medicamento(s) processados com lookup de médicos`);
-        console.log(`📊 Fontes dos dados: ${medicationsData.map(m => m.source).join(', ')}`);
+        console.log(`✅ SUCESSO: ${reportData.medications.length} medicamento(s) processados`);
       } else {
-        console.log('ℹ️ Nenhum medicamento encontrado após busca híbrida.');
+        console.log('ℹ️ Nenhum medicamento encontrado.');
       }
-    } catch (error) {
-      console.error('❌ ERRO CRÍTICO na busca híbrida de medicamentos:', error);
-    }
-
-    // 3. Buscar médicos usando estratégia híbrida
-    console.log('Buscando médicos do usuário...');
-    try {
-      const doctorsData = await fetchUserDoctors(userId);
       
+      // Processar médicos
       doctorsData.forEach(doctor => {
         reportData.doctors.push({
           nome: doctor.nome,
@@ -713,12 +721,10 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
         });
       });
       
-      console.log(`✅ SUCESSO: ${reportData.doctors.length} médico(s) encontrados`);
-      if (doctorsData.length > 0) {
-        console.log(`📊 Fontes dos dados: ${doctorsData.map(d => d.source).join(', ')}`);
-      }
+      console.log(`✅ SUCESSO: ${reportData.doctors.length} médico(s) processados`);
+      
     } catch (error) {
-      console.error('❌ ERRO CRÍTICO na busca híbrida de médicos:', error);
+      console.error('❌ ERRO nas queries paralelas:', error);
     }
 
     // 4. Calcular estatísticas finais
@@ -809,6 +815,8 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
     });
     
     console.log('🔧 Melhorias da Fase 1 aplicadas:');
+    console.log('  ⚡ NOVO: Queries Firestore executadas em PARALELO');
+    console.log('  ⚡ NOVO: Performance otimizada para medicamentos + médicos');
     console.log('  ✅ Busca híbrida de medicamentos (email + UID)');
     console.log('  ✅ Busca híbrida de médicos (email + UID)');
     console.log('  ✅ Normalização robusta de quizzes');

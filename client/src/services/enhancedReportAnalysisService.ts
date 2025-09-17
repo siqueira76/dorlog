@@ -349,7 +349,7 @@ export class EnhancedReportAnalysisService {
   }
 
   /**
-   * Processa textos de uma categoria específica
+   * 🚀 OTIMIZAÇÃO FASE 1: Processa textos de uma categoria com BATCH PROCESSING
    */
   private static async processCategoryTexts(texts: any[], category: string): Promise<any> {
     try {
@@ -357,32 +357,38 @@ export class EnhancedReportAnalysisService {
       const { NLPAnalysisService } = await import('./nlpAnalysisService');
       const nlpService = new NLPAnalysisService();
       
-      // Combinar todos os textos da categoria
-      const combinedText = texts.map(t => t.text).join('. ');
+      // ⚡ OTIMIZAÇÃO: Usar batch processing em vez de texto combinado
+      const textsToAnalyze = texts.map(t => t.text);
+      console.log(`⚡ Processando ${textsToAnalyze.length} textos da categoria "${category}" em LOTE...`);
       
-      // Analisar com NLP
+      // Analisar todos os textos simultaneamente usando batch processing
       await nlpService.initialize();
-      const analysis = await nlpService.analyzeText(combinedText);
+      const nlpResults = await nlpService.analyzeBatch(textsToAnalyze);
+      
+      // ⚡ Agregar resultados do batch processing
+      const aggregatedAnalysis = this.aggregateNLPResults(nlpResults, textsToAnalyze);
       
       // Extrair insights específicos da categoria
       let categoryInsights = {};
       
       if (category === 'matinal') {
-        categoryInsights = this.extractMorningInsights(texts, analysis);
+        categoryInsights = this.extractMorningInsights(texts, aggregatedAnalysis);
       } else if (category === 'noturno') {
-        categoryInsights = this.extractEveningInsights(texts, analysis);
+        categoryInsights = this.extractEveningInsights(texts, aggregatedAnalysis);
       } else if (category === 'emergencial') {
-        categoryInsights = this.extractCrisisInsights(texts, analysis);
+        categoryInsights = this.extractCrisisInsights(texts, aggregatedAnalysis);
       } else if (category === 'geral') {
-        categoryInsights = this.extractGeneralInsights(texts, analysis);
+        categoryInsights = this.extractGeneralInsights(texts, aggregatedAnalysis);
       }
       
+      const combinedText = textsToAnalyze.join('. ');
+      
       return {
-        summary: analysis.summary?.summary || this.generateFallbackSummary(combinedText),
-        averageSentiment: analysis.sentiment.label.toLowerCase(),
+        summary: aggregatedAnalysis.summary?.summary || this.generateFallbackSummary(combinedText),
+        averageSentiment: aggregatedAnalysis.sentiment.label.toLowerCase(),
         textCount: texts.length,
         averageLength: Math.round(combinedText.length / texts.length),
-        urgencyLevel: analysis.urgencyLevel || 5,
+        urgencyLevel: aggregatedAnalysis.urgencyLevel || 5,
         ...categoryInsights
       };
       
@@ -398,6 +404,68 @@ export class EnhancedReportAnalysisService {
         averageLength: Math.round(combinedText.length / texts.length)
       };
     }
+  }
+
+  /**
+   * ⚡ OTIMIZAÇÃO: Agrega resultados de múltiplas análises NLP em uma única estrutura
+   */
+  private static aggregateNLPResults(nlpResults: any[], texts: string[]): any {
+    if (!nlpResults || nlpResults.length === 0) {
+      return {
+        sentiment: { label: 'NEUTRAL', score: 0.5, confidence: 'LOW' },
+        summary: undefined,
+        emotions: [{ primary: 'neutro', intensity: 5, confidence: 0.5 }],
+        entities: [],
+        urgencyLevel: 5,
+        clinicalRelevance: 5
+      };
+    }
+
+    // Agregar sentimentos (média ponderada)
+    const sentiments = nlpResults.map(r => r.sentiment);
+    const avgSentimentScore = sentiments.reduce((sum, s) => sum + s.score, 0) / sentiments.length;
+    const positiveCount = sentiments.filter(s => s.label === 'POSITIVE').length;
+    const negativeCount = sentiments.filter(s => s.label === 'NEGATIVE').length;
+    
+    let dominantSentiment = 'NEUTRAL';
+    if (positiveCount > negativeCount) dominantSentiment = 'POSITIVE';
+    else if (negativeCount > positiveCount) dominantSentiment = 'NEGATIVE';
+
+    // Agregar entidades médicas
+    const allEntities = nlpResults.flatMap(r => r.entities || []);
+    const uniqueEntities = allEntities.filter((entity, index, self) => 
+      index === self.findIndex(e => e.entity === entity.entity && e.type === entity.type)
+    );
+
+    // Calcular urgência e relevância médias
+    const avgUrgency = nlpResults.reduce((sum, r) => sum + (r.urgencyLevel || 5), 0) / nlpResults.length;
+    const avgRelevance = nlpResults.reduce((sum, r) => sum + (r.clinicalRelevance || 5), 0) / nlpResults.length;
+
+    // Gerar resumo combinado (usar o resumo mais longo)
+    const summaries = nlpResults.filter(r => r.summary).map(r => r.summary);
+    const combinedSummary = summaries.length > 0 
+      ? summaries.reduce((longest, current) => 
+          current.summary.length > longest.summary.length ? current : longest
+        ) 
+      : undefined;
+
+    return {
+      sentiment: {
+        label: dominantSentiment,
+        score: avgSentimentScore,
+        confidence: avgSentimentScore > 0.7 ? 'HIGH' : avgSentimentScore > 0.5 ? 'MEDIUM' : 'LOW'
+      },
+      summary: combinedSummary,
+      emotions: [{
+        primary: dominantSentiment === 'POSITIVE' ? 'calmo' : 
+                dominantSentiment === 'NEGATIVE' ? 'preocupado' : 'neutro',
+        intensity: avgSentimentScore * 10,
+        confidence: avgSentimentScore
+      }],
+      entities: uniqueEntities,
+      urgencyLevel: Math.round(avgUrgency),
+      clinicalRelevance: Math.round(avgRelevance)
+    };
   }
 
   /**
