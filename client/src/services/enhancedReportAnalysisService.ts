@@ -136,21 +136,42 @@ export class EnhancedReportAnalysisService {
     try {
       const enhanced: EnhancedReportData = { ...reportData };
       
-      // 1. Análise Sono-Dor Matinal (substitui NLP)
-      console.log('🌅 Processando análise sono-dor matinal...');
-      const { SleepPainAnalysisService } = await import('./sleepPainAnalysisService');
-      enhanced.sleepPainInsights = SleepPainAnalysisService.generateSleepPainInsights(reportData);
+      // 🚀 OTIMIZAÇÃO FASE 2: Paralelização de análises de padrões
+      console.log('⚡ Executando análises paralelas de padrões...');
+      console.time('⚡ Parallel Pattern Analysis');
       
-      // 2. Análise de padrões comportamentais
-      console.log('🔍 Detectando padrões comportamentais...');
-      enhanced.patternInsights = this.analyzePatterns(reportData);
-      enhanced.behavioralPatterns = this.detectBehavioralPatterns(reportData);
+      const analysisPromises: Promise<any>[] = [
+        // 1. Análise Sono-Dor Matinal
+        (async () => {
+          const { SleepPainAnalysisService } = await import('./sleepPainAnalysisService');
+          return SleepPainAnalysisService.generateSleepPainInsights(reportData);
+        })(),
+        
+        // 2. Análise de padrões comportamentais
+        Promise.resolve(this.analyzePatterns(reportData)),
+        
+        // 3. Detecção de padrões comportamentais
+        Promise.resolve(this.detectBehavioralPatterns(reportData)),
+        
+        // 4. Correlação dor-humor se houver dados suficientes
+        reportData.painEvolution.length > 5 
+          ? Promise.resolve(this.analyzePainMoodCorrelation(reportData.painEvolution))
+          : Promise.resolve(null)
+      ];
       
-      // 3. Correlação dor-humor se houver dados suficientes (mantido)
-      if (reportData.painEvolution.length > 5) {
-        console.log('💭 Analisando correlação dor-humor...');
-        enhanced.painMoodCorrelation = this.analyzePainMoodCorrelation(reportData.painEvolution);
+      const [sleepPainInsights, patternInsights, behavioralPatterns, painMoodCorrelation] = 
+        await Promise.all(analysisPromises);
+      
+      // Aplicar resultados
+      enhanced.sleepPainInsights = sleepPainInsights;
+      enhanced.patternInsights = patternInsights;
+      enhanced.behavioralPatterns = behavioralPatterns;
+      if (painMoodCorrelation) {
+        enhanced.painMoodCorrelation = painMoodCorrelation;
       }
+      
+      console.timeEnd('⚡ Parallel Pattern Analysis');
+      console.log('✅ Análises paralelas de padrões concluídas');
       
       // 4. Geração de sumário inteligente (atualizado para sono-dor)
       console.log('💡 Gerando sumário inteligente...');
