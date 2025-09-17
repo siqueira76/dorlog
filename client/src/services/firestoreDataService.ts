@@ -700,7 +700,7 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
     }
 
     // 3. Buscar médicos usando estratégia híbrida
-    console.log('👨‍⚕️ === INICIANDO BUSCA HÍBRIDA DE MÉDICOS ===');
+    console.log('Buscando médicos do usuário...');
     try {
       const doctorsData = await fetchUserDoctors(userId);
       
