@@ -282,7 +282,7 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                 
                 ${generateCrisisAnalysisSection(reportData)}
                 
-                ${crisisAnalysis?.insights.length > 0 
+                ${crisisAnalysis?.insights && crisisAnalysis.insights.length > 0 
                   ? generateCrisisTemporalSection(crisisAnalysis) 
                   : ''
                 }
@@ -323,7 +323,7 @@ function generateDigestiveHealthSection(digestiveAnalysis: any): string {
             <div class="metric-row">
                 <div class="metric-item">
                     <div class="metric-title">🏥 Saúde Digestiva:</div>
-                    <div class="metric-status">${statusText[digestiveAnalysis.status]} ${statusEmoji[digestiveAnalysis.status]}</div>
+                    <div class="metric-status">${(statusText as any)[digestiveAnalysis.status]} ${(statusEmoji as any)[digestiveAnalysis.status]}</div>
                     <div class="metric-subtitle">
                         ${digestiveAnalysis.status !== 'normal' 
                           ? `Constipação moderada. Maior intervalo: ${digestiveAnalysis.maxInterval} dias, média: ${digestiveAnalysis.averageInterval} dia(s). Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement} dia(s)`
@@ -388,7 +388,7 @@ function generatePhysicalActivitySection(physicalActivity: any): string {
                         ${physicalActivity.activityBreakdown.slice(0, 3).map((activity: any) => 
                           `• ${activity.activity}: ${activity.days} dia(s) - ${activity.percentage}% dos dias ativos`
                         ).join('<br>')}<br>
-                        • Nível de atividade: ${physicalActivity.activityLevel} ${activityLevelEmoji[physicalActivity.activityLevel]}
+                        • Nível de atividade: ${physicalActivity.activityLevel} ${(activityLevelEmoji as any)[physicalActivity.activityLevel]}
                     </div>
                     
                     <div class="recommendation">
@@ -495,8 +495,8 @@ function generateTraditionalSections(reportData: EnhancedReportData): string {
             <div class="insight-card">
                 <div class="insight-header">
                     <h3 class="insight-title">🎯 Análise de Sentimento</h3>
-                    <div class="sentiment-indicator sentiment-${reportData.nlpInsights?.sentimentAnalysis?.overallSentiment || 'neutral'}">
-                        ${reportData.nlpInsights?.sentimentAnalysis?.overallSentiment || 'Neutro'}
+                    <div class="sentiment-indicator sentiment-${(reportData as any).nlpInsights?.sentimentAnalysis?.overallSentiment || 'neutral'}">
+                        ${(reportData as any).nlpInsights?.sentimentAnalysis?.overallSentiment || 'Neutro'}
                     </div>
                 </div>
                 <p>Análise de sentimento geral dos seus registros de dor e bem-estar.</p>
@@ -505,8 +505,8 @@ function generateTraditionalSections(reportData: EnhancedReportData): string {
             <div class="insight-card">
                 <div class="insight-header">
                     <h3 class="insight-title">📈 Tendências de Dor</h3>
-                    <div class="trend-indicator trend-${reportData.painEvolution?.[0]?.trend || 'stable'}">
-                        ${reportData.painEvolution?.[0]?.trend || 'Estável'}
+                    <div class="trend-indicator trend-stable">
+                        Estável
                     </div>
                 </div>
                 <p>Evolução dos níveis de dor ao longo do período analisado.</p>
