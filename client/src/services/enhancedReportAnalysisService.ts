@@ -6,6 +6,7 @@
 
 import { ReportData } from './firestoreDataService';
 import { SleepPainInsights } from './sleepPainAnalysisService';
+import { MedicalNLPService, MedicalMention, MedicationReference, TreatmentSentiment, AdheerencePattern } from './medicalNLPService';
 
 // Tipos específicos para análise enhanced
 export interface PainMoodCorrelation {
@@ -117,6 +118,26 @@ export interface EnhancedReportData extends ReportData {
       timelineInsights?: any;
     };
   };
+  // 🧠 ANÁLISES MÉDICAS AVANÇADAS: NLP contextual e análise de adesão
+  medicalNLPAnalysis?: {
+    medicalMentions: MedicalMention[];
+    medicationReferences: MedicationReference[];
+    treatmentSentiment: TreatmentSentiment;
+    adherencePatterns: AdheerencePattern[];
+    predictiveInsights: any[];
+  };
+  medicationAdherenceCharts?: {
+    adherenceData: Array<{
+      medicationName: string;
+      adherenceScore: number;
+      totalMentions: number;
+      positiveEvents: number;
+      negativeEvents: number;
+      chartData: Array<{date: string, adherence: 'TOMOU' | 'ESQUECEU' | 'PAROU', medication: string}>;
+    }>;
+    overallAdherence: number;
+    riskMedications: string[];
+  };
   // 🆕 NOVAS PROPRIEDADES: Análises específicas implementadas
   digestiveAnalysis?: {
     maxInterval: number;
@@ -219,6 +240,16 @@ export class EnhancedReportAnalysisService {
       
       console.timeEnd('⚡ Specific Analysis');
       console.log('✅ Novas análises específicas concluídas');
+      
+      // 🧠 FASE 3: Análises médicas avançadas com NLP contextual
+      console.log('🧠 Executando análises médicas avançadas...');
+      console.time('⚡ Advanced Medical Analysis');
+      
+      enhanced.medicalNLPAnalysis = this.performAdvancedMedicalAnalysis(enhanced, textResponses || []);
+      enhanced.medicationAdherenceCharts = this.generateMedicationAdherenceCharts(enhanced);
+      
+      console.timeEnd('⚡ Advanced Medical Analysis');
+      console.log('✅ Análises médicas avançadas concluídas');
       
       // 5. Geração de sumário inteligente (atualizado para sono-dor)
       console.log('💡 Gerando sumário inteligente...');
@@ -1220,5 +1251,177 @@ export class EnhancedReportAnalysisService {
       recommendation,
       weeklyAverage
     };
+  }
+  
+  /**
+   * 🧠 Realiza análise médica avançada com NLP contextual
+   */
+  private static performAdvancedMedicalAnalysis(
+    reportData: EnhancedReportData,
+    textResponses: Array<{text: string, date: string, timestamp?: string, quizType: string}>
+  ): any {
+    console.log('🧠 Iniciando análise médica avançada com NLP...');
+    
+    try {
+      // Normalizar textResponses para o formato esperado
+      const normalizedTexts = Array.isArray(textResponses) && textResponses.length > 0 
+        ? textResponses.map(response => 
+            typeof response === 'string' 
+              ? { text: response, date: new Date().toISOString().split('T')[0], timestamp: new Date().toISOString() }
+              : response
+          )
+        : [];
+      
+      const medications = (reportData as any).medications || [];
+      const doctors = (reportData as any).doctors || [];
+      
+      if (medications.length === 0 && doctors.length === 0) {
+        console.log('ℹ️ Nenhum dado médico disponível para análise NLP');
+        return {
+          medicalMentions: [],
+          medicationReferences: [],
+          treatmentSentiment: {
+            overallSentiment: 'NEUTRO',
+            confidence: 0,
+            positiveCount: 0,
+            negativeCount: 0,
+            neutralCount: 0,
+            keyPositiveTerms: [],
+            keyNegativeTerms: [],
+            improvementMentions: 0,
+            worseningMentions: 0
+          },
+          adherencePatterns: [],
+          predictiveInsights: []
+        };
+      }
+      
+      console.log(`📊 Analisando ${textResponses.length} textos com ${medications.length} medicamentos e ${doctors.length} médicos`);
+      
+      // Análise de menções médicas
+      const medicalMentions = MedicalNLPService.analyzeMedicalMentions(
+        normalizedTexts,
+        medications,
+        doctors
+      );
+      
+      // Análise de referências específicas a medicamentos
+      const medicationReferences = MedicalNLPService.analyzeMedicationReferences(
+        normalizedTexts,
+        medications
+      );
+      
+      // Análise de padrões de adesão
+      const adherencePatterns = MedicalNLPService.analyzeAdherencePatterns(
+        normalizedTexts,
+        medications
+      );
+      
+      // Análise de sentimento sobre tratamentos
+      const treatmentSentiment = MedicalNLPService.analyzeTreatmentSentiment(normalizedTexts);
+      
+      // Gerar insights preditivos
+      const predictiveInsights = MedicalNLPService.generatePredictiveInsights(
+        medicationReferences,
+        adherencePatterns,
+        treatmentSentiment,
+        medications
+      );
+      
+      console.log(`✅ Análise NLP concluída: ${medicalMentions.length} menções, ${medicationReferences.length} referências, ${adherencePatterns.length} padrões de adesão`);
+      
+      return {
+        medicalMentions,
+        medicationReferences,
+        treatmentSentiment,
+        adherencePatterns,
+        predictiveInsights
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro na análise médica avançada:', error);
+      return {
+        medicalMentions: [],
+        medicationReferences: [],
+        treatmentSentiment: {
+          overallSentiment: 'NEUTRO',
+          confidence: 0,
+          positiveCount: 0,
+          negativeCount: 0,
+          neutralCount: 0,
+          keyPositiveTerms: [],
+          keyNegativeTerms: [],
+          improvementMentions: 0,
+          worseningMentions: 0
+        },
+        adherencePatterns: [],
+        predictiveInsights: []
+      };
+    }
+  }
+  
+  /**
+   * 📊 Gera dados para gráficos de adesão aos medicamentos
+   */
+  private static generateMedicationAdherenceCharts(reportData: EnhancedReportData): any {
+    console.log('📊 Gerando gráficos de adesão aos medicamentos...');
+    
+    try {
+      const adherencePatterns = reportData.medicalNLPAnalysis?.adherencePatterns || [];
+      const medications = (reportData as any).medications || [];
+      
+      if (adherencePatterns.length === 0) {
+        console.log('ℹ️ Nenhum padrão de adesão disponível para gráficos');
+        return {
+          adherenceData: [],
+          overallAdherence: 0,
+          riskMedications: []
+        };
+      }
+      
+      const adherenceData = adherencePatterns.map(pattern => {
+        // Criar dados do gráfico temporal
+        const chartData = pattern.patterns.map(event => ({
+          date: event.date,
+          adherence: event.adherenceType,
+          medication: pattern.medicationName
+        }));
+        
+        return {
+          medicationName: pattern.medicationName,
+          adherenceScore: pattern.adherenceScore,
+          totalMentions: pattern.totalMentions,
+          positiveEvents: pattern.adherencePositive,
+          negativeEvents: pattern.adherenceNegative,
+          chartData
+        };
+      });
+      
+      // Calcular adesão geral
+      const overallAdherence = adherencePatterns.length > 0 ?
+        adherencePatterns.reduce((sum, p) => sum + p.adherenceScore, 0) / adherencePatterns.length :
+        0;
+      
+      // Identificar medicamentos de risco (adesão < 0.6)
+      const riskMedications = adherencePatterns
+        .filter(p => p.adherenceScore < 0.6)
+        .map(p => p.medicationName);
+      
+      console.log(`📊 Gráficos gerados: ${adherenceData.length} medicamentos, adesão geral: ${(overallAdherence * 100).toFixed(1)}%`);
+      
+      return {
+        adherenceData,
+        overallAdherence,
+        riskMedications
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro na geração de gráficos de adesão:', error);
+      return {
+        adherenceData: [],
+        overallAdherence: 0,
+        riskMedications: []
+      };
+    }
   }
 }

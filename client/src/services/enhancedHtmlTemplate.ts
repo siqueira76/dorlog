@@ -6,6 +6,7 @@
  */
 
 import { EnhancedReportData } from './enhancedReportAnalysisService';
+import { MedicalCorrelationService, Doctor, Medication, MedicalInsight, MedicationEffectiveness, DoctorSpecialtyAnalysis } from './medicalCorrelationService';
 
 export interface EnhancedReportTemplateData {
   userEmail: string;
@@ -286,6 +287,8 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                   ? generateCrisisTemporalSection(crisisAnalysis) 
                   : ''
                 }
+                
+                ${generateMedicalAnalysisSection(reportData)}
             </div>
         </div>`;
 }
@@ -484,6 +487,344 @@ function generateCrisisTemporalSection(crisisAnalysis: any): string {
                     ` : ''}
                 </div>
             </div>`;
+}
+
+/**
+ * 🆕 Gera seção de análise médica completa
+ */
+function generateMedicalAnalysisSection(reportData: EnhancedReportData): string {
+  const doctors = (reportData as any).doctors || [];
+  const medications = (reportData as any).medications || [];
+  
+  if (doctors.length === 0 && medications.length === 0) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">👨‍⚕️ Análise Médica:</div>
+                    <div class="metric-status">📊 Cadastre médicos e medicamentos para análises detalhadas</div>
+                    <div class="metric-subtitle">└ Vá para "Médicos" e "Medicamentos" no menu principal</div>
+                </div>
+            </div>`;
+  }
+  
+  // Gerar dados de dor simulados para análise
+  const painData = reportData.painEvolution?.map(p => ({
+    date: p.date,
+    level: p.level,
+    timestamp: new Date(),
+    quizType: 'matinal' as const
+  })) || [];
+  
+  // Realizar análises usando o novo serviço
+  let medicationEffectiveness: MedicationEffectiveness[] = [];
+  let specialtyAnalysis: DoctorSpecialtyAnalysis[] = [];
+  let insights: MedicalInsight[] = [];
+  
+  try {
+    medicationEffectiveness = MedicalCorrelationService.analyzeMedicationEffectiveness(medications, doctors, painData);
+    specialtyAnalysis = MedicalCorrelationService.analyzeDoctorSpecialtyCorrelation(doctors, medications, painData);
+    insights = MedicalCorrelationService.generateMedicalInsights(medications, doctors, painData);
+  } catch (error) {
+    console.warn('⚠️ Erro na análise médica:', error);
+  }
+  
+  return `
+            <div class="medical-analysis-section">
+                <h3>👨‍⚕️ Análise do Cuidado Médico</h3>
+                
+                ${generateDoctorsOverview(doctors, specialtyAnalysis)}
+                
+                ${generateMedicationsEffectivenessSection(medications, medicationEffectiveness)}
+                
+                ${generateMedicalInsightsSection(insights)}
+                
+                ${generateAdvancedNLPSection(reportData)}
+                
+                ${generateMedicationAdherenceSection(reportData)}
+            </div>`;
+}
+
+/**
+ * Gera visão geral dos médicos e especialidades
+ */
+function generateDoctorsOverview(doctors: Doctor[], specialtyAnalysis: DoctorSpecialtyAnalysis[]): string {
+  if (doctors.length === 0) {
+    return '';
+  }
+  
+  const specialties = Array.from(new Set(doctors.map(d => d.especialidade)));
+  const topSpecialty = specialtyAnalysis.length > 0 ? specialtyAnalysis[0] : null;
+  
+  return `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">🏥 Equipe Médica:</div>
+                        <div class="doctors-summary">
+                            ${doctors.length} médico(s) • ${specialties.length} especialidade(s)
+                        </div>
+                        <div class="doctors-list">
+                            ${doctors.slice(0, 3).map(doctor => 
+                              `👨‍⚕️ ${doctor.nome} (${doctor.especialidade})`
+                            ).join(' • ')}
+                            ${doctors.length > 3 ? ` • +${doctors.length - 3} outros` : ''}
+                        </div>
+                        
+                        ${topSpecialty ? `
+                        <div class="specialty-highlight">
+                            <strong>🎯 Destaque:</strong> ${topSpecialty.specialty} 
+                            (${(topSpecialty.averagePainImprovement * 100).toFixed(1)}% de melhoria)
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>`;
+}
+
+/**
+ * Gera seção de eficácia de medicamentos
+ */
+function generateMedicationsEffectivenessSection(medications: any[], effectiveness: MedicationEffectiveness[]): string {
+  if (medications.length === 0) {
+    return '';
+  }
+  
+  const topMedication = effectiveness.length > 0 ? effectiveness[0] : null;
+  const totalMedications = medications.length;
+  
+  return `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">💊 Medicamentos:</div>
+                        <div class="medications-summary">
+                            ${totalMedications} medicamento(s) em uso
+                        </div>
+                        
+                        ${topMedication ? `
+                        <div class="medication-highlight">
+                            <strong>🏆 Mais Eficaz:</strong> ${topMedication.medicationName}<br>
+                            └ ${(topMedication.averagePainReduction * 100).toFixed(1)}% de redução da dor
+                            (${topMedication.effectivenessRating.replace('_', ' ').toLowerCase()})
+                        </div>
+                        ` : ''}
+                        
+                        <div class="medications-list">
+                            ${medications.slice(0, 3).map(med => 
+                              `💊 ${med.nome} (${med.frequencia})`
+                            ).join('<br>')}
+                            ${medications.length > 3 ? `<br>• +${medications.length - 3} outros medicamentos` : ''}
+                        </div>
+                    </div>
+                </div>`;
+}
+
+/**
+ * Gera seção de insights médicos
+ */
+function generateMedicalInsightsSection(insights: MedicalInsight[]): string {
+  if (insights.length === 0) {
+    return '';
+  }
+  
+  const highPriorityInsights = insights.filter(i => i.priority === 'ALTA').slice(0, 2);
+  
+  return `
+                <div class="medical-insights">
+                    <h4>💡 Insights Médicos</h4>
+                    ${highPriorityInsights.map(insight => `
+                    <div class="insight-item priority-${insight.priority.toLowerCase()}">
+                        <div class="insight-title-medical">${insight.title}</div>
+                        <div class="insight-description">${insight.description}</div>
+                        <div class="insight-recommendation">
+                            <strong>Recomendação:</strong> ${insight.recommendation}
+                        </div>
+                    </div>
+                    `).join('')}
+                    
+                    ${insights.length > highPriorityInsights.length ? `
+                    <div class="more-insights">
+                        <em>+${insights.length - highPriorityInsights.length} insights adicionais disponíveis</em>
+                    </div>
+                    ` : ''}
+                </div>`;
+}
+
+/**
+ * 🧠 Gera seção de análise NLP médica avançada
+ */
+function generateAdvancedNLPSection(reportData: EnhancedReportData): string {
+  const nlpAnalysis = reportData.medicalNLPAnalysis;
+  
+  if (!nlpAnalysis || !nlpAnalysis.medicalMentions.length) {
+    return `
+                <div class="advanced-nlp-section">
+                    <h4>🧠 Análise Contextual de Textos</h4>
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">📝 Status:</div>
+                            <div class="metric-value">Não há menções médicas suficientes nos textos para análise</div>
+                            <div class="metric-subtitle">└ Continue registrando detalhes sobre tratamentos</div>
+                        </div>
+                    </div>
+                </div>`;
+  }
+  
+  const { medicalMentions, medicationReferences, treatmentSentiment, predictiveInsights } = nlpAnalysis;
+  
+  // Estatísticas de menções
+  const totalMentions = medicalMentions.length;
+  const medMentions = medicalMentions.filter(m => m.type === 'MEDICATION').length;
+  const doctorMentions = medicalMentions.filter(m => m.type === 'DOCTOR').length;
+  
+  // Sentimento geral
+  const sentimentEmoji = treatmentSentiment.overallSentiment === 'POSITIVO' ? '😊' : 
+                        treatmentSentiment.overallSentiment === 'NEGATIVO' ? '😔' : '😐';
+  
+  return `
+                <div class="advanced-nlp-section">
+                    <h4>🧠 Análise Contextual de Textos</h4>
+                    
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">📊 Menções Detectadas:</div>
+                            <div class="metric-value">${totalMentions} referências médicas</div>
+                            <div class="metric-subtitle">
+                                └ ${medMentions} medicamentos • ${doctorMentions} médicos
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">🎯 Sentimento Sobre Tratamento:</div>
+                            <div class="sentiment-analysis">
+                                <span class="sentiment-${treatmentSentiment.overallSentiment.toLowerCase()}">
+                                    ${sentimentEmoji} ${treatmentSentiment.overallSentiment}
+                                </span>
+                                <div class="sentiment-breakdown">
+                                    ✅ ${treatmentSentiment.positiveCount} positivos • 
+                                    ❌ ${treatmentSentiment.negativeCount} negativos • 
+                                    ⚪ ${treatmentSentiment.neutralCount} neutros
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${treatmentSentiment.improvementMentions > 0 ? `
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">📈 Menções de Melhoria:</div>
+                            <div class="metric-value improvement">${treatmentSentiment.improvementMentions} relatos</div>
+                            <div class="metric-subtitle">└ Indicadores positivos de progresso</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${predictiveInsights.length > 0 ? `
+                    <div class="nlp-insights">
+                        <strong>💡 Insights Preditivos:</strong>
+                        ${predictiveInsights.slice(0, 2).map(insight => `
+                        <div class="insight-item priority-${insight.priority.toLowerCase()}">
+                            <div class="insight-title-nlp">${insight.title}</div>
+                            <div class="insight-description">${insight.description}</div>
+                            ${insight.recommendation ? `<div class="insight-recommendation">💡 ${insight.recommendation}</div>` : ''}
+                        </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                </div>`;
+}
+
+/**
+ * 📊 Gera seção de gráficos de adesão aos medicamentos
+ */
+function generateMedicationAdherenceSection(reportData: EnhancedReportData): string {
+  const adherenceData = reportData.medicationAdherenceCharts;
+  
+  if (!adherenceData || !adherenceData.adherenceData.length) {
+    return `
+                <div class="adherence-section">
+                    <h4>📊 Adesão aos Medicamentos</h4>
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">📝 Status:</div>
+                            <div class="metric-value">Dados insuficientes para análise de adesão</div>
+                            <div class="metric-subtitle">└ Registre mais detalhes sobre uso de medicamentos</div>
+                        </div>
+                    </div>
+                </div>`;
+  }
+  
+  const { adherenceData: medData, overallAdherence, riskMedications } = adherenceData;
+  const overallPercent = (overallAdherence * 100).toFixed(1);
+  
+  // Top 3 medicamentos por adesão
+  const topMedications = medData
+    .sort((a, b) => b.adherenceScore - a.adherenceScore)
+    .slice(0, 3);
+  
+  const adherenceStatus = overallAdherence >= 0.8 ? 'excelente' : 
+                         overallAdherence >= 0.6 ? 'boa' : 
+                         overallAdherence >= 0.4 ? 'moderada' : 'baixa';
+  
+  const adherenceEmoji = overallAdherence >= 0.8 ? '🟢' : 
+                        overallAdherence >= 0.6 ? '🟡' : '🔴';
+  
+  return `
+                <div class="adherence-section">
+                    <h4>📊 Adesão aos Medicamentos</h4>
+                    
+                    <div class="metric-row">
+                        <div class="metric-item">
+                            <div class="metric-title">📈 Adesão Geral:</div>
+                            <div class="metric-value-large adherence-${adherenceStatus}">
+                                ${adherenceEmoji} ${overallPercent}%
+                            </div>
+                            <div class="metric-subtitle">└ Adesão ${adherenceStatus} ao tratamento</div>
+                        </div>
+                    </div>
+                    
+                    <div class="adherence-chart-container">
+                        <h5>🏆 Top Medicamentos por Adesão</h5>
+                        ${topMedications.map((med, index) => {
+                          const score = (med.adherenceScore * 100).toFixed(1);
+                          const barWidth = med.adherenceScore * 100;
+                          const statusClass = med.adherenceScore >= 0.8 ? 'high' : 
+                                            med.adherenceScore >= 0.6 ? 'medium' : 'low';
+                          
+                          return `
+                        <div class="adherence-bar-item">
+                            <div class="medication-name">
+                                ${index + 1}. ${med.medicationName}
+                                <span class="adherence-score">${score}%</span>
+                            </div>
+                            <div class="adherence-bar">
+                                <div class="adherence-fill adherence-${statusClass}" 
+                                     style="width: ${barWidth}%"></div>
+                            </div>
+                            <div class="adherence-details">
+                                ${med.positiveEvents} eventos positivos • ${med.negativeEvents} negativos
+                            </div>
+                        </div>
+                          `;
+                        }).join('')}
+                    </div>
+                    
+                    ${riskMedications.length > 0 ? `
+                    <div class="risk-medications">
+                        <h5>⚠️ Medicamentos de Risco (Adesão < 60%)</h5>
+                        <div class="risk-list">
+                            ${riskMedications.map(med => `
+                            <div class="risk-item">
+                                🔴 ${med}
+                            </div>
+                            `).join('')}
+                        </div>
+                        <div class="recommendation">
+                            <strong>💡 Recomendação:</strong><br>
+                            Configure lembretes mais frequentes e discuta barreiras para adesão com seu médico.
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>`;
 }
 
 /**
@@ -774,7 +1115,7 @@ function getEnhancedReportCSS(): string {
 
         .key-metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: var(--space-4);
         }
 
@@ -799,7 +1140,7 @@ function getEnhancedReportCSS(): string {
 
         .nlp-insights {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: var(--space-6);
             margin-bottom: var(--space-8);
         }
@@ -870,6 +1211,243 @@ function getEnhancedReportCSS(): string {
         canvas {
             max-width: 100%;
             height: auto;
+        }
+        
+        /* Sistema responsivo mobile-first */
+        @media (max-width: 640px) {
+            .container {
+                padding: var(--space-4) !important;
+            }
+            
+            .enhanced-header {
+                margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-6);
+                padding: var(--space-6);
+            }
+            
+            .logo-enhanced {
+                font-size: var(--text-2xl);
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+            
+            .logo-enhanced .brain-icon {
+                font-size: var(--text-3xl);
+            }
+            
+            .subtitle-enhanced {
+                font-size: var(--text-lg);
+            }
+            
+            .section-enhanced {
+                padding: var(--space-4);
+                margin-bottom: var(--space-6);
+            }
+            
+            .section-title-enhanced {
+                font-size: var(--text-xl);
+                flex-direction: column;
+                text-align: center;
+                gap: var(--space-2);
+            }
+            
+            .nlp-insights {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .key-metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-badges {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .badge {
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .insight-card {
+                padding: var(--space-4);
+            }
+            
+            .metric-card {
+                padding: var(--space-3);
+            }
+            
+            .metric-value {
+                font-size: var(--text-xl);
+            }
+        }
+        
+        @media (max-width: 375px) {
+            .container {
+                padding: var(--space-3) !important;
+            }
+            
+            .enhanced-header {
+                margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-4);
+                padding: var(--space-4);
+            }
+            
+            .section-enhanced {
+                padding: var(--space-3);
+            }
+            
+            .logo-enhanced {
+                font-size: var(--text-xl);
+            }
+            
+            .logo-enhanced .brain-icon {
+                font-size: var(--text-2xl);
+            }
+            
+            .key-metrics {
+                grid-template-columns: 1fr;
+                gap: var(--space-2);
+            }
+        }
+        
+        @media (min-width: 641px) and (max-width: 768px) {
+            .key-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .nlp-insights {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .key-metrics {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .nlp-insights {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+        }
+        
+        /* Touch-friendly interactions */
+        .insight-card, .metric-card, .section-enhanced {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .insight-card:hover, .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        @media (hover: none) and (pointer: coarse) {
+            .insight-card:hover, .metric-card:hover {
+                transform: none;
+            }
+            
+            .insight-card:active, .metric-card:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+            }
+        }
+        
+        /* Estilos para a seção de análise médica */
+        .medical-analysis-section {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin-bottom: var(--space-6);
+        }
+        
+        .doctors-summary, .medications-summary {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: var(--space-2);
+        }
+        
+        .doctors-list, .medications-list {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: var(--space-3);
+        }
+        
+        .specialty-highlight, .medication-highlight {
+            background: linear-gradient(135deg, var(--success) 0%, var(--info) 100%);
+            color: white;
+            padding: var(--space-3);
+            border-radius: var(--radius);
+            margin-top: var(--space-3);
+            font-size: var(--text-sm);
+        }
+        
+        .medical-insights {
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--border);
+        }
+        
+        .insight-item {
+            background: var(--gray-50);
+            border-left: 4px solid var(--info);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+        
+        .insight-item.priority-alta {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .insight-item.priority-media {
+            border-left-color: var(--warning);
+            background: rgba(251, 192, 45, 0.05);
+        }
+        
+        .insight-title-medical {
+            font-weight: 600;
+            font-size: var(--text-base);
+            color: var(--text);
+            margin-bottom: var(--space-2);
+        }
+        
+        .insight-description {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: var(--space-2);
+        }
+        
+        .insight-recommendation {
+            color: var(--text);
+            font-size: var(--text-sm);
+            background: rgba(255, 255, 255, 0.7);
+            padding: var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+        
+        .more-insights {
+            text-align: center;
+            color: var(--text-subtle);
+            font-style: italic;
+            margin-top: var(--space-3);
+        }
+        
+        @media (max-width: 640px) {
+            .medical-analysis-section {
+                padding: var(--space-4);
+            }
+            
+            .insight-item {
+                padding: var(--space-3);
+            }
+            
+            .specialty-highlight, .medication-highlight {
+                padding: var(--space-2);
+                font-size: var(--text-xs);
+            }
         }
 
         @media print {
@@ -963,6 +1541,221 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
                     this.style.boxShadow = '';
                 });
             });
+        }
+
+        /* 🧠 Estilos para Análise NLP Médica Avançada */
+        .advanced-nlp-section {
+            margin: var(--space-6) 0;
+            padding: var(--space-6);
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid #0891b2;
+            box-shadow: var(--shadow);
+        }
+
+        .sentiment-analysis {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .sentiment-positivo { 
+            color: var(--sentiment-positive); 
+            font-weight: 600;
+        }
+        .sentiment-negativo { 
+            color: var(--sentiment-negative); 
+            font-weight: 600;
+        }
+        .sentiment-neutro { 
+            color: var(--sentiment-neutral); 
+            font-weight: 600;
+        }
+
+        .sentiment-breakdown {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            margin-top: var(--space-1);
+        }
+
+        .nlp-insights {
+            margin-top: var(--space-4);
+        }
+
+        .insight-title-nlp {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: var(--space-1);
+            font-size: var(--text-sm);
+        }
+
+        .insight-description {
+            font-size: var(--text-sm);
+            color: var(--text);
+            margin-bottom: var(--space-2);
+        }
+
+        .insight-recommendation {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            background: rgba(156, 39, 176, 0.1);
+            padding: var(--space-2);
+            border-radius: var(--radius);
+            border-left: 3px solid var(--primary);
+        }
+
+        /* 📊 Estilos para Gráficos de Adesão aos Medicamentos */
+        .adherence-section {
+            margin: var(--space-6) 0;
+            padding: var(--space-6);
+            background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid #f59e0b;
+            box-shadow: var(--shadow);
+        }
+
+        .adherence-chart-container {
+            margin-top: var(--space-4);
+        }
+
+        .adherence-chart-container h5 {
+            color: var(--text);
+            font-size: var(--text-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+            text-align: center;
+        }
+
+        .adherence-bar-item {
+            margin-bottom: var(--space-4);
+            padding: var(--space-3);
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .medication-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-2);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .adherence-score {
+            font-size: var(--text-sm);
+            padding: var(--space-1) var(--space-2);
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+        }
+
+        .adherence-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--space-2);
+        }
+
+        .adherence-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: var(--radius-sm);
+        }
+
+        .adherence-fill.adherence-high {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .adherence-fill.adherence-medium {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .adherence-fill.adherence-low {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .adherence-details {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .adherence-excelente { color: #10b981; }
+        .adherence-boa { color: #f59e0b; }
+        .adherence-moderada { color: #f97316; }
+        .adherence-baixa { color: #ef4444; }
+
+        .risk-medications {
+            margin-top: var(--space-4);
+            padding: var(--space-4);
+            background: #fef2f2;
+            border-radius: var(--radius);
+            border: 1px solid #fca5a5;
+        }
+
+        .risk-medications h5 {
+            color: #dc2626;
+            font-size: var(--text-base);
+            font-weight: 600;
+            margin-bottom: var(--space-3);
+        }
+
+        .risk-list {
+            margin-bottom: var(--space-3);
+        }
+
+        .risk-item {
+            padding: var(--space-2);
+            margin-bottom: var(--space-1);
+            background: white;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        .recommendation {
+            padding: var(--space-3);
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: var(--radius);
+            border-left: 3px solid #10b981;
+            font-size: var(--text-sm);
+            color: var(--text);
+        }
+
+        .recommendation strong {
+            color: #059669;
+        }
+
+        .metric-value.improvement {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Responsividade para as novas seções */
+        @media (max-width: 768px) {
+            .advanced-nlp-section,
+            .adherence-section {
+                margin: var(--space-4) 0;
+                padding: var(--space-4);
+            }
+
+            .medication-name {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-1);
+            }
+
+            .adherence-score {
+                align-self: flex-end;
+            }
+
+            .sentiment-breakdown {
+                font-size: var(--text-xs);
+            }
         }
 
         // Função para impressão otimizada
