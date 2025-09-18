@@ -247,32 +247,243 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
 }
 
 /**
- * Gera seção de resumo inteligente baseada em quiz
+ * Gera seção de resumo inteligente baseada em quiz - FORMATO APRIMORADO
  */
 function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): string {
+  const digestiveAnalysis = reportData.digestiveAnalysis;
+  const physicalActivity = reportData.physicalActivityAnalysis;
+  const crisisAnalysis = reportData.crisisTemporalAnalysis;
+  
+  // Calcular intensidade média da dor dos dados reais
+  const avgPain = reportData.painEvolution && reportData.painEvolution.length > 0
+    ? (reportData.painEvolution.reduce((sum, p) => sum + p.level, 0) / reportData.painEvolution.length).toFixed(1)
+    : 'N/A';
+  
   return `
-        <div class="executive-summary">
-            <h2>📋 Resumo Executivo</h2>
-            <div class="summary-text">
-                Este relatório apresenta uma análise inteligente dos seus dados de dor, sono e bem-estar,
-                utilizando processamento de linguagem natural e insights preditivos para identificar
-                padrões e tendências importantes no seu quadro de fibromialgia.
-            </div>
-            <div class="key-metrics">
-                <div class="metric-card">
-                    <div class="metric-value">${reportData.textSummaries?.combined?.totalTexts || 0}</div>
-                    <div class="metric-label">Registros Analisados</div>
+        <div class="intelligent-summary">
+            <h2>📋 Resumo Inteligente dos Questionários</h2>
+            
+            <div class="summary-section">
+                <h3>🌅 Manhãs e Noites</h3>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-header">
+                            <span class="metric-title">Intensidade média da Dor:</span>
+                        </div>
+                        <div class="metric-value-large">${avgPain}/10 😌</div>
+                        <div class="metric-subtitle">└ Intensidade média ao final do dia</div>
+                    </div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value">${reportData.painEvolution?.length || 0}</div>
-                    <div class="metric-label">Dias de Dados</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">${reportData.nlpInsights?.urgencyAnalysis?.averageUrgency?.toFixed(1) || 'N/A'}</div>
-                    <div class="metric-label">Urgência Média</div>
-                </div>
+                
+                ${generateDigestiveHealthSection(digestiveAnalysis)}
+                
+                ${generatePhysicalActivitySection(physicalActivity)}
+                
+                ${generateCrisisAnalysisSection(reportData)}
+                
+                ${crisisAnalysis?.insights.length > 0 
+                  ? generateCrisisTemporalSection(crisisAnalysis) 
+                  : ''
+                }
             </div>
         </div>`;
+}
+
+/**
+ * 🆕 Gera seção de saúde digestiva no formato do relatório analisado
+ */
+function generateDigestiveHealthSection(digestiveAnalysis: any): string {
+  if (!digestiveAnalysis) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🏥 Saúde Digestiva:</div>
+                    <div class="metric-status">📊 Ainda coletando dados de evacuação</div>
+                    <div class="metric-subtitle">└ Continue respondendo os questionários noturnos</div>
+                </div>
+            </div>`;
+  }
+
+  const statusEmoji = {
+    'normal': '✅',
+    'mild_constipation': '⚠️',
+    'moderate_constipation': '❗',
+    'severe_constipation': '🚨'
+  };
+
+  const statusText = {
+    'normal': 'Normal',
+    'mild_constipation': 'Constipação leve',
+    'moderate_constipation': 'Atenção Necessária ❗',
+    'severe_constipation': 'Constipação severa'
+  };
+
+  return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🏥 Saúde Digestiva:</div>
+                    <div class="metric-status">${statusText[digestiveAnalysis.status]} ${statusEmoji[digestiveAnalysis.status]}</div>
+                    <div class="metric-subtitle">
+                        ${digestiveAnalysis.status !== 'normal' 
+                          ? `Constipação moderada. Maior intervalo: ${digestiveAnalysis.maxInterval} dias, média: ${digestiveAnalysis.averageInterval} dia(s). Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement} dia(s)`
+                          : 'Padrão intestinal dentro da normalidade'
+                        }
+                    </div>
+                    
+                    ${digestiveAnalysis.status !== 'normal' ? `
+                    <div class="analysis-details">
+                        <strong>📊 Análise de Intervalos:</strong><br>
+                        • Maior intervalo: ${digestiveAnalysis.maxInterval} dia(s)<br>
+                        • Intervalo médio: ${digestiveAnalysis.averageInterval} dia(s)<br>
+                        • Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement} dia(s)<br>
+                        • Frequência: ${digestiveAnalysis.frequency}% dos dias
+                    </div>
+                    
+                    <div class="recommendation">
+                        <strong>💡 Recomendação:</strong><br>
+                        ${digestiveAnalysis.recommendation}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>`;
+}
+
+/**
+ * 🆕 Gera seção de atividades físicas no formato do relatório analisado
+ */
+function generatePhysicalActivitySection(physicalActivity: any): string {
+  if (!physicalActivity) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🏃 Atividades Físicas:</div>
+                    <div class="metric-status">📊 Ainda coletando dados de atividades</div>
+                    <div class="metric-subtitle">└ Continue respondendo os questionários noturnos (Pergunta 6)</div>
+                </div>
+            </div>`;
+  }
+
+  const activityLevelEmoji = {
+    'sedentário': '🔴',
+    'levemente_ativo': '🟡',
+    'moderadamente_ativo': '🟢',
+    'muito_ativo': '🔵'
+  };
+
+  const activitiesList = physicalActivity.activityBreakdown
+    .map((activity: any) => `🏃 ${activity.activity} (${activity.days} dias)`)
+    .join(' • ');
+
+  return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🏃 Atividades Físicas:</div>
+                    <div class="activity-list">${activitiesList}</div>
+                    <div class="metric-subtitle">└ Você se manteve ativo em ${physicalActivity.activeDays} de ${physicalActivity.totalDays} dias (${physicalActivity.activePercentage}%)</div>
+                    
+                    <div class="analysis-details">
+                        <strong>🧠 Análise de Atividades:</strong><br>
+                        • Total de atividades registradas: ${physicalActivity.activityBreakdown.reduce((sum: number, a: any) => sum + a.days, 0)} registros<br>
+                        ${physicalActivity.activityBreakdown.slice(0, 3).map((activity: any) => 
+                          `• ${activity.activity}: ${activity.days} dia(s) - ${activity.percentage}% dos dias ativos`
+                        ).join('<br>')}<br>
+                        • Nível de atividade: ${physicalActivity.activityLevel} ${activityLevelEmoji[physicalActivity.activityLevel]}
+                    </div>
+                    
+                    <div class="recommendation">
+                        <strong>💡 Recomendação:</strong><br>
+                        ${physicalActivity.recommendation}
+                    </div>
+                </div>
+            </div>`;
+}
+
+/**
+ * 🆕 Gera seção de análise de crises no formato do relatório analisado
+ */
+function generateCrisisAnalysisSection(reportData: EnhancedReportData): string {
+  const crises = reportData.painEvolution?.filter(p => p.level >= 7) || [];
+  const totalDays = reportData.painEvolution?.length || 0;
+  
+  if (crises.length === 0) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🚨 Episódios de Crise</div>
+                    <div class="metric-status">✅ Nenhuma crise registrada no período</div>
+                    <div class="metric-subtitle">└ Continue monitorando para detecção precoce</div>
+                </div>
+            </div>`;
+  }
+
+  const avgPainInCrises = crises.length > 0
+    ? (crises.reduce((sum, c) => sum + c.level, 0) / crises.length).toFixed(1)
+    : '0';
+
+  const avgInterval = totalDays > 0 && crises.length > 1
+    ? (totalDays / crises.length).toFixed(1)
+    : totalDays.toString();
+
+  // Contar locais de dor (simulado baseado em dados típicos)
+  const painLocations = reportData.painPoints?.slice(0, 3) || [];
+
+  return `
+            <div class="crisis-section">
+                <h3>🚨 Episódios de Crise</h3>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Frequência:</div>
+                        <div class="metric-value">${crises.length} crises em ${totalDays} dias</div>
+                        <div class="metric-subtitle">└ Média de 1 crise a cada ${avgInterval} dias</div>
+                    </div>
+                </div>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Intensidade Média:</div>
+                        <div class="metric-value-large">${avgPainInCrises}/10 😖</div>
+                        <div class="metric-subtitle">└ Classificação: "Dor intensa"</div>
+                    </div>
+                </div>
+                
+                ${painLocations.length > 0 ? `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Locais Mais Afetados:</div>
+                        <div class="pain-locations">
+                            ${painLocations.map((location: any) => `🎯 ${location.local} (${location.occurrences} vezes)`).join(' • ')}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            </div>`;
+}
+
+/**
+ * 🆕 Gera seção de análise temporal de crises
+ */
+function generateCrisisTemporalSection(crisisAnalysis: any): string {
+  const highestRiskPeriod = crisisAnalysis.riskPeriods[0];
+  
+  return `
+            <div class="temporal-analysis">
+                <h3>⏰ Padrões Temporais</h3>
+                
+                <div class="analysis-details">
+                    <strong>Horários de Maior Risco:</strong><br>
+                    🕐 ${highestRiskPeriod.period} (${highestRiskPeriod.percentage}% das crises)
+                    
+                    ${crisisAnalysis.peakHours.length > 0 ? `<br><br>
+                    <strong>Horários específicos:</strong> ${crisisAnalysis.peakHours.join(', ')}
+                    ` : ''}
+                    
+                    ${crisisAnalysis.insights.length > 0 ? `<br><br>
+                    <strong>💡 Insight:</strong> ${crisisAnalysis.insights[0]}
+                    ` : ''}
+                </div>
+            </div>`;
 }
 
 /**

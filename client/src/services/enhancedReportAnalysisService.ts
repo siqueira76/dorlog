@@ -117,6 +117,37 @@ export interface EnhancedReportData extends ReportData {
       timelineInsights?: any;
     };
   };
+  // 🆕 NOVAS PROPRIEDADES: Análises específicas implementadas
+  digestiveAnalysis?: {
+    maxInterval: number;
+    averageInterval: number;
+    daysSinceLastBowelMovement: number;
+    frequency: number;
+    totalDays: number;
+    bowelMovementDays: number;
+    status: 'normal' | 'mild_constipation' | 'moderate_constipation' | 'severe_constipation';
+    recommendation: string;
+    analysis: {
+      intervals: number[];
+      evacuationDates: string[];
+      totalAnalyzedDays: number;
+    };
+  };
+  crisisTemporalAnalysis?: {
+    hourlyDistribution: Array<{ hour: number; count: number; percentage: number }>;
+    peakHours: string[];
+    riskPeriods: Array<{ period: string; riskLevel: 'low' | 'medium' | 'high'; count: number; percentage: number }>;
+    insights: string[];
+  };
+  physicalActivityAnalysis?: {
+    totalDays: number;
+    activeDays: number;
+    activePercentage: number;
+    activityBreakdown: Array<{ activity: string; days: number; percentage: number }>;
+    activityLevel: 'sedentário' | 'levemente_ativo' | 'moderadamente_ativo' | 'muito_ativo';
+    recommendation: string;
+    weeklyAverage: number;
+  };
 }
 
 /**
@@ -172,8 +203,24 @@ export class EnhancedReportAnalysisService {
       
       console.timeEnd('⚡ Parallel Pattern Analysis');
       console.log('✅ Análises paralelas de padrões concluídas');
+
+      // 🆕 NOVAS ANÁLISES: Integrar análises específicas implementadas
+      console.log('🔄 Executando novas análises específicas...');
+      console.time('⚡ Specific Analysis');
       
-      // 4. Geração de sumário inteligente (atualizado para sono-dor)
+      // 4.1 Análise digestiva detalhada
+      enhanced.digestiveAnalysis = this.analyzeDigestiveIntervals(enhanced);
+      
+      // 4.2 Análise temporal de crises
+      enhanced.crisisTemporalAnalysis = this.analyzeCrisisTemporalPatterns(enhanced);
+      
+      // 4.3 Análise de padrões de atividade física
+      enhanced.physicalActivityAnalysis = this.analyzePhysicalActivityPatterns(enhanced);
+      
+      console.timeEnd('⚡ Specific Analysis');
+      console.log('✅ Novas análises específicas concluídas');
+      
+      // 5. Geração de sumário inteligente (atualizado para sono-dor)
       console.log('💡 Gerando sumário inteligente...');
       enhanced.smartSummary = this.generateSleepPainSummary(
         enhanced.sleepPainInsights,
