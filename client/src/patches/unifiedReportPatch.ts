@@ -80,14 +80,19 @@ export const patchApiCallsUnified = () => {
   console.log('✅ Patch unificado aplicado com sucesso');
 };
 
+// Mover import.meta.env para escopo de módulo para evitar erros ESM
+const FIREBASE_CONFIG = {
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY
+};
+
 /**
  * Check if unified report service is ready with enhanced validation
  */
 export const checkUnifiedReportReadiness = (): boolean => {
   try {
     // 1. Check Firebase configuration
-    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const { projectId, apiKey } = FIREBASE_CONFIG;
     const hasFirebaseConfig = Boolean(projectId && apiKey && projectId !== 'demo-project');
     
     if (!hasFirebaseConfig) {

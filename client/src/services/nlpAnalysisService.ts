@@ -46,7 +46,7 @@ function getEnvironmentConfig(envInfo: { isGitHubPages: boolean; isReplit: boole
       name: 'Replit',
       allowRemoteModels: true,  // Usar Hugging Face Hub
       allowLocalModels: false,  // Evitar problemas de filesystem
-      useBrowserCache: false,   // Cache pode causar problemas no dev
+      useBrowserCache: true,    // Habilitar cache para reduzir tempo de carregamento
       useWebGPU: false         // Compatibilidade primeiro
     };
   } else {
@@ -109,6 +109,49 @@ const nlpLog = (message: string, ...args: any[]) => {
   if (NLP_VERBOSE_LOGGING) {
     console.log(message, ...args);
   }
+};
+
+// Singleton para garantir uma única instância de NLP compartilhada
+class NLPSingleton {
+  private static instance: NLPAnalysisService | null = null;
+  private static initPromise: Promise<NLPAnalysisService> | null = null;
+
+  static async getInstance(): Promise<NLPAnalysisService> {
+    if (this.instance) return this.instance;
+    
+    if (this.initPromise) return this.initPromise;
+    
+    this.initPromise = this.createInstance();
+    this.instance = await this.initPromise;
+    this.initPromise = null;
+    
+    return this.instance;
+  }
+
+  private static async createInstance(): Promise<NLPAnalysisService> {
+    const service = new NLPAnalysisService();
+    await service.initialize();
+    return service;
+  }
+
+  static resetInstance(): void {
+    this.instance = null;
+    this.initPromise = null;
+  }
+}
+
+/**
+ * Função estática para acessar a instância singleton de NLP
+ */
+export const getNLPInstance = async (): Promise<NLPAnalysisService> => {
+  return NLPSingleton.getInstance();
+};
+
+/**
+ * Função para resetar a instância singleton (útil para testes)
+ */
+export const resetNLPInstance = (): void => {
+  NLPSingleton.resetInstance();
 };
 
 /**
@@ -611,81 +654,51 @@ export class NLPAnalysisService {
   }
 
   /**
-   * 🚀 OTIMIZAÇÃO FASE 1: Análise em LOTE de múltiplos textos
-   * Processa vários textos simultaneamente para máxima performance
+   * Processamento em paralelo de múltiplos textos (NOVO - BATCH PROCESSING)
    */
   async analyzeBatch(texts: string[]): Promise<NLPAnalysisResult[]> {
-    if (!texts || texts.length === 0) {
-      return [];
+    if (texts.length === 0) return [];
+    
+    nlpLog(`🚀 Processando ${texts.length} textos em batches...`);
+    
+    // Processar em batches de 5 textos para otimização
+    const BATCH_SIZE = 5;
+    const batches: string[][] = [];
+    
+    for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+      batches.push(texts.slice(i, i + BATCH_SIZE));
     }
+    
+    // Processar batches em paralelo
+    const batchPromises = batches.map(batch => 
+      Promise.all(batch.map(text => this.analyzeText(text)))
+    );
+    
+    const startTime = Date.now();
+    const results = await Promise.all(batchPromises);
+    const endTime = Date.now();
+    
+    const flatResults = results.flat();
+    nlpLog(`⚡ PERFORMANCE: Lote de ${texts.length} textos processado em ${endTime - startTime}ms (${Math.round((endTime - startTime) / texts.length)}ms/texto)`);
+    
+    return flatResults;
+  }
 
-    console.log(`⚡ Iniciando análise NLP em LOTE de ${texts.length} textos...`);
-    const batchStartTime = Date.now();
+  /**
+   * Garantir que modelo de sumarização esteja carregado sob demanda
+   */
+  private async ensureSummaryModel(): Promise<void> {
+    if (!this.summaryPipeline) {
+      await this.initializeSummaryModel();
+    }
+  }
 
-    try {
-      // Filtrar textos válidos
-      const validTexts = texts.filter(text => text && text.trim().length >= 3);
-      console.log(`📝 Processando ${validTexts.length} textos válidos em paralelo...`);
-
-      // Processar todos os textos em paralelo usando Promise.all
-      const results = await Promise.all(
-        validTexts.map(async (text, index) => {
-          try {
-            // Executar análises EM PARALELO por texto
-            const [sentiment, entities, summary] = await Promise.all([
-              this.analyzeSentiment(text),
-              this.extractMedicalEntities(text),
-              text.length > 100 ? this.summarizeText(text) : Promise.resolve(undefined)
-            ]);
-
-            // Análises síncronas (rápidas)
-            const urgencyLevel = this.detectUrgencyLevel(text);
-            const clinicalRelevance = this.assessClinicalRelevance(text);
-
-            // Mapear estado emocional
-            const emotions: EmotionalState[] = [{
-              primary: sentiment.label === 'POSITIVE' ? 'calmo' : 
-                      sentiment.label === 'NEGATIVE' ? 'preocupado' : 'neutro',
-              intensity: sentiment.score * 10,
-              confidence: sentiment.score
-            }];
-
-            return {
-              sentiment,
-              summary,
-              emotions,
-              entities,
-              urgencyLevel,
-              clinicalRelevance
-            };
-          } catch (error) {
-            console.error(`❌ Erro na análise do texto ${index + 1}:`, error);
-            return {
-              sentiment: { label: 'NEUTRAL' as const, score: 0.5, confidence: 'LOW' as const },
-              emotions: [{ primary: 'neutro', intensity: 5, confidence: 0.5 }],
-              entities: [],
-              urgencyLevel: 5,
-              clinicalRelevance: 5
-            };
-          }
-        })
-      );
-
-      const batchTime = Date.now() - batchStartTime;
-      console.log(`⚡ PERFORMANCE: Lote de ${texts.length} textos processado em ${batchTime}ms (${Math.round(batchTime/texts.length)}ms/texto)`);
-      
-      return results;
-      
-    } catch (error) {
-      console.error('❌ Erro na análise em lote:', error);
-      // Retornar resultados básicos para todos os textos
-      return texts.map(() => ({
-        sentiment: { label: 'NEUTRAL' as const, score: 0.5, confidence: 'LOW' as const },
-        emotions: [{ primary: 'neutro', intensity: 5, confidence: 0.5 }],
-        entities: [],
-        urgencyLevel: 5,
-        clinicalRelevance: 5
-      }));
+  /**
+   * Garantir que modelo de classificação esteja carregado sob demanda
+   */
+  private async ensureClassificationModel(): Promise<void> {
+    if (!this.classificationPipeline) {
+      await this.initializeClassificationModel();
     }
   }
 
