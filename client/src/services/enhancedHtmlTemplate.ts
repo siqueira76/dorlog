@@ -301,6 +301,16 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
 function generateDoctorsSectionStandalone(reportData: EnhancedReportData): string {
   const doctors = (reportData as any).doctors || [];
   
+  // Função para escapar HTML
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+  
   if (doctors.length === 0) {
     return `
             <div class="metric-row">
@@ -312,7 +322,14 @@ function generateDoctorsSectionStandalone(reportData: EnhancedReportData): strin
             </div>`;
   }
 
-  const specialties = Array.from(new Set(doctors.map((d: any) => d.especialidade)));
+  // Normalizar nomes de campos (nome/name, especialidade/specialty)
+  const normalizedDoctors = doctors.map((d: any) => ({
+    name: d.nome || d.name || 'Nome não informado',
+    specialty: d.especialidade || d.specialty || 'Especialidade não informada',
+    crm: d.crm || 'CRM não informado'
+  }));
+
+  const specialties = Array.from(new Set(normalizedDoctors.map((d: any) => d.specialty)));
   
   return `
             <div class="doctors-section">
@@ -322,18 +339,18 @@ function generateDoctorsSectionStandalone(reportData: EnhancedReportData): strin
                     <div class="metric-item">
                         <div class="metric-title">Resumo da Equipe:</div>
                         <div class="doctors-summary">
-                            ${doctors.length} médico(s) • ${specialties.length} especialidade(s)
+                            ${normalizedDoctors.length} médico(s) • ${specialties.length} especialidade(s)
                         </div>
                         <div class="doctors-list">
-                            ${doctors.slice(0, 4).map((doctor: any) => 
-                              `👨‍⚕️ Dr(a). ${doctor.nome} (${doctor.especialidade})`
+                            ${normalizedDoctors.slice(0, 4).map((doctor: any) => 
+                              `👨‍⚕️ Dr(a). ${escapeHtml(doctor.name)} (${escapeHtml(doctor.specialty)})`
                             ).join('<br>')}
-                            ${doctors.length > 4 ? `<br>• +${doctors.length - 4} outros médicos` : ''}
+                            ${normalizedDoctors.length > 4 ? `<br>• +${normalizedDoctors.length - 4} outros médicos` : ''}
                         </div>
                         
                         <div class="analysis-details">
                             <strong>📊 Especialidades:</strong><br>
-                            ${specialties.slice(0, 3).map(spec => `• ${spec}`).join('<br>')}
+                            ${specialties.slice(0, 3).map((spec: any) => `• ${escapeHtml(String(spec))}`).join('<br>')}
                             ${specialties.length > 3 ? `<br>• +${specialties.length - 3} outras especialidades` : ''}
                         </div>
                     </div>
@@ -348,6 +365,16 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
   const medications = (reportData as any).medications || [];
   const rescueMedications = (reportData as any).rescueMedications || [];
   
+  // Função para escapar HTML
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+  
   if (medications.length === 0 && rescueMedications.length === 0) {
     return `
             <div class="metric-row">
@@ -359,14 +386,28 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
             </div>`;
   }
 
-  const totalMedications = medications.length;
-  const totalRescueMedications = rescueMedications.length;
+  // Normalizar nomes de campos para medicamentos regulares
+  const normalizedMedications = medications.map((med: any) => ({
+    name: med.nome || med.name || 'Medicamento',
+    dosage: med.posologia || med.dosage || 'Dose não especificada',
+    frequency: med.frequencia || med.frequency || 'Não especificada'
+  }));
+
+  // Normalizar nomes de campos para medicamentos de resgate
+  const normalizedRescueMedications = rescueMedications.map((med: any) => ({
+    name: med.medication || med.nome || med.name || 'Medicamento',
+    frequency: med.frequency || med.frequencia || 0,
+    riskLevel: med.riskLevel || 'medium'
+  }));
+
+  const totalMedications = normalizedMedications.length;
+  const totalRescueMedications = normalizedRescueMedications.length;
   
   return `
             <div class="medications-section">
                 <h3>💊 Medicamentos</h3>
                 
-                ${medications.length > 0 ? `
+                ${normalizedMedications.length > 0 ? `
                 <div class="metric-row">
                     <div class="metric-item">
                         <div class="metric-title">Medicamentos Regulares:</div>
@@ -375,23 +416,23 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                         </div>
                         
                         <div class="medications-list">
-                            ${medications.slice(0, 4).map((med: any) => 
-                              `💊 ${med.nome} - ${med.posologia || 'Dose não especificada'}`
+                            ${normalizedMedications.slice(0, 4).map((med: any) => 
+                              `💊 ${escapeHtml(String(med.name || ''))} - ${escapeHtml(String(med.dosage || ''))}`
                             ).join('<br>')}
-                            ${medications.length > 4 ? `<br>• +${medications.length - 4} outros medicamentos` : ''}
+                            ${normalizedMedications.length > 4 ? `<br>• +${normalizedMedications.length - 4} outros medicamentos` : ''}
                         </div>
                         
                         <div class="analysis-details">
                             <strong>📊 Frequências:</strong><br>
-                            ${medications.slice(0, 3).map((med: any) => 
-                              `• ${med.nome}: ${med.frequencia || 'Não especificada'}`
+                            ${normalizedMedications.slice(0, 3).map((med: any) => 
+                              `• ${escapeHtml(String(med.name || ''))}: ${escapeHtml(String(med.frequency || ''))}`
                             ).join('<br>')}
                         </div>
                     </div>
                 </div>
                 ` : ''}
                 
-                ${rescueMedications.length > 0 ? `
+                ${normalizedRescueMedications.length > 0 ? `
                 <div class="metric-row">
                     <div class="metric-item">
                         <div class="metric-title">Medicamentos de Resgate:</div>
@@ -400,10 +441,10 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                         </div>
                         
                         <div class="medications-list">
-                            ${rescueMedications.slice(0, 3).map((med: any) => 
-                              `🚨 ${med.medication} (${med.frequency}x)`
+                            ${normalizedRescueMedications.slice(0, 3).map((med: any) => 
+                              `🚨 ${escapeHtml(String(med.name || ''))} (${med.frequency || 0}x)`
                             ).join('<br>')}
-                            ${rescueMedications.length > 3 ? `<br>• +${rescueMedications.length - 3} outros medicamentos de resgate` : ''}
+                            ${normalizedRescueMedications.length > 3 ? `<br>• +${normalizedRescueMedications.length - 3} outros medicamentos de resgate` : ''}
                         </div>
                     </div>
                 </div>
@@ -590,15 +631,18 @@ function generateCrisisAnalysisSection(reportData: EnhancedReportData): string {
  */
 function generateRescueMedicationsInCrisis(rescueMedications: any[]): string {
   if (!rescueMedications || rescueMedications.length === 0) {
-    return `
-                <div class="metric-row">
-                    <div class="metric-item">
-                        <div class="metric-title">💊 Medicamentos de Resgate:</div>
-                        <div class="metric-status">📊 Nenhum medicamento de resgate relatado</div>
-                        <div class="metric-subtitle">└ Continue respondendo "Tomou algum medicamento?" nos quizzes de crise</div>
-                    </div>
-                </div>`;
+    return '';
   }
+
+  // Função para escapar HTML
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
 
   // Ordenar medicamentos por frequência
   const sortedMedications = rescueMedications
@@ -630,14 +674,14 @@ function generateRescueMedicationsInCrisis(rescueMedications: any[]): string {
                         
                         ${mostUsedMed ? `
                         <div class="medication-highlight">
-                            <strong>🏆 Mais Utilizado:</strong> ${mostUsedMed.medication}<br>
-                            └ ${mostUsedMed.frequency} uso(s) • Risco ${mostUsedMed.riskLevel.toUpperCase()} ${(riskEmojis as any)[mostUsedMed.riskLevel]}
+                            <strong>🏆 Mais Utilizado:</strong> ${escapeHtml(String(mostUsedMed.medication || mostUsedMed.name || 'N/A'))}<br>
+                            └ ${mostUsedMed.frequency || 0} uso(s) • Risco ${(mostUsedMed.riskLevel || 'medium').toUpperCase()} ${(riskEmojis as any)[mostUsedMed.riskLevel || 'medium']}
                         </div>
                         ` : ''}
                         
                         <div class="medications-list">
-                            ${sortedMedications.map(med => 
-                              `💊 ${med.medication} (${med.frequency}x) ${(riskEmojis as any)[med.riskLevel]}`
+                            ${sortedMedications.map((med: any) => 
+                              `💊 ${escapeHtml(String(med.medication || med.name || 'Medicamento'))} (${med.frequency || 0}x) ${(riskEmojis as any)[med.riskLevel || 'medium']}`
                             ).join('<br>')}
                             ${rescueMedications.length > 3 ? `<br>• +${rescueMedications.length - 3} outros medicamentos` : ''}
                         </div>
