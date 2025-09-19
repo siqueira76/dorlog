@@ -243,8 +243,24 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
   return `
         <div class="enhanced-header">
             <div class="logo-enhanced">
-                <span class="brain-icon">🧠</span>
-                FibroDiário Enhanced
+                <div class="fibro-logo">
+                    <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="url(#gradient)" stroke="white" stroke-width="2"/>
+                        <path d="M30 50C30 50 40 35 50 50C60 35 70 50 70 50C70 60 60 65 50 60C40 65 30 60 30 50Z" fill="white" opacity="0.9"/>
+                        <circle cx="42" cy="45" r="3" fill="white"/>
+                        <circle cx="58" cy="45" r="3" fill="white"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#E1BEE7;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#9C27B0;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="app-name">FibroDiário</span>
+                    <span class="app-subtitle">Enhanced</span>
+                </div>
             </div>
             <div class="subtitle-enhanced">
                 Relatório Inteligente de Análise da Dor - ${periodsText}
@@ -254,8 +270,8 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
                 <div class="badge">📊 Visualizações Interativas</div>
                 <div class="badge">🤖 Insights Preditivos</div>
             </div>
-            <div style="font-size: 0.9rem; opacity: 0.8;">
-                Usuário: ${userEmail}
+            <div class="user-info">
+                📧 ${userEmail}
             </div>
         </div>`;
 }
@@ -1337,13 +1353,22 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
 function getEnhancedReportCSS(): string {
   return `
         :root {
-            --primary: #9C27B0;
-            --accent: #FBC02D;
-            --secondary: #66BB6A;
-            --success: #66BB6A;
-            --warning: #FBC02D;
+            /* FibroDiário - Cores oficiais PWA */
+            --fibro-purple: #9C27B0;
+            --fibro-yellow: #FBC02D;
+            --fibro-green: #66BB6A;
+            --fibro-purple-light: #E1BEE7;
+            --fibro-yellow-light: #FFF9C4;
+            --fibro-green-light: #C8E6C9;
+            
+            /* Mapeamento para compatibilidade */
+            --primary: var(--fibro-purple);
+            --accent: var(--fibro-yellow);
+            --secondary: var(--fibro-green);
+            --success: var(--fibro-green);
+            --warning: var(--fibro-yellow);
             --danger: #ef4444;
-            --info: #9C27B0;
+            --info: var(--fibro-purple);
             
             --sentiment-positive: #10b981;
             --sentiment-negative: #ef4444;
@@ -1419,19 +1444,34 @@ function getEnhancedReportCSS(): string {
             width: 100%;
             max-width: 64rem;
             margin: 0 auto;
-            padding: var(--space-6);
+            padding: var(--space-4);
             background: var(--background);
             min-height: 100vh;
         }
 
+        @media (min-width: 768px) {
+            .container {
+                padding: var(--space-6);
+            }
+        }
+
         .enhanced-header {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--fibro-purple) 0%, var(--fibro-green) 100%);
             color: white;
-            padding: var(--space-8);
-            margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-6)) var(--space-8);
+            padding: var(--space-6);
+            margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-6);
             text-align: center;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(156, 39, 176, 0.2);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        @media (min-width: 768px) {
+            .enhanced-header {
+                padding: var(--space-8);
+                margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-6)) var(--space-8);
+            }
         }
 
         .enhanced-header::before {
@@ -1451,23 +1491,61 @@ function getEnhancedReportCSS(): string {
         }
 
         .logo-enhanced {
-            font-size: var(--text-3xl);
-            font-weight: 700;
-            margin-bottom: var(--space-3);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: var(--space-3);
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
         }
 
-        .logo-enhanced .brain-icon {
-            font-size: var(--text-4xl);
-            animation: pulse 2s ease-in-out infinite;
+        .fibro-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: gentle-pulse 3s ease-in-out infinite;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .app-name {
+            font-size: var(--text-3xl);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: var(--space-1);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-subtitle {
+            font-size: var(--text-lg);
+            font-weight: 500;
+            opacity: 0.9;
+            line-height: 1;
+        }
+
+        .user-info {
+            font-size: var(--text-sm);
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-xl);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes gentle-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1; 
+            }
+            50% { 
+                transform: scale(1.05);
+                opacity: 0.9; 
+            }
         }
 
         .subtitle-enhanced {
@@ -1480,34 +1558,59 @@ function getEnhancedReportCSS(): string {
         .header-badges {
             display: flex;
             justify-content: center;
-            gap: var(--space-4);
+            gap: var(--space-2);
             flex-wrap: wrap;
             margin-bottom: var(--space-4);
         }
 
+        @media (min-width: 768px) {
+            .header-badges {
+                gap: var(--space-4);
+            }
+        }
+
         .badge {
             background: rgba(255, 255, 255, 0.2);
-            padding: var(--space-2) var(--space-4);
+            padding: var(--space-2) var(--space-3);
             border-radius: var(--radius-xl);
-            font-size: var(--text-sm);
+            font-size: var(--text-xs);
             font-weight: 500;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 32px; /* Touch target mínimo mobile */
+            display: flex;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .badge {
+                padding: var(--space-2) var(--space-4);
+                font-size: var(--text-sm);
+                min-height: auto;
+            }
         }
 
         .section-enhanced {
             background: var(--surface-elevated);
             border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-8);
-            margin-bottom: var(--space-8);
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s ease-in-out;
+            border-radius: 0.75rem; /* Consistente com PWA */
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 768px) {
+            .section-enhanced {
+                padding: var(--space-8);
+                margin-bottom: var(--space-8);
+            }
         }
 
         .section-enhanced:hover {
-            box-shadow: var(--shadow);
-            border-color: var(--border-elevated);
+            box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.1);
+            border-color: var(--fibro-purple-light);
+            transform: translateY(-1px);
         }
 
         .section-title-enhanced {
@@ -2344,32 +2447,92 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             font-weight: 600;
         }
 
-        /* Responsividade para seção de insights de texto */
+        /* ===== RESPONSIVIDADE MOBILE MELHORADA ===== */
+        
+        /* Header responsivo */
+        @media (max-width: 768px) {
+            .logo-enhanced {
+                flex-direction: row;
+                gap: var(--space-3);
+            }
+
+            .fibro-logo svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .app-name {
+                font-size: var(--text-2xl);
+            }
+
+            .app-subtitle {
+                font-size: var(--text-base);
+            }
+
+            .subtitle-enhanced {
+                font-size: var(--text-lg);
+                line-height: 1.3;
+            }
+
+            .badge {
+                font-size: 0.7rem;
+                padding: var(--space-1) var(--space-2);
+            }
+        }
+
+        /* Seção de insights de texto mobile */
         @media (max-width: 768px) {
             .text-insights-section {
                 margin: var(--space-4) 0;
                 padding: var(--space-4);
+                border-radius: 0.75rem;
             }
 
             .text-insights-subsection {
-                padding-left: var(--space-2);
-                border-left-width: 2px;
+                padding-left: var(--space-3);
+                border-left-width: 3px;
+                margin-bottom: var(--space-4);
             }
 
             .text-insights-subsection h4 {
                 font-size: var(--text-base);
+                font-weight: 600;
             }
 
             .insight-summary {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: var(--space-1);
-                text-align: left;
+                flex-direction: row;
+                align-items: center;
+                gap: var(--space-2);
+                font-size: var(--text-xs);
+                padding: var(--space-3);
+                min-height: 40px; /* Touch target */
             }
 
             .insight-details {
                 padding: var(--space-3);
                 font-size: var(--text-xs);
+                line-height: 1.5;
+            }
+        }
+
+        /* Cards e métricas mobile-friendly */
+        @media (max-width: 768px) {
+            .metric-row {
+                gap: var(--space-2);
+            }
+
+            .metric-item {
+                min-height: 60px; /* Touch-friendly */
+                padding: var(--space-3);
+            }
+
+            .metric-title {
+                font-size: var(--text-sm);
+                font-weight: 600;
+            }
+
+            .metric-value-large {
+                font-size: var(--text-xl);
             }
         }
 
