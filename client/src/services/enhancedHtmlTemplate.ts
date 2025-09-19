@@ -67,7 +67,19 @@ export async function* generateEnhancedReportHTMLStream(
       size: summaryHtml.length
     };
 
-    // 3. Seções Tradicionais (pode ser pesada)
+    // 3. Seção Text Insights (nova seção de insights de texto livre)
+    console.time('💬 Text Insights Section');
+    const textInsightsHtml = generateTextInsightsSection(reportData);
+    console.timeEnd('💬 Text Insights Section');
+    
+    yield {
+      id: 'text-insights',
+      content: textInsightsHtml,
+      order: 2.5,
+      size: textInsightsHtml.length
+    };
+
+    // 4. Seções Tradicionais (pode ser pesada)
     console.time('📋 Traditional Sections');
     const traditionalHtml = generateTraditionalSections(reportData);
     console.timeEnd('📋 Traditional Sections');
@@ -79,7 +91,7 @@ export async function* generateEnhancedReportHTMLStream(
         yield {
           id: `traditional-${i}`,
           content: chunks[i],
-          order: 3 + i,
+          order: 4 + i,
           size: chunks[i].length
         };
       }
@@ -87,12 +99,12 @@ export async function* generateEnhancedReportHTMLStream(
       yield {
         id: 'traditional',
         content: traditionalHtml,
-        order: 3,
+        order: 4,
         size: traditionalHtml.length
       };
     }
 
-    // 4. Seção Footer + Scripts (final)
+    // 5. Seção Footer + Scripts (final)
     console.time('🔚 Footer Section');
     const footerHtml = generateEnhancedFooter(reportId, reportData) +
                        generateHTMLDocumentEnd(reportData, withPassword, passwordHash, reportId);
@@ -210,6 +222,7 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
          generateEnhancedHeader(userEmail, periodsText, reportData) +
          `<div class="content">
             ${generateQuizIntelligentSummarySection(reportData)}
+            ${generateTextInsightsSection(reportData)}
             ${generateTraditionalSections(reportData)}
             ${generateEnhancedFooter(reportId, reportData)}
          </div>` +
@@ -293,6 +306,208 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                 ${generateMedicationsSectionStandalone(reportData)}
             </div>
         </div>`;
+}
+
+/**
+ * 💬 Gera seção dedicada aos insights de texto livre dos quizzes
+ */
+function generateTextInsightsSection(reportData: EnhancedReportData): string {
+  const textSummaries = reportData.textSummaries;
+  
+  // Se não há textSummaries, não exibir a seção
+  if (!textSummaries) {
+    return '';
+  }
+  
+  // Função para escapar HTML
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+
+  // Função para obter emoji do sentimento
+  const getSentimentEmoji = (sentiment: string) => {
+    switch (sentiment?.toLowerCase()) {
+      case 'positive': case 'positivo': return '😊';
+      case 'negative': case 'negativo': return '😔';
+      case 'neutral': case 'neutro': return '😐';
+      default: return '🤔';
+    }
+  };
+
+  // Função para formatar nível de urgência
+  const getUrgencyLabel = (level: number) => {
+    if (level >= 8) return { label: 'Crítica', emoji: '🚨', color: '#dc2626' };
+    if (level >= 6) return { label: 'Alta', emoji: '⚠️', color: '#ea580c' };
+    if (level >= 4) return { label: 'Moderada', emoji: '🔶', color: '#d97706' };
+    return { label: 'Baixa', emoji: '🟢', color: '#16a34a' };
+  };
+
+  let sectionsContent = '';
+
+  // Seção para Quiz Emergencial (Pergunta 4: "Quer descrever algo a mais?")
+  if (textSummaries.emergencial && textSummaries.emergencial.textCount > 0) {
+    const urgency = getUrgencyLabel(textSummaries.emergencial.averageUrgency || 5);
+    sectionsContent += `
+      <div class="text-insights-subsection">
+        <h4>🆘 Quiz Emergencial - Observações Livres</h4>
+        <div class="metric-row">
+          <div class="metric-item">
+            <div class="metric-header">
+              <span class="metric-title">Análise das Crises Descritas:</span>
+            </div>
+            <div class="text-insights-content">
+              <div class="insight-summary">
+                ${getSentimentEmoji(textSummaries.emergencial.averageSentiment)} 
+                <strong>Sentimento:</strong> ${textSummaries.emergencial.averageSentiment || 'Neutro'}
+              </div>
+              
+              <div class="insight-summary">
+                ${urgency.emoji} <strong>Urgência:</strong> 
+                <span style="color: ${urgency.color}; font-weight: bold;">${urgency.label}</span>
+                (${textSummaries.emergencial.averageUrgency || 5}/10)
+              </div>
+              
+              <div class="insight-summary">
+                📝 <strong>Textos analisados:</strong> ${textSummaries.emergencial.textCount}
+              </div>
+              
+              ${textSummaries.emergencial.summary ? `
+                <div class="insight-details">
+                  <strong>💡 Resumo dos relatos:</strong><br>
+                  "${escapeHtml(textSummaries.emergencial.summary)}"
+                </div>
+              ` : ''}
+              
+              ${textSummaries.emergencial.commonTriggers && textSummaries.emergencial.commonTriggers.length > 0 ? `
+                <div class="insight-details">
+                  <strong>🔍 Gatilhos comuns identificados:</strong><br>
+                  ${textSummaries.emergencial.commonTriggers.map((trigger: string) => `• ${escapeHtml(trigger)}`).join('<br>')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Seção para Quiz Noturno (Pergunta 9: "Quer descrever algo a mais?")
+  if (textSummaries.noturno && textSummaries.noturno.textCount > 0) {
+    sectionsContent += `
+      <div class="text-insights-subsection">
+        <h4>🌙 Quiz Noturno - Observações do Dia</h4>
+        <div class="metric-row">
+          <div class="metric-item">
+            <div class="metric-header">
+              <span class="metric-title">Análise das Observações Noturnas:</span>
+            </div>
+            <div class="text-insights-content">
+              <div class="insight-summary">
+                ${getSentimentEmoji(textSummaries.noturno.averageSentiment)} 
+                <strong>Sentimento:</strong> ${textSummaries.noturno.averageSentiment || 'Neutro'}
+              </div>
+              
+              <div class="insight-summary">
+                📝 <strong>Textos analisados:</strong> ${textSummaries.noturno.textCount}
+              </div>
+              
+              <div class="insight-summary">
+                📏 <strong>Tamanho médio:</strong> ${textSummaries.noturno.averageLength || 0} caracteres
+              </div>
+              
+              ${textSummaries.noturno.summary ? `
+                <div class="insight-details">
+                  <strong>💡 Resumo das observações:</strong><br>
+                  "${escapeHtml(textSummaries.noturno.summary)}"
+                </div>
+              ` : ''}
+              
+              ${textSummaries.noturno.keyPatterns && textSummaries.noturno.keyPatterns.length > 0 ? `
+                <div class="insight-details">
+                  <strong>🔍 Padrões identificados:</strong><br>
+                  ${textSummaries.noturno.keyPatterns.map((pattern: string) => `• ${escapeHtml(pattern)}`).join('<br>')}
+                </div>
+              ` : ''}
+              
+              ${textSummaries.noturno.reflectionDepth ? `
+                <div class="insight-details">
+                  <strong>🤔 Profundidade de reflexão:</strong> ${escapeHtml(textSummaries.noturno.reflectionDepth)}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Seção combinada (insights longitudinais)
+  if (textSummaries.combined && textSummaries.combined.totalTexts > 1) {
+    sectionsContent += `
+      <div class="text-insights-subsection">
+        <h4>🧠 Análise Longitudinal dos Textos</h4>
+        <div class="metric-row">
+          <div class="metric-item">
+            <div class="metric-header">
+              <span class="metric-title">Padrões Identificados ao Longo do Tempo:</span>
+            </div>
+            <div class="text-insights-content">
+              <div class="insight-summary">
+                📊 <strong>Total de textos analisados:</strong> ${textSummaries.combined.totalTexts}
+              </div>
+              
+              <div class="insight-summary">
+                📅 <strong>Período analisado:</strong> ${textSummaries.combined.totalDays} dias
+              </div>
+              
+              ${textSummaries.combined.summary ? `
+                <div class="insight-details">
+                  <strong>📈 Resumo longitudinal:</strong><br>
+                  "${escapeHtml(textSummaries.combined.summary)}"
+                </div>
+              ` : ''}
+              
+              ${textSummaries.combined.clinicalRecommendations && textSummaries.combined.clinicalRecommendations.length > 0 ? `
+                <div class="insight-details">
+                  <strong>💡 Recomendações clínicas:</strong><br>
+                  ${textSummaries.combined.clinicalRecommendations.map((rec: string) => 
+                    `• ${escapeHtml(rec)}`
+                  ).join('<br>')}
+                </div>
+              ` : ''}
+              
+              ${textSummaries.combined.timelineInsights ? `
+                <div class="insight-details">
+                  <strong>⏱️ Insights temporais:</strong> Evolução detectada ao longo do período
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Se não há nenhum conteúdo, retornar vazio
+  if (!sectionsContent) {
+    return '';
+  }
+
+  return `
+    <div class="text-insights-section">
+      <h2>💬 Insights de Texto Livre</h2>
+      <div class="section-description">
+        Análise inteligente das suas observações livres nos questionários, incluindo sentimentos, padrões e recomendações personalizadas.
+      </div>
+      
+      ${sectionsContent}
+    </div>
+  `;
 }
 
 /**
@@ -1986,6 +2201,174 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             }
 
             .sentiment-breakdown {
+                font-size: var(--text-xs);
+            }
+        }
+
+        /* ===== ESTILOS PARA SEÇÃO DE INSIGHTS DE TEXTO LIVRE ===== */
+        .text-insights-section {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-8);
+            margin: var(--space-8) 0;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .text-insights-section:hover {
+            box-shadow: var(--shadow);
+            border-color: var(--border-elevated);
+        }
+
+        .text-insights-section h2 {
+            color: var(--primary);
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .text-insights-section .section-description {
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-6);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+        }
+
+        .text-insights-subsection {
+            margin-bottom: var(--space-6);
+            border-left: 3px solid var(--gray-300);
+            padding-left: var(--space-4);
+        }
+
+        .text-insights-subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .text-insights-subsection h4 {
+            color: var(--gray-800);
+            font-size: var(--text-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .text-insights-content {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+        }
+
+        .insight-summary {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+            font-size: var(--text-sm);
+            padding: var(--space-2);
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .insight-summary:last-of-type {
+            margin-bottom: var(--space-4);
+        }
+
+        .insight-details {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+            font-size: var(--text-sm);
+            line-height: 1.6;
+        }
+
+        .insight-details:last-child {
+            margin-bottom: 0;
+        }
+
+        .insight-details strong {
+            color: var(--gray-800);
+            font-weight: 600;
+        }
+
+        .insight-details br + strong {
+            margin-top: var(--space-2);
+            display: inline-block;
+        }
+
+        /* Estilos para diferentes tipos de sentimento */
+        .sentiment-positive {
+            color: var(--sentiment-positive);
+            font-weight: 600;
+        }
+
+        .sentiment-negative {
+            color: var(--sentiment-negative);
+            font-weight: 600;
+        }
+
+        .sentiment-neutral {
+            color: var(--sentiment-neutral);
+            font-weight: 600;
+        }
+
+        /* Estilos para níveis de urgência */
+        .urgency-critical {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .urgency-high {
+            color: #ea580c;
+            font-weight: 600;
+        }
+
+        .urgency-moderate {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .urgency-low {
+            color: #16a34a;
+            font-weight: 600;
+        }
+
+        /* Responsividade para seção de insights de texto */
+        @media (max-width: 768px) {
+            .text-insights-section {
+                margin: var(--space-4) 0;
+                padding: var(--space-4);
+            }
+
+            .text-insights-subsection {
+                padding-left: var(--space-2);
+                border-left-width: 2px;
+            }
+
+            .text-insights-subsection h4 {
+                font-size: var(--text-base);
+            }
+
+            .insight-summary {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-1);
+                text-align: left;
+            }
+
+            .insight-details {
+                padding: var(--space-3);
                 font-size: var(--text-xs);
             }
         }
