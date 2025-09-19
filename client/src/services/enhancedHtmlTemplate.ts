@@ -288,9 +288,127 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                   : ''
                 }
                 
-                ${generateMedicalAnalysisSection(reportData)}
+                ${generateDoctorsSectionStandalone(reportData)}
+                
+                ${generateMedicationsSectionStandalone(reportData)}
             </div>
         </div>`;
+}
+
+/**
+ * 🆕 Gera seção independente de equipe médica
+ */
+function generateDoctorsSectionStandalone(reportData: EnhancedReportData): string {
+  const doctors = (reportData as any).doctors || [];
+  
+  if (doctors.length === 0) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🏥 Equipe Médica:</div>
+                    <div class="metric-status">📊 Nenhum médico cadastrado</div>
+                    <div class="metric-subtitle">└ Vá para "Médicos" no menu principal para cadastrar</div>
+                </div>
+            </div>`;
+  }
+
+  const specialties = Array.from(new Set(doctors.map((d: any) => d.especialidade)));
+  
+  return `
+            <div class="doctors-section">
+                <h3>🏥 Equipe Médica</h3>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Resumo da Equipe:</div>
+                        <div class="doctors-summary">
+                            ${doctors.length} médico(s) • ${specialties.length} especialidade(s)
+                        </div>
+                        <div class="doctors-list">
+                            ${doctors.slice(0, 4).map((doctor: any) => 
+                              `👨‍⚕️ Dr(a). ${doctor.nome} (${doctor.especialidade})`
+                            ).join('<br>')}
+                            ${doctors.length > 4 ? `<br>• +${doctors.length - 4} outros médicos` : ''}
+                        </div>
+                        
+                        <div class="analysis-details">
+                            <strong>📊 Especialidades:</strong><br>
+                            ${specialties.slice(0, 3).map(spec => `• ${spec}`).join('<br>')}
+                            ${specialties.length > 3 ? `<br>• +${specialties.length - 3} outras especialidades` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+}
+
+/**
+ * 🆕 Gera seção independente de medicamentos
+ */
+function generateMedicationsSectionStandalone(reportData: EnhancedReportData): string {
+  const medications = (reportData as any).medications || [];
+  const rescueMedications = (reportData as any).rescueMedications || [];
+  
+  if (medications.length === 0 && rescueMedications.length === 0) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">💊 Medicamentos:</div>
+                    <div class="metric-status">📊 Nenhum medicamento cadastrado</div>
+                    <div class="metric-subtitle">└ Vá para "Medicamentos" no menu principal para cadastrar</div>
+                </div>
+            </div>`;
+  }
+
+  const totalMedications = medications.length;
+  const totalRescueMedications = rescueMedications.length;
+  
+  return `
+            <div class="medications-section">
+                <h3>💊 Medicamentos</h3>
+                
+                ${medications.length > 0 ? `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Medicamentos Regulares:</div>
+                        <div class="medications-summary">
+                            ${totalMedications} medicamento(s) em uso regular
+                        </div>
+                        
+                        <div class="medications-list">
+                            ${medications.slice(0, 4).map((med: any) => 
+                              `💊 ${med.nome} - ${med.posologia || 'Dose não especificada'}`
+                            ).join('<br>')}
+                            ${medications.length > 4 ? `<br>• +${medications.length - 4} outros medicamentos` : ''}
+                        </div>
+                        
+                        <div class="analysis-details">
+                            <strong>📊 Frequências:</strong><br>
+                            ${medications.slice(0, 3).map((med: any) => 
+                              `• ${med.nome}: ${med.frequencia || 'Não especificada'}`
+                            ).join('<br>')}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${rescueMedications.length > 0 ? `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Medicamentos de Resgate:</div>
+                        <div class="medications-summary">
+                            ${totalRescueMedications} medicamento(s) utilizados em crises
+                        </div>
+                        
+                        <div class="medications-list">
+                            ${rescueMedications.slice(0, 3).map((med: any) => 
+                              `🚨 ${med.medication} (${med.frequency}x)`
+                            ).join('<br>')}
+                            ${rescueMedications.length > 3 ? `<br>• +${rescueMedications.length - 3} outros medicamentos de resgate` : ''}
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+            </div>`;
 }
 
 /**
@@ -408,6 +526,7 @@ function generatePhysicalActivitySection(physicalActivity: any): string {
 function generateCrisisAnalysisSection(reportData: EnhancedReportData): string {
   const crises = reportData.painEvolution?.filter(p => p.level >= 7) || [];
   const totalDays = reportData.painEvolution?.length || 0;
+  const rescueMedications = (reportData as any).rescueMedications || [];
   
   if (crises.length === 0) {
     return `
@@ -461,7 +580,76 @@ function generateCrisisAnalysisSection(reportData: EnhancedReportData): string {
                     </div>
                 </div>
                 ` : ''}
+                
+                ${generateRescueMedicationsInCrisis(rescueMedications)}
             </div>`;
+}
+
+/**
+ * 🆕 Gera seção de medicamentos de resgate utilizados durante crises
+ */
+function generateRescueMedicationsInCrisis(rescueMedications: any[]): string {
+  if (!rescueMedications || rescueMedications.length === 0) {
+    return `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">💊 Medicamentos de Resgate:</div>
+                        <div class="metric-status">📊 Nenhum medicamento de resgate relatado</div>
+                        <div class="metric-subtitle">└ Continue respondendo "Tomou algum medicamento?" nos quizzes de crise</div>
+                    </div>
+                </div>`;
+  }
+
+  // Ordenar medicamentos por frequência
+  const sortedMedications = rescueMedications
+    .sort((a, b) => b.frequency - a.frequency)
+    .slice(0, 3); // Mostrar apenas os 3 mais usados
+
+  const totalUses = rescueMedications.reduce((sum, med) => sum + med.frequency, 0);
+  const mostUsedMed = sortedMedications[0];
+  
+  // Contar medicamentos por nível de risco
+  const riskCounts = rescueMedications.reduce((acc, med) => {
+    acc[med.riskLevel] = (acc[med.riskLevel] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const riskEmojis = {
+    'low': '🟢',
+    'medium': '🟡', 
+    'high': '🔴'
+  };
+
+  return `
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">💊 Medicamentos de Resgate:</div>
+                        <div class="medications-summary">
+                            ${rescueMedications.length} medicamento(s) • ${totalUses} uso(s) total
+                        </div>
+                        
+                        ${mostUsedMed ? `
+                        <div class="medication-highlight">
+                            <strong>🏆 Mais Utilizado:</strong> ${mostUsedMed.medication}<br>
+                            └ ${mostUsedMed.frequency} uso(s) • Risco ${mostUsedMed.riskLevel.toUpperCase()} ${(riskEmojis as any)[mostUsedMed.riskLevel]}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="medications-list">
+                            ${sortedMedications.map(med => 
+                              `💊 ${med.medication} (${med.frequency}x) ${(riskEmojis as any)[med.riskLevel]}`
+                            ).join('<br>')}
+                            ${rescueMedications.length > 3 ? `<br>• +${rescueMedications.length - 3} outros medicamentos` : ''}
+                        </div>
+                        
+                        <div class="analysis-details">
+                            <strong>📊 Análise de Risco:</strong><br>
+                            ${riskCounts.low ? `🟢 Baixo: ${riskCounts.low} medicamento(s) • ` : ''}
+                            ${riskCounts.medium ? `🟡 Médio: ${riskCounts.medium} medicamento(s) • ` : ''}
+                            ${riskCounts.high ? `🔴 Alto: ${riskCounts.high} medicamento(s)` : ''}
+                        </div>
+                    </div>
+                </div>`;
 }
 
 /**
