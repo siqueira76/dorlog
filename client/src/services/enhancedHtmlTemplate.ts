@@ -55,41 +55,53 @@ export async function* generateEnhancedReportHTMLStream(
       size: headerHtml.length
     };
 
-    // 2. Seção Executive Summary (paralela)
-    console.time('📊 Summary Section');  
-    const summaryHtml = generateQuizIntelligentSummarySection(reportData);
-    console.timeEnd('📊 Summary Section');
+    // 2. Seção Executive Dashboard (destaque máximo)
+    console.time('🏆 Executive Dashboard');
+    const executiveDashboardHtml = generateExecutiveDashboard(reportData);
+    console.timeEnd('🏆 Executive Dashboard');
     
     yield {
-      id: 'summary', 
-      content: summaryHtml,
+      id: 'executive-dashboard',
+      content: executiveDashboardHtml,
       order: 2,
-      size: summaryHtml.length
+      size: executiveDashboardHtml.length
     };
 
-    // 3. Seção Text Insights (nova seção de insights de texto livre)
-    console.time('💬 Text Insights Section');
-    const textInsightsHtml = generateTextInsightsSection(reportData);
-    console.timeEnd('💬 Text Insights Section');
+    // 3. Seção AI Insights Zone (nova seção premium de IA)
+    console.time('🧠 AI Insights Zone');
+    const aiInsightsHtml = generateAIInsightsZone(reportData);
+    console.timeEnd('🧠 AI Insights Zone');
     
     yield {
-      id: 'text-insights',
-      content: textInsightsHtml,
+      id: 'ai-insights',
+      content: aiInsightsHtml,
       order: 2.5,
-      size: textInsightsHtml.length
+      size: aiInsightsHtml.length
     };
 
-    // 4. Seções Tradicionais (pode ser pesada)
-    console.time('📋 Traditional Sections');
-    const traditionalHtml = generateTraditionalSections(reportData);
-    console.timeEnd('📋 Traditional Sections');
+    // 4. Seção Data Analytics
+    console.time('📊 Data Analytics Section');
+    const dataAnalyticsHtml = generateDataAnalyticsSection(reportData);
+    console.timeEnd('📊 Data Analytics Section');
+    
+    yield {
+      id: 'data-analytics',
+      content: dataAnalyticsHtml,
+      order: 3,
+      size: dataAnalyticsHtml.length
+    };
+    
+    // 5. Seção Clinical Data
+    console.time('📋 Clinical Data Section');
+    const clinicalHtml = generateClinicalDataSection(reportData);
+    console.timeEnd('📋 Clinical Data Section');
     
     // Dividir seções grandes em chunks se necessário
-    if (traditionalHtml.length > chunkSize) {
-      const chunks = splitIntoChunks(traditionalHtml, chunkSize);
+    if (clinicalHtml.length > chunkSize) {
+      const chunks = splitIntoChunks(clinicalHtml, chunkSize);
       for (let i = 0; i < chunks.length; i++) {
         yield {
-          id: `traditional-${i}`,
+          id: `clinical-${i}`,
           content: chunks[i],
           order: 4 + i,
           size: chunks[i].length
@@ -97,10 +109,10 @@ export async function* generateEnhancedReportHTMLStream(
       }
     } else {
       yield {
-        id: 'traditional',
-        content: traditionalHtml,
+        id: 'clinical',
+        content: clinicalHtml,
         order: 4,
-        size: traditionalHtml.length
+        size: clinicalHtml.length
       };
     }
 
@@ -245,7 +257,23 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
         <div class="header-premium">
             <div class="logo-premium">
                 <div class="fibro-logo-premium">
-                    <img src="/icons/shortcut-report.png" alt="FibroDiário" width="56" height="56" class="report-icon">
+                    <div class="fibro-logo-premium-svg">
+                        <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" fill="url(#premiumGradient)" stroke="white" stroke-width="2"/>
+                            <path d="M30 50C30 50 40 35 50 50C60 35 70 50 70 50C70 60 60 65 50 60C40 65 30 60 30 50Z" fill="white" opacity="0.9"/>
+                            <circle cx="42" cy="45" r="3" fill="white"/>
+                            <circle cx="58" cy="45" r="3" fill="white"/>
+                            <circle cx="50" cy="70" r="8" fill="white" opacity="0.8"/>
+                            <text x="50" y="75" text-anchor="middle" fill="#1e3a8a" font-size="8" font-weight="bold">AI</text>
+                            <defs>
+                                <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#3730a3;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
                 </div>
                 <div class="brand-text-premium">
                     <span class="app-name-premium">FibroDiário</span>
@@ -329,7 +357,19 @@ function generateAIInsightsZone(reportData: EnhancedReportData): string {
         <div class="ai-insights-zone">
             <div class="ai-header">
                 <div class="ai-icon-header">
-                    <img src="/icons/shortcut-pain.png" alt="AI Analysis" width="32" height="32" class="ai-icon">
+                    <div class="ai-icon-svg">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="url(#aiIconGradient)" stroke="white" stroke-width="1"/>
+                            <path d="M12 6v6l4 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="2" fill="white"/>
+                            <defs>
+                                <linearGradient id="aiIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
                     <h2 class="title-ai-insights">🤖 Zona de Insights de Inteligência Artificial</h2>
                 </div>
                 <div class="ai-subtitle">Análise avançada com processamento de linguagem natural</div>
@@ -702,13 +742,21 @@ function generateTextInsightsSection(reportData: EnhancedReportData): string {
   }
 
   return `
-    <div class="text-insights-section">
-      <h2>💬 Insights de Texto Livre</h2>
-      <div class="section-description">
-        Análise inteligente das suas observações livres nos questionários, incluindo sentimentos, padrões e recomendações personalizadas.
+    <div class="text-insights-premium-card">
+      <div class="text-insights-header">
+        <h4 class="insights-card-title">💬 Análise de Texto Livre com NLP</h4>
+        <div class="insights-subtitle">Processamento de linguagem natural dos seus relatos</div>
       </div>
       
-      ${sectionsContent}
+      <div class="nlp-process-indicator">
+        <div class="process-step active">📝 Textos Coletados</div>
+        <div class="process-step active">🧠 Análise IA</div>
+        <div class="process-step active">📊 Insights Gerados</div>
+      </div>
+      
+      <div class="text-insights-content-premium">
+        ${sectionsContent}
+      </div>
     </div>
   `;
 }
@@ -1695,11 +1743,14 @@ function getEnhancedReportCSS(): string {
             filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4));
         }
         
-        .report-icon {
+        .fibro-logo-premium-svg {
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.2);
             padding: 8px;
             backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .brand-text-premium {
@@ -2524,40 +2575,62 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             }
         }
 
-        /* ===== ESTILOS PARA SEÇÃO DE INSIGHTS DE TEXTO LIVRE ===== */
-        .text-insights-section {
-            background: var(--surface-elevated);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-8);
-            margin: var(--space-8) 0;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.2s ease-in-out;
+        /* ===== ESTILOS PREMIUM PARA INSIGHTS DE TEXTO ===== */
+        .text-insights-premium-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #7c3aed;
+            border-radius: 1rem;
+            padding: var(--space-6);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
         }
-
-        .text-insights-section:hover {
-            box-shadow: var(--shadow);
-            border-color: var(--border-elevated);
-        }
-
-        .text-insights-section h2 {
-            color: var(--primary);
-            font-size: var(--text-2xl);
-            font-weight: 700;
-            margin-bottom: var(--space-4);
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-        }
-
-        .text-insights-section .section-description {
-            color: var(--text-muted);
-            font-size: var(--text-sm);
+        
+        .text-insights-header {
+            text-align: center;
             margin-bottom: var(--space-6);
+        }
+        
+        .insights-card-title {
+            font-size: var(--text-lg);
+            font-weight: 700;
+            color: #6b46c1;
+            margin-bottom: var(--space-2);
+        }
+        
+        .insights-subtitle {
+            font-size: var(--text-sm);
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        
+        .nlp-process-indicator {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+            flex-wrap: wrap;
+        }
+        
+        .process-step {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid #7c3aed;
+            border-radius: 1rem;
+            padding: var(--space-2) var(--space-4);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: #6b46c1;
+        }
+        
+        .process-step.active {
+            background: linear-gradient(45deg, #7c3aed, #8b5cf6);
+            color: white;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+        
+        .text-insights-content-premium {
+            background: rgba(124, 58, 237, 0.05);
+            border-radius: 0.75rem;
             padding: var(--space-4);
-            background: var(--gray-50);
-            border-radius: var(--radius);
-            border-left: 4px solid var(--primary);
         }
 
         .text-insights-subsection {
@@ -2842,10 +2915,13 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             margin-bottom: var(--space-4);
         }
         
-        .ai-icon {
+        .ai-icon-svg {
             border-radius: 50%;
             background: rgba(79, 70, 229, 0.2);
             padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .title-ai-insights {
@@ -3047,10 +3123,165 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* Seção de insights de texto mobile */
         @media (max-width: 768px) {
-            .text-insights-section {
+            .text-insights-premium-card {
                 margin: var(--space-4) 0;
                 padding: var(--space-4);
+            }
+            
+            .nlp-process-indicator {
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+            
+            /* Responsividade mobile para componentes premium */
+            .executive-dashboard {
+                padding: var(--space-4);
+                margin-bottom: var(--space-6);
+            }
+            
+            .title-executive {
+                font-size: 1.875rem;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .ai-insights-zone {
+                padding: var(--space-4);
+                margin-bottom: var(--space-6);
+            }
+            
+            .title-ai-insights {
+                font-size: 1.5rem;
+            }
+            
+            .ai-content-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .header-premium {
+                padding: var(--space-6);
+            }
+            
+            .app-name-premium {
+                font-size: var(--text-3xl);
+            }
+            
+            .subtitle-premium {
+                font-size: var(--text-lg);
+            }
+            
+            .header-badges-premium {
+                flex-direction: column;
+                gap: var(--space-2);
+            }
+            
+            /* Responsividade específica para componentes premium */
+            .confidence-progress {
+                height: 6px;
+            }
+            
+            .ai-confidence-bar {
+                padding: var(--space-3);
+            }
+            
+            .confidence-label {
+                font-size: var(--text-xs);
+            }
+            
+            .process-step {
+                padding: var(--space-1) var(--space-3);
+                font-size: 10px;
+            }
+            
+            .kpi-card {
+                padding: var(--space-4);
+            }
+            
+            .kpi-value {
+                font-size: 2rem;
+            }
+            
+            .kpi-icon {
+                font-size: 1.5rem;
+            }
+            
+            .executive-alert {
+                padding: var(--space-3);
+                gap: var(--space-3);
+            }
+            
+            .alert-icon {
+                font-size: 1.2rem;
+            }
+            
+            .data-analytics-section, .clinical-data-section {
+                padding: var(--space-4);
+                margin-bottom: var(--space-4);
+            }
+            
+            .insights-card-title {
+                font-size: var(--text-base);
+            }
+            
+            .insight-item, .correlation-item {
+                padding: var(--space-2);
+                margin-bottom: var(--space-2);
+            }
+        }
+        
+        /* Responsividade para telas muito pequenas */
+        @media (max-width: 375px) {
+            .executive-dashboard {
+                padding: var(--space-3);
                 border-radius: 0.75rem;
+            }
+            
+            .ai-insights-zone {
+                padding: var(--space-3);
+                border-radius: 0.75rem;
+            }
+            
+            .kpi-grid {
+                gap: var(--space-3);
+            }
+            
+            .title-executive {
+                font-size: 1.5rem;
+            }
+            
+            .title-ai-insights {
+                font-size: 1.25rem;
+            }
+            
+            .nlp-process-indicator {
+                gap: var(--space-1);
+            }
+            
+            .process-step {
+                padding: var(--space-1) var(--space-2);
+                font-size: 9px;
+            }
+            
+            .header-premium {
+                padding: var(--space-4);
+                border-radius: 0;
+            }
+            
+            .fibro-logo-premium-svg svg {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .app-name-premium {
+                font-size: var(--text-2xl);
+            }
+            
+            .subtitle-premium {
+                font-size: var(--text-base);
             }
 
             .text-insights-subsection {
