@@ -258,57 +258,14 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
             <div class="logo-premium">
                 <div class="fibro-logo-premium">
                     <div class="fibro-logo-premium-svg">
-                        <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Flor amarela (elemento distintivo) -->
-                            <circle cx="50" cy="20" r="8" fill="#F6E05E" stroke="#E69E00" stroke-width="1"/>
-                            <circle cx="42" cy="25" r="3" fill="#FFD700"/>
-                            <circle cx="58" cy="25" r="3" fill="#FFD700"/>
-                            <circle cx="50" cy="32" r="3" fill="#FFD700"/>
-                            <circle cx="50" cy="18" r="3" fill="#FFD700"/>
-                            <circle cx="46" cy="18" r="2" fill="#FFA500"/>
-                            <circle cx="54" cy="18" r="2" fill="#FFA500"/>
-                            
-                            <!-- Corpo da borboleta -->
-                            <ellipse cx="50" cy="50" rx="2.5" ry="25" fill="#4A5568" stroke="#2D3748" stroke-width="0.5"/>
-                            <circle cx="50" cy="35" r="1.5" fill="#2D3748"/>
-                            
-                            <!-- Asas superiores esquerda e direita -->
-                            <ellipse cx="35" cy="42" rx="14" ry="10" fill="url(#butterflyGradient)" stroke="#7C2D92" stroke-width="1"/>
-                            <ellipse cx="65" cy="42" rx="14" ry="10" fill="url(#butterflyGradient)" stroke="#7C2D92" stroke-width="1"/>
-                            
-                            <!-- Asas inferiores esquerda e direita -->
-                            <ellipse cx="37" cy="58" rx="11" ry="8" fill="url(#butterflyGradientLight)" stroke="#B794F6" stroke-width="1"/>
-                            <ellipse cx="63" cy="58" rx="11" ry="8" fill="url(#butterflyGradientLight)" stroke="#B794F6" stroke-width="1"/>
-                            
-                            <!-- Detalhes decorativos nas asas -->
-                            <circle cx="32" cy="40" r="2" fill="#E9D8FD" opacity="0.8"/>
-                            <circle cx="38" cy="45" r="1.5" fill="#E9D8FD" opacity="0.8"/>
-                            <circle cx="68" cy="40" r="2" fill="#E9D8FD" opacity="0.8"/>
-                            <circle cx="62" cy="45" r="1.5" fill="#E9D8FD" opacity="0.8"/>
-                            
-                            <!-- Antenas -->
-                            <line x1="48" y1="35" x2="45" y2="30" stroke="#4A5568" stroke-width="1" stroke-linecap="round"/>
-                            <line x1="52" y1="35" x2="55" y2="30" stroke="#4A5568" stroke-width="1" stroke-linecap="round"/>
-                            <circle cx="45" cy="30" r="1" fill="#9C27B0"/>
-                            <circle cx="55" cy="30" r="1" fill="#9C27B0"/>
-                            
-                            <!-- Badge "AI" discreto -->
-                            <circle cx="75" cy="25" r="10" fill="rgba(156, 39, 176, 0.9)" stroke="white" stroke-width="1"/>
-                            <text x="75" y="29" text-anchor="middle" fill="white" font-size="8" font-weight="bold">AI</text>
-                            
-                            <defs>
-                                <linearGradient id="butterflyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#9C27B0;stop-opacity:1" />
-                                    <stop offset="60%" style="stop-color:#7C2D92;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#5A1A6B;stop-opacity:1" />
-                                </linearGradient>
-                                <linearGradient id="butterflyGradientLight" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#B794F6;stop-opacity:1" />
-                                    <stop offset="50%" style="stop-color:#9C27B0;stop-opacity:0.8" />
-                                    <stop offset="100%" style="stop-color:#7C2D92;stop-opacity:0.6" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
+                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAKMElEQVR4nO2ce3CT1RrAfyWE0KKhrbSlbW7aJm3SXkLfafqCAtpi7wuxUqA8pEqhQhFBHB3GHXQcBcdRxzujOA6Po4Nlli2KgoJFhApCZ3xQC2JRsagtU9qmbbom5+4fCRJI3iRN0hfc/WZ+M2Tnnfd753znfOec731DgP9yOkl4WrG/lsHhvBfW79+Sx2FUP5d8+h2pXd3vUCX55K3yLk7jivpTH13A+bJ3uP/sJOHq4tMOOBzOPMnBfacHfPdOGde8bMu3P/PN7+5Jb9++eCO7fXzCqS0d3TcfZL6S7H/bGjblxh8u9XTb+JGJg0dS26oDuT3eHqFAWqfyHyM8H9IDAMgwzM0PjzjVLOK8/nPWtm3vGD6I8MBRBr6k6qb2PuTFkz5cPaKU4WrFbqwY3X+1NX7s29aVl+UNWxaZYITjR2D7s3/9fHh7dZ1fSs1cPIkX2jjM7PHQJ+3tKqPuOcEArmTyzGtrFkyNJi+O4r2T6o7u3LdJCNl5OMDL/ZlvnAaOHT68kPelBpM4nfm6eO5fY8BKJqfN37HmYV9yuQS+QWp/4+s7V+b9+9T2Dc96K97dLhO9cO/CQj+QOrBwjbwGjB94Y8+Q8ZtXrKm4F2a4jKDtobJ1H8+9oNjfY2O7Tv/HlJZVLLqQd4eHxKn9SyLGpGz/8dG68ks/4S8VvBh7oXmvBz0Vn/VNwI+ZebcXzJj9r9oLIZeLJi7vPn9x6d4Ptt5qxpDz7SdKj6kbMOT03qSjK8NyfcIjOw9v8EjB8P2f7RqjvVBnz/0LJCTTmjh4dNXvBtTPvK1tzqbYHGt8zWMHhDK9w9DLgJr9j0vP/ELc3XL9zNd5OhGv8h/X2nPYE2v4TUaLDc2Jcz/TnlQ3YMrRdS9cvWQwmOz4V3dFTQCw5p8vWbOxN9aAKdXNMx1j/jOl7kKtXZ9I9k1dfWR18jP1TmW5/HfmDWhJ1ZbLxzrvGhczKfKBM6Kgd6x4/Q3rwfkh9YZB+p+zf9C4gq1oCt87pGnqR5azF4yaFjS5Fj3lQCEqz41bY6kWvJ1Zo1O0QlDfQZELLR+bBAjPY+w5FQn6bj3lOPdV/H/mjG9bOqW6vE2rPqmD5vU8VGlr/ZvSLn3PBXOx4+3m7nfvDIy6mJO2ckRIxOlfJoJahjGkr7/OVWRR1IKEyF8MUXm4Gqd63hJQ2zI7zMgF47ZOKi2ctMLb5I/bbvPAYWPaOd8T51v7L7wEi57wE0o6m5MHj+5pQRW8ObKK4m8ixybhRg2pWze6sXFOW9yNIjNAaTp4POXCvh0zp57YfbpNqlAGSuWvqnJGEr2rrZGOAz7j0x7J7D1rwQN7jbkTHGcE5Mqa77+bLLvPbtSdaPrH1hNGOc5IgY+4o+nQvGzNcT/WgNYJgzB7yzKkr7/RRPM/M8I8CIqrfDRhk8SQEhp5qMcZL/6vxS3hKbsZSN/9dYg3NlYPq1/2WE3btfOO8+fPDe8+ctzU+cVOAz1qj3O8Mbbc2DjdmxQeEqMSqL3k+qOdO9vnlAP7s/LJkZaK/5Pq9qPKyvN2Ke7sEiKfbqJdK8AjztiV7ZqSFgqLqm5Kv1B8+FjBJqhZIeWf2B9eTv9h+/Hl3zWaGKccVz5etOmpP7/Lf3VZxfmGlHPHpWuKPyAe6/lQrg5fJw9Mj4+MMHIQ17xrG7c78pmlA3XYA8ZbKpJyKgqGLLWOyNZULdG9eGvWmTa2uOp7k+Msi9X1D5Qfrt9rDGfKgOK1P19e+rnqTYuR9hZPg+TL7zstRj7FXbKsU2ptHTyyrOb0e/Wm0c8r39ceLZeH9JQBHqVMSRs8usbR+tC3rDr7rkTqVJZJncrKj13kPh7Q7FuW4eY8MlLdgInyqUm23QhLOA6qG3B/w7dbnzvzHaGrF5PvEOPc7yt7hZUaQmhYuR4Wqb9zzOhFV1t/RzP2pBPUEbNz8rTZN9Y/W/W68fzJvUON3Zu/qIFZj1zYJa5U1AyvOxePDJo2vvbYjFu7Dt7+1lMGXGqJo85YhfnOHMdOKQyTKd5c9sVb4/dPz6QfaJD8jgRO17CwSP1yRX5wKITpfKvC9f6+E8Zqrf4c6U4kPJd/UDPY49PXjqkOKnWdD6pT+ZXrrr5vFP/Wrd+8JGh5Y5eJ3ZOTx0l7rhWJ1LN1dqG0RfL5VosJZhCfrLJK3cCeZqFhQ7+ztT5+vOYVwzDMpCXc3qktjDqcBwW54LMBVIz8tqHr4E/jyh+3VUtKOr64vOFCR3qLOvJCaJQuV25MXbCi9pcj7iJKdaDszQkMO0vfF3XPMpZdpjbDJrAL6L6FrsVJGpF6/a6lpz+xSYikXrqnRCpV9YTPKJZKpXe7U9FuUKsKO7VDFBUr+wLN/82qGrB8xM6VhQZWKWQzfpnKGpH4mKFjjT1HY37CpI9n4pYJMQ/fhBm3d6G5Bvfp18E8hVzHs67t3h2fOGKGfP7Jh2esOyQS6vu+Fy+7IxFJfvhOJZJK3d1nrQWeLSMvn4+jy/M5JNOOLWj5S8x8HUKaVOqw8bN8+3q7WIXaZaTsm6VJ2nt0FT9fW5bP5Y0wfIJ5g5afvL2HfbKdEUKlbx0aV5RQWMB5b3XcJ2KSKT2fzUJZhQNSncsM6qV5uvN0K1AZUrOF7Sy6zqrW+eX0hO4xrfRpCl+bczZi+2BXAWvmM9pJNXhGJOWKoaHfP6F+bVrWGT3vZJXqnZ/t/L2XB+8FoamdQ+3BLlH3WE7Kf7/J+dGALBxGsF2R2kf1RlxK8JO2uDvKqhM8nK6+7xm2h/+k8s8YTDH2Ot3pWu/WIjkxG9yC4hPyeL4V3Fd6vpJy5J/7NeKOz2vr6Fl8/Jf68q+n7pn49EYBh89q7kNI6E/NeWx3aJH0YrW1lsB3gePe8BM85gTsV7v+cq37kh60VtJNr6D+EkbP7yocBOX0wUuKg5QjqfZGY/c+sFz9w9JNGdaHzEPyJxkqfF5aEJ/n5dHpEU+8m1lHdO5Dm7v4Bp/+OKa5jM6PHq2A+oK8q5z3aPm9ZznjUEYOFZKo6qlDWOgQTn/3hKyB99GXrmNg3iBSUC/LN55zLnArhq6x9n5B1Afs1N/8cJ3qOe7K3oaWWoEV+l8Qn+yO4BXEt3/vKQdaDhq6L6QmHLkw6zlzUZKfnG7+b2xvFW9rHZJfP9/lhZJLsZKFzNzwh8mAefSFxC0nL2TcgSPXMXfJP5/YvkJl6kvfZYPyh/f2dnSBrQJ/5/TEK6SJI7Ov6C7VddsPyh2UJH5Iz78d7Z1ooq9Xe8k9C9z6z6n1GXUb9Bre7Hy6bL6TXQdN/wGfQ+OPqKgWU/Q8AAAAASUVORK5CYII=" 
+                               alt="FibroDiário - Ícone Oficial" 
+                               width="56" 
+                               height="56" 
+                               style="border-radius: 12px; box-shadow: 0 4px 8px rgba(156, 39, 176, 0.25);"
+                        />
+                        <!-- Badge "AI" discreto sobreposto -->
+                        <div style="position: absolute; top: -2px; right: -2px; background: #9C27B0; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">AI</div>
                     </div>
                 </div>
                 <div class="brand-text-premium">
@@ -1809,10 +1766,7 @@ function getEnhancedReportCSS(): string {
         }
         
         .fibro-logo-premium-svg {
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px;
-            backdrop-filter: blur(10px);
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
