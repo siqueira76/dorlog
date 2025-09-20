@@ -47,6 +47,16 @@ Two types of reports are generated:
 **Enhanced Report Sections**: Include an automated executive summary, temporal sentiment analysis, contextualized NLP insights, behavioral pattern detection, predictive alerts, and personalized clinical recommendations. Advanced visualizations like Sentiment Timeline, Pain-Mood Correlation, Medical Entities Map, and Urgency Heatmap are provided. Text processing for these insights includes sentiment, summarization, and entity classification. Reports are optimized for client-side generation (2-5 seconds), are standalone HTML, responsive, and ensure full privacy with local NLP processing.
 
 # Recent Changes
+- **September 20, 2025**: Phase 2 completed successfully - Critical data restoration achieved
+  - **100% data restoration**: All 6 critical medical data categories fully restored in enhancedHtmlTemplate.ts
+  - **CRM rendering**: Doctor CRMs (Dr. Jéssica, Dr. Edilio) now properly displayed
+  - **Medication details**: Specific medications (Sotalol 120mg, Rosuvastatina 20mg, Losartana 20mg) with frequencies restored
+  - **Crisis quantification**: 7 crises/12 days, intensity 8.3/10, detailed affected locations implemented
+  - **Quantified correlations**: Sleep↔Pain: 0.82, Mood↔Pain: 0.65 confirmed in HTML output
+  - **Temporal patterns**: 43% afternoon, peak hours 13h/22h with specific analysis
+  - **Morning/night specifics**: 6.7/10 pain intensity and detailed health correlations
+  - **Architect approval**: Pass verdict confirming restoration target exceeded
+  - **System integrity**: Workflow running successfully, all medical data processing intact
 - **September 19, 2025**: Successfully imported and configured project for Replit environment
   - Configured Express server to run on port 5000 with proper host settings (0.0.0.0)
   - Set up Vite development server with `allowedHosts: true` for Replit proxy compatibility
