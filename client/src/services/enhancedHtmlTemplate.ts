@@ -3073,6 +3073,90 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             initializeCharts();
             initializeInteractions();
         });
+        
+        // 📱 PHASE 3: Funções Mobile App-Like
+        function initMobileAppInteractions() {
+            // Touch feedback para todos os elementos interativos
+            const interactiveElements = document.querySelectorAll('.metric-tile, .nav-pill');
+            
+            interactiveElements.forEach(element => {
+                element.addEventListener('touchstart', function(e) {
+                    this.classList.add('card-pressed');
+                }, { passive: true });
+                
+                element.addEventListener('touchend', function(e) {
+                    this.classList.remove('card-pressed');
+                    setTimeout(() => {
+                        this.classList.add('card-hover');
+                        setTimeout(() => this.classList.remove('card-hover'), 150);
+                    }, 50);
+                }, { passive: true });
+                
+                element.addEventListener('touchcancel', function(e) {
+                    this.classList.remove('card-pressed');
+                }, { passive: true });
+            });
+        }
+        
+        function initExpandableCards() {
+            const expandableCards = document.querySelectorAll('.expandable-card');
+            
+            expandableCards.forEach(card => {
+                const header = card.querySelector('.expandable-header');
+                const content = card.querySelector('.card-content');
+                
+                if (header) {
+                    header.addEventListener('click', function() {
+                        card.classList.toggle('expanded');
+                        
+                        // Animação de expand/collapse
+                        if (card.classList.contains('expanded')) {
+                            if (content) {
+                                content.style.maxHeight = content.scrollHeight + 'px';
+                            }
+                        } else {
+                            if (content) {
+                                content.style.maxHeight = '100px';
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        function initTouchFeedback() {
+            // Feedback visual para todas as interações
+            const touchElements = document.querySelectorAll('[data-interactive="true"], .metric-tile, .app-card');
+            
+            touchElements.forEach(element => {
+                element.style.webkitTapHighlightColor = 'transparent';
+                
+                element.addEventListener('mousedown', function() {
+                    this.style.transform = 'scale(0.98)';
+                });
+                
+                element.addEventListener('mouseup', function() {
+                    this.style.transform = '';
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                });
+            });
+        }
+        
+        function initNavigationPills() {
+            const pills = document.querySelectorAll('.nav-pill');
+            
+            pills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    // Remove active de todos
+                    pills.forEach(p => p.classList.remove('active'));
+                    // Adiciona active no clicado
+                    this.classList.add('active');
+                });
+            });
+        }
 
         function initializeCharts() {
             const painTrendChart = document.getElementById('painTrendChart');
@@ -3128,6 +3212,12 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         }
 
         function initializeInteractions() {
+            // 📱 PHASE 3: Interações Mobile App-Like
+            initMobileAppInteractions();
+            initExpandableCards();
+            initTouchFeedback();
+            initNavigationPills();
+            
             // Adicionar interatividade aos cards mobile app-like
             const cards = document.querySelectorAll('.app-card, .insight-card, .metric-card');
             cards.forEach(card => {
@@ -4774,134 +4864,5 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         .expandable-card.expanded .card-content {
             max-height: 1000px;
-        }
-
-        // Função para impressão otimizada
-        function printReport() {
-            window.print();
-        }
-
-        // Função para salvar como PDF (se suportado pelo navegador)
-        function saveAsPDF() {
-            if (window.html2canvas && window.jsPDF) {
-                const element = document.querySelector('.container');
-                html2canvas(element).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF();
-                    const imgWidth = 210;
-                    const pageHeight = 295;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    let heightLeft = imgHeight;
-
-                    let position = 0;
-
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-
-                    pdf.save(\`fibrodiario-report-\${new Date().toISOString().split('T')[0]}.pdf\`);
-                });
-            } else {
-                alert('Funcionalidade de PDF não disponível. Use a opção de impressão do navegador.');
-            }
-        }
-        
-        // 📱 PHASE 3: Sistema de Interações Mobile App-Like
-        document.addEventListener('DOMContentLoaded', function() {
-            initMobileAppInteractions();
-            initExpandableCards();
-            initTouchFeedback();
-            initNavigationPills();
-        });
-        
-        function initMobileAppInteractions() {
-            // Touch feedback para todos os elementos interativos
-            const interactiveElements = document.querySelectorAll('.app-card, .metric-tile, .nav-pill');
-            
-            interactiveElements.forEach(element => {
-                element.addEventListener('touchstart', function(e) {
-                    this.classList.add('card-pressed');
-                }, { passive: true });
-                
-                element.addEventListener('touchend', function(e) {
-                    this.classList.remove('card-pressed');
-                    setTimeout(() => {
-                        this.classList.add('card-hover');
-                        setTimeout(() => this.classList.remove('card-hover'), 150);
-                    }, 50);
-                }, { passive: true });
-                
-                element.addEventListener('touchcancel', function(e) {
-                    this.classList.remove('card-pressed');
-                }, { passive: true });
-            });
-        }
-        
-        function initExpandableCards() {
-            const expandableCards = document.querySelectorAll('.expandable-card');
-            
-            expandableCards.forEach(card => {
-                const header = card.querySelector('.expandable-header');
-                const content = card.querySelector('.card-content');
-                
-                if (header) {
-                    header.addEventListener('click', function() {
-                        card.classList.toggle('expanded');
-                        
-                        // Animação de expand/collapse
-                        if (card.classList.contains('expanded')) {
-                            if (content) {
-                                content.style.maxHeight = content.scrollHeight + 'px';
-                            }
-                        } else {
-                            if (content) {
-                                content.style.maxHeight = '100px';
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        
-        function initTouchFeedback() {
-            // Feedback visual para todas as interações
-            const touchElements = document.querySelectorAll('[data-interactive="true"], .metric-tile, .app-card');
-            
-            touchElements.forEach(element => {
-                element.style.webkitTapHighlightColor = 'transparent';
-                
-                element.addEventListener('mousedown', function() {
-                    this.style.transform = 'scale(0.98)';
-                });
-                
-                element.addEventListener('mouseup', function() {
-                    this.style.transform = '';
-                });
-                
-                element.addEventListener('mouseleave', function() {
-                    this.style.transform = '';
-                });
-            });
-        }
-        
-        function initNavigationPills() {
-            const pills = document.querySelectorAll('.nav-pill');
-            
-            pills.forEach(pill => {
-                pill.addEventListener('click', function() {
-                    // Remove active de todos
-                    pills.forEach(p => p.classList.remove('active'));
-                    // Adiciona active no clicado
-                    this.classList.add('active');
-                });
-            });
-        }
-
-        console.log('🦋 FibroDiário Enhanced Report inicializado com sucesso!');
+        }`;
 }
