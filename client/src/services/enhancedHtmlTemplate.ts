@@ -1889,19 +1889,98 @@ function getEnhancedReportCSS(): string {
             margin-bottom: var(--space-lg);
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--app-border-light);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
+            transform: translateY(var(--ty, 0)) scale(var(--scale, 1));
         }
         
-        .app-card:hover {
+        .app-card.card-hover,
+        .insight-card.card-hover,
+        .metric-card.card-hover {
+            --ty: -2px;
             box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
         }
         
-        .app-card:active {
-            transform: translateY(0);
-            box-shadow: var(--shadow-sm);
+        .app-card.card-pressed,
+        .insight-card.card-pressed,
+        .metric-card.card-pressed {
+            --scale: 0.98;
+            transition: transform 0.1s ease-out;
         }
+        
+        /* Unificar sistema de transform para todos os cards */
+        .insight-card,
+        .metric-card {
+            transform: translateY(var(--ty, 0)) scale(var(--scale, 1));
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Acessibilidade - reduzir movimento */
+        @media (prefers-reduced-motion: reduce) {
+            .app-card,
+            .app-header,
+            .insight-card,
+            .metric-card {
+                animation: none !important;
+                transition: none !important;
+            }
+            .app-card:nth-child(n),
+            .insight-card:nth-child(n),
+            .metric-card:nth-child(n) {
+                animation-delay: 0s !important;
+            }
+        }
+        
+        /* 🎬 Animações Mobile App-Like */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        
+        /* Aplicar animações aos cards */
+        .app-card {
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+        
+        .app-header {
+            animation: fadeInScale 0.5s ease-out backwards;
+        }
+        
+        /* Stagger animation para cards sequenciais */
+        .app-card:nth-child(1) { animation-delay: 0.1s; }
+        .app-card:nth-child(2) { animation-delay: 0.2s; }
+        .app-card:nth-child(3) { animation-delay: 0.3s; }
+        .app-card:nth-child(4) { animation-delay: 0.4s; }
+        .app-card:nth-child(5) { animation-delay: 0.5s; }
+        .app-card:nth-child(6) { animation-delay: 0.6s; }
         
         /* 📱 Header Mobile App-Like */
         .app-header {
@@ -2784,17 +2863,51 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         }
 
         function initializeInteractions() {
-            // Adicionar interatividade aos cards
-            const cards = document.querySelectorAll('.insight-card, .metric-card');
+            // Adicionar interatividade aos cards mobile app-like
+            const cards = document.querySelectorAll('.app-card, .insight-card, .metric-card');
             cards.forEach(card => {
+                let startY = 0;
+                let hasMoved = false;
+                
+                // Touch feedback para dispositivos móveis (passivo)
+                card.addEventListener('touchstart', function(e) {
+                    startY = e.touches[0].clientY;
+                    hasMoved = false;
+                    this.classList.add('card-pressed');
+                }, { passive: true });
+                
+                card.addEventListener('touchmove', function(e) {
+                    if (Math.abs(e.touches[0].clientY - startY) > 10) {
+                        hasMoved = true;
+                        this.classList.remove('card-pressed');
+                    }
+                }, { passive: true });
+                
+                card.addEventListener('touchend', function() {
+                    this.classList.remove('card-pressed');
+                }, { passive: true });
+                
+                // Hover para desktop
                 card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                    this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                    this.classList.add('card-hover');
                 });
                 
                 card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                    this.style.boxShadow = '';
+                    this.classList.remove('card-hover');
+                });
+            });
+            
+            // Scroll smooth para relatórios longos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
                 });
             });
         }
