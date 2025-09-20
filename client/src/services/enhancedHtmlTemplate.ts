@@ -366,7 +366,6 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
                     <div class="nav-pill">🧠 Insights</div>
                 </div>
                 <h1 class="hero-title">Dashboard Executivo</h1>
-                <p class="hero-subtitle">Visão geral inteligente dos seus indicadores</p>
             </div>
             
             <!-- Hero Metrics Tiles -->
@@ -411,16 +410,7 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
                     </div>
                     <div class="expand-indicator">▼</div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
-                    <div style="text-align: center;">
-                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-primary); margin-bottom: var(--space-xs);">${avgPain}/10</div>
-                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Dor Média</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-primary); margin-bottom: var(--space-xs);">${crisisCount}</div>
-                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Episódios de Crise</div>
-                    </div>
-                </div>
+                <p style="margin: 0; color: var(--app-text-secondary); font-size: var(--text-base); line-height: 1.5;">Monitoramento contínuo dos indicadores de saúde e bem-estar.</p>
             </div>
 
             <!-- CARD 2: Tratamento Expandível -->
@@ -432,16 +422,7 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
                     </div>
                     <div class="expand-indicator">▼</div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
-                    <div style="text-align: center;">
-                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-accent); margin-bottom: var(--space-xs);">${adherenceRate}%</div>
-                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Taxa de Adesão</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: var(--text-lg); font-weight: 600; color: var(--status-success); margin-bottom: var(--space-xs);">✓ Ativo</div>
-                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Sistema IA</div>
-                    </div>
-                </div>
+                <p style="margin: 0; color: var(--app-text-secondary); font-size: var(--text-base); line-height: 1.5;">Acompanhamento ativo do regime terapêutico com análise inteligente.</p>
             </div>
 
             <!-- CARD 3: Indicadores Estáveis -->
