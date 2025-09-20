@@ -3121,8 +3121,66 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             color: #6b7280;
         }
         
+        /* Scroll prevention e baseline mobile */
+        html, body {
+            overflow-x: hidden;
+        }
+        
         /* Seção de insights de texto mobile */
         @media (max-width: 768px) {
+            /* Forçar grids em 2 colunas ou menos */
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--space-3);
+            }
+            
+            .ai-content-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-4);
+            }
+            
+            .clinical-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-3);
+            }
+            
+            /* Confidence bar stacking */
+            .ai-confidence-bar {
+                padding: var(--space-4);
+                display: flex;
+                flex-wrap: wrap;
+                gap: var(--space-2);
+            }
+            
+            .confidence-label {
+                flex: 1 1 100%;
+                text-align: center;
+                margin-bottom: var(--space-2);
+            }
+            
+            .confidence-progress {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
+            
+            /* Canvas e imagens responsivas */
+            canvas, svg, img {
+                max-width: 100% !important;
+                height: auto !important;
+                width: auto !important;
+            }
+            
+            /* Cards com padding reduzido */
+            .insight-card, .correlation-card, .predictive-insights-card {
+                padding: var(--space-3);
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
             .text-insights-premium-card {
                 margin: var(--space-4) 0;
                 padding: var(--space-4);
@@ -3199,10 +3257,18 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             
             .kpi-card {
                 padding: var(--space-4);
+                min-width: 0;
             }
             
             .kpi-value {
                 font-size: 2rem;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            .kpi-label {
+                overflow-wrap: anywhere;
+                word-break: break-word;
             }
             
             .kpi-icon {
@@ -3212,6 +3278,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             .executive-alert {
                 padding: var(--space-3);
                 gap: var(--space-3);
+                min-width: 0;
             }
             
             .alert-icon {
@@ -3225,11 +3292,108 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             
             .insights-card-title {
                 font-size: var(--text-base);
+                overflow-wrap: anywhere;
+                word-break: break-word;
             }
             
             .insight-item, .correlation-item {
                 padding: var(--space-2);
                 margin-bottom: var(--space-2);
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            /* Segurança completa para todos os filhos de grids */
+            .ai-content-grid > *, .analytics-grid > *, .clinical-grid > *, .intelligent-summary > * {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            /* Cards específicos com proteção */
+            .predictive-insights-card, .correlation-card {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+        }
+        
+        /* Responsividade extrema para telas pequenas */
+        @media (max-width: 420px) {
+            /* Forçar todas as grids em coluna única */
+            .kpi-grid {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-2);
+            }
+            
+            .ai-content-grid, .analytics-grid, .clinical-grid {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-3);
+            }
+            
+            /* Segurança para prevenir overflow */
+            .ai-insights-zone, .data-analytics-section, .clinical-data-section {
+                overflow-x: hidden;
+                max-width: 100%;
+            }
+            
+            /* Redução agressiva de paddings */
+            .text-insights-premium-card {
+                padding: var(--space-3);
+                margin: var(--space-2) 0;
+                min-width: 0;
+            }
+            
+            .kpi-card {
+                padding: var(--space-3);
+                min-width: 0;
+            }
+            
+            .kpi-value {
+                font-size: 1.5rem;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            .kpi-label {
+                font-size: var(--text-xs);
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            /* Forçar proteção final contra overflow */
+            .text-insights-premium-card, .predictive-insights-card, .correlation-card {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            /* Containers com scroll protection */
+            .ai-insights-zone, .data-analytics-section, .clinical-data-section {
+                overflow-x: hidden;
+                padding: var(--space-2);
+            }
+            
+            /* Segurança para cards e grids */
+            .kpi-card, .insight-card, .correlation-card, .predictive-insights-card {
+                min-width: 0;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+            }
+            
+            /* Itens de grid com segurança contra overflow */
+            .kpi-grid > *, .ai-content-grid > *, .analytics-grid > *, .clinical-grid > * {
+                min-width: 0;
+            }
+            
+            /* Tables e listas responsivas */
+            table {
+                font-size: var(--text-xs);
+                overflow-x: auto;
+                display: block;
+                white-space: nowrap;
+                max-width: 100%;
             }
         }
         
@@ -3288,6 +3452,12 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
                 padding-left: var(--space-3);
                 border-left-width: 3px;
                 margin-bottom: var(--space-4);
+            }
+            
+            /* Padding reduzido para cards premium em 768px */
+            .text-insights-premium-card {
+                padding: var(--space-4);
+                margin: var(--space-3) 0;
             }
 
             .text-insights-subsection h4 {
