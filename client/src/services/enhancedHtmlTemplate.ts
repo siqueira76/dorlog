@@ -317,62 +317,58 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
                         treatmentStatus === 'good' ? 'Bom' : 'Melhorar';
   
   return `
-        <div class="executive-dashboard">
-            <div class="dashboard-header">
-                <h1 class="title-executive">📊 Executive Dashboard</h1>
-                <div class="dashboard-subtitle">Visão geral dos indicadores principais</div>
+        <div class="app-header">
+            <h1 style="font-size: var(--text-3xl); font-weight: 800; margin-bottom: var(--space-md); color: white;">📊 Dashboard Executivo</h1>
+            <p style="font-size: var(--text-lg); opacity: 0.9; margin-bottom: 0;">Visão geral dos indicadores principais</p>
+        </div>
+        
+        <div style="display: grid; gap: var(--space-lg); margin-top: var(--space-xl);">
+            <!-- CARD 1: Saúde Geral -->
+            <div class="app-card" style="border-left: 4px solid var(--status-${healthStatus === 'critical' ? 'error' : healthStatus === 'warning' ? 'warning' : 'success'});">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-lg);">
+                    <h3 style="font-size: var(--text-xl); font-weight: 600; color: var(--app-text); margin: 0;">⚡ Saúde Geral</h3>
+                    <span style="background: var(--status-${healthStatus === 'critical' ? 'error' : healthStatus === 'warning' ? 'warning' : 'success'}); color: white; padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500;">${healthLabel}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                    <div style="text-align: center;">
+                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-primary); margin-bottom: var(--space-xs);">${avgPain}/10</div>
+                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Dor Média</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-primary); margin-bottom: var(--space-xs);">${crisisCount}</div>
+                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Episódios de Crise</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: Tratamento -->
+            <div class="app-card" style="border-left: 4px solid var(--fibro-accent);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-lg);">
+                    <h3 style="font-size: var(--text-xl); font-weight: 600; color: var(--app-text); margin: 0;">💊 Adesão ao Tratamento</h3>
+                    <span style="background: var(--status-${treatmentStatus === 'excellent' ? 'success' : treatmentStatus === 'good' ? 'info' : 'warning'}); color: white; padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500;">${treatmentLabel}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                    <div style="text-align: center;">
+                        <div style="font-size: var(--text-2xl); font-weight: 700; color: var(--fibro-accent); margin-bottom: var(--space-xs);">${adherenceRate}%</div>
+                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Taxa de Adesão</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: var(--text-lg); font-weight: 600; color: var(--status-success); margin-bottom: var(--space-xs);">✓ Ativo</div>
+                        <div style="font-size: var(--text-sm); color: var(--app-text-secondary);">Sistema IA</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Indicadores Estáveis -->
+            <div class="app-card" style="border-left: 4px solid var(--status-success);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+                    <h3 style="font-size: var(--text-xl); font-weight: 600; color: var(--app-text); margin: 0;">✅ Indicadores Estáveis</h3>
+                    <span style="background: var(--status-success); color: white; padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 500;">Estável</span>
+                </div>
+                <p style="margin: 0; color: var(--app-text-secondary); font-size: var(--text-base); line-height: 1.5;">Continue seguindo as orientações médicas para manter o progresso.</p>
             </div>
             
-            <div class="dashboard-cards-grid">
-                <!-- CARD 1: Saúde Geral -->
-                <div class="insight-card priority-high">
-                    <div class="insight-header">
-                        <h3 class="insight-title">⚡ Saúde Geral</h3>
-                        <div class="health-indicator health-${healthStatus}">${healthLabel}</div>
-                    </div>
-                    <div class="metrics-grid">
-                        <div class="metric-item">
-                            <span class="metric-value">${avgPain}/10</span>
-                            <span class="metric-label">Dor Média</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-value">${crisisCount}</span>
-                            <span class="metric-label">Episódios de Crise</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 2: Tratamento -->
-                <div class="insight-card priority-medium">
-                    <div class="insight-header">
-                        <h3 class="insight-title">💊 Adesão ao Tratamento</h3>
-                        <div class="treatment-indicator treatment-${treatmentStatus}">${treatmentLabel}</div>
-                    </div>
-                    <div class="metrics-grid">
-                        <div class="metric-item">
-                            <span class="metric-value">${adherenceRate}%</span>
-                            <span class="metric-label">Adesão</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="metric-value">Ativo</span>
-                            <span class="metric-label">Sistema IA</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 3: Indicadores Estáveis -->
-                <div class="insight-card priority-low">
-                    <div class="insight-header">
-                        <h3 class="insight-title">✅ Indicadores estáveis</h3>
-                        <div class="status-indicator status-stable">Estável</div>
-                    </div>
-                    <p>Continue seguindo as orientações médicas</p>
-                </div>
-            </div>
-            
-            <div class="executive-alerts">
-                ${generateExecutiveAlerts(reportData)}
-            </div>
+            ${generateExecutiveAlerts(reportData)}
         </div>`;
 }
 
@@ -1755,6 +1751,179 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
  */
 function getEnhancedReportCSS(): string {
   return `
+        /* 🦋 FibroDiário Mobile App-Like Variables System */
+        :root {
+            /* Core Brand Colors */
+            --fibro-primary: #667eea;
+            --fibro-primary-light: #818cf8;
+            --fibro-primary-dark: #4f46e5;
+            --fibro-secondary: #f59e0b;
+            --fibro-accent: #10b981;
+            
+            /* Mobile App Colors */
+            --app-bg: #f8fafc;
+            --app-surface: #ffffff;
+            --app-surface-elevated: #ffffff;
+            --app-surface-secondary: #f1f5f9;
+            --app-border: #e2e8f0;
+            --app-border-light: #f1f5f9;
+            --app-text: #1e293b;
+            --app-text-secondary: #64748b;
+            --app-text-muted: #94a3b8;
+            
+            /* Status Colors */
+            --status-success: #10b981;
+            --status-warning: #f59e0b;
+            --status-error: #ef4444;
+            --status-info: #3b82f6;
+            
+            /* Mobile App Spacing (Instagram/WhatsApp-like) */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 20px;
+            --space-2xl: 24px;
+            --space-3xl: 32px;
+            --space-4xl: 48px;
+            
+            /* Typography Scale */
+            --text-xs: 12px;
+            --text-sm: 14px;
+            --text-base: 16px;
+            --text-lg: 18px;
+            --text-xl: 20px;
+            --text-2xl: 24px;
+            --text-3xl: 30px;
+            --text-4xl: 36px;
+            
+            /* Border Radius (iOS/Android-like) */
+            --radius-xs: 4px;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 20px;
+            --radius-full: 9999px;
+            
+            /* Mobile App Shadows */
+            --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            
+            /* Dark Mode Support */
+            --dark-bg: #0f172a;
+            --dark-surface: #1e293b;
+            --dark-text: #f1f5f9;
+            --dark-text-secondary: #cbd5e1;
+        }
+        
+        /* Dark Mode Implementation */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --app-bg: var(--dark-bg);
+                --app-surface: var(--dark-surface);
+                --app-text: var(--dark-text);
+                --app-text-secondary: var(--dark-text-secondary);
+                --app-border: #334155;
+            }
+        }
+        
+        /* 🚀 Mobile-First CSS Reset & Base Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--app-bg);
+            color: var(--app-text);
+            line-height: 1.6;
+            touch-action: manipulation;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .mobile-app {
+            min-height: 100vh;
+            background: var(--app-bg);
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 100%;
+            padding: var(--space-md);
+            padding-top: max(var(--space-md), env(safe-area-inset-top));
+            padding-right: max(var(--space-md), env(safe-area-inset-right));
+            padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+            padding-left: max(var(--space-md), env(safe-area-inset-left));
+            margin: 0 auto;
+            background: var(--app-bg);
+            min-height: 100vh;
+        }
+        
+        @media (min-width: 768px) {
+            .app-container {
+                max-width: 768px;
+                padding: var(--space-xl);
+            }
+        }
+        
+        /* 🎨 Mobile App-Like Card System */
+        .app-card {
+            background: var(--app-surface);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--app-border-light);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        
+        .app-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        
+        .app-card:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        /* 📱 Header Mobile App-Like */
+        .app-header {
+            background: linear-gradient(135deg, var(--fibro-primary) 0%, var(--fibro-primary-light) 100%);
+            color: white;
+            padding: var(--space-2xl);
+            padding-top: max(var(--space-2xl), calc(env(safe-area-inset-top) + var(--space-md)));
+            margin: calc(-1 * max(var(--space-md), env(safe-area-inset-top))) calc(-1 * max(var(--space-md), env(safe-area-inset-right))) var(--space-lg) calc(-1 * max(var(--space-md), env(safe-area-inset-left)));
+            border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .app-header {
+                margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-xl)) var(--space-2xl);
+                padding: var(--space-4xl);
+            }
+        }
+        
+        /* Compatibilidade com sistema existente */
         :root {
             /* FibroDiário - Cores oficiais PWA */
             --fibro-purple: #9C27B0;
