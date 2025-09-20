@@ -79,17 +79,6 @@ export async function* generateEnhancedReportHTMLStream(
       size: aiInsightsHtml.length
     };
 
-    // 4. Seção Data Analytics
-    console.time('📊 Data Analytics Section');
-    const dataAnalyticsHtml = generateDataAnalyticsSection(reportData);
-    console.timeEnd('📊 Data Analytics Section');
-    
-    yield {
-      id: 'data-analytics',
-      content: dataAnalyticsHtml,
-      order: 3,
-      size: dataAnalyticsHtml.length
-    };
 
     // 4.1. 🌅 Seção Manhãs e Noites (RESTAURADA)
     console.time('🌅 Morning Evening Section');
@@ -287,7 +276,6 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
          `<div class="content">
             ${generateExecutiveDashboard(reportData)}
             ${generateAIInsightsZone(reportData)}
-            ${generateDataAnalyticsSection(reportData)}
             ${generateMorningEveningSection(reportData)}
             ${generateDetailedCrisisEpisodesSection(reportData)}
             ${generateTemporalPatternsSection(reportData)}
@@ -330,7 +318,7 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
                 </div>
             </div>
             <div class="subtitle-premium">
-                Análise Médica Profissional com IA - ${periodsText}
+                Análise do Diário da Dor - ${periodsText}
             </div>
             <div class="header-badges-premium">
                 <div class="badge-premium ai-badge">🧠 Análise IA</div>
@@ -561,122 +549,13 @@ function generateAIInsightsZone(reportData: EnhancedReportData): string {
         </div>`;
 }
 
-/**
- * 📊 NÍVEL 3: Data Analytics - Aplicando padrão visual premium
- */
-function generateDataAnalyticsSection(reportData: EnhancedReportData): string {
-  return `
-        <div class="data-analytics-section-premium">
-            <div class="analytics-header-premium">
-                <h2 class="title-data-analytics">📊 Análise de Dados e Correlações</h2>
-                <div class="analytics-subtitle-premium">Visualizações e tendências baseadas em dados</div>
-                <div class="analytics-confidence-bar">
-                    <div class="confidence-label">Precisão dos dados: 92%</div>
-                    <div class="confidence-progress">
-                        <div class="confidence-fill" style="width: 92%"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="analytics-cards-grid">
-                <!-- CARD 1: Resumo Inteligente -->
-                <div class="insight-card analytics-summary">
-                    <div class="insight-header">
-                        <h3 class="insight-title">📊 Resumo dos Dados</h3>
-                        <div class="data-indicator data-complete">Completo</div>
-                    </div>
-                    <p>Análise abrangente dos dados coletados durante o período de monitoramento.</p>
-                </div>
-
-                <!-- CARD 2: Correlações -->
-                <div class="insight-card analytics-correlations">
-                    <div class="insight-header">
-                        <h3 class="insight-title">🔗 Correlações Detectadas</h3>
-                        <div class="correlation-indicator correlation-strong">Forte</div>
-                    </div>
-                    <div class="correlation-summary">
-                        <div class="correlation-item">• Correlação sono-dor identificada</div>
-                        <div class="correlation-item">• Padrão alimentar vs energia</div>
-                        <div class="correlation-item">• Atividade física vs bem-estar</div>
-                    </div>
-                </div>
-
-                <!-- CARD 3: Visualizações -->
-                <div class="insight-card analytics-charts">
-                    <div class="insight-header">
-                        <h3 class="insight-title">📈 Gráficos e Tendências</h3>
-                        <div class="chart-indicator chart-active">Ativo</div>
-                    </div>
-                    <p>Visualizações interativas dos dados de dor, sono e atividades ao longo do tempo.</p>
-                </div>
-
-                <!-- CARD 4: Insights dos Dados -->
-                <div class="insight-card analytics-insights">
-                    <div class="insight-header">
-                        <h3 class="insight-title">💡 Insights dos Dados</h3>
-                        <div class="insight-indicator insight-moderate">Moderado</div>
-                    </div>
-                    <p>Padrões identificados sugerem melhoria gradual com as intervenções implementadas.</p>
-                </div>
-            </div>
-        </div>`;
-}
 
 /**
- * 📋 NÍVEL 4: Clinical Data - Aplicando padrão visual premium
+ * 📋 NÍVEL 4: Clinical Data - Aplicando padrão visual premium (dados específicos apenas)
  */
 function generateClinicalDataSection(reportData: EnhancedReportData): string {
   return `
         <div class="clinical-data-section-premium">
-            <div class="clinical-header-premium">
-                <h2 class="title-clinical-data">📋 Dados Clínicos</h2>
-                <div class="clinical-subtitle-premium">Informações médicas e histórico detalhado</div>
-                <div class="clinical-confidence-bar">
-                    <div class="confidence-label">Completude dos dados: 88%</div>
-                    <div class="confidence-progress">
-                        <div class="confidence-fill" style="width: 88%"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="clinical-cards-grid">
-                <!-- CARD 1: Informações Médicas -->
-                <div class="insight-card clinical-info">
-                    <div class="insight-header">
-                        <h3 class="insight-title">👨‍⚕️ Equipe Médica</h3>
-                        <div class="medical-indicator medical-active">Ativo</div>
-                    </div>
-                    <p>Acompanhamento médico multidisciplinar para tratamento otimizado.</p>
-                </div>
-
-                <!-- CARD 2: Medicamentos -->
-                <div class="insight-card clinical-medications">
-                    <div class="insight-header">
-                        <h3 class="insight-title">💊 Medicamentos</h3>
-                        <div class="medication-indicator medication-controlled">Controlado</div>
-                    </div>
-                    <p>Regime medicamentoso monitorado para máxima eficácia e segurança.</p>
-                </div>
-
-                <!-- CARD 3: Histórico -->
-                <div class="insight-card clinical-history">
-                    <div class="insight-header">
-                        <h3 class="insight-title">📋 Histórico Clínico</h3>
-                        <div class="history-indicator history-complete">Completo</div>
-                    </div>
-                    <p>Registro abrangente da evolução clínica e intervenções realizadas.</p>
-                </div>
-
-                <!-- CARD 4: Recomendações -->
-                <div class="insight-card clinical-recommendations">
-                    <div class="insight-header">
-                        <h3 class="insight-title">🎯 Recomendações</h3>
-                        <div class="recommendation-indicator recommendation-active">Ativas</div>
-                    </div>
-                    <p>Orientações personalizadas baseadas na análise clínica integral.</p>
-                </div>
-            </div>
-            
             <!-- Dados Específicos Detalhados -->
             <div class="clinical-detailed-content">
                 ${generateDoctorsSectionStandalone(reportData)}
