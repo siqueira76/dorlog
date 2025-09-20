@@ -156,7 +156,15 @@ export class EnhancedUnifiedReportService {
     } catch (error) {
       const executionTime = `${((Date.now() - startTime) / 1000).toFixed(2)}s`;
       
-      console.error('❌ Erro na geração enhanced, tentando fallback:', error);
+      // 🔧 MELHORIA NO ERROR HANDLING: Log com mais detalhes
+      console.error('❌ Erro na geração enhanced, tentando fallback:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        stack: error instanceof Error ? error.stack : 'Stack não disponível',
+        name: error instanceof Error ? error.name : 'Erro sem nome',
+        timestamp: new Date().toISOString(),
+        context: 'enhancedReportGeneration',
+        executionTime
+      });
       
       // Fallback para relatório padrão em caso de erro
       try {

@@ -60,12 +60,23 @@ export const patchApiCallsUnified = () => {
         }
         
       } catch (error) {
-        console.error('❌ Erro no patch unificado:', error);
+        // 🔧 MELHORIA NO ERROR HANDLING: Log com mais detalhes
+        console.error('❌ Erro no patch unificado:', {
+          message: error instanceof Error ? error.message : 'Erro desconhecido',
+          stack: error instanceof Error ? error.stack : 'Stack não disponível',
+          name: error instanceof Error ? error.name : 'Erro sem nome',
+          timestamp: new Date().toISOString(),
+          context: 'unifiedReportPatch'
+        });
         
         return new Response(JSON.stringify({
           success: false,
           error: `Erro na geração do relatório: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-          environment: 'unified_client_side'
+          environment: 'unified_client_side',
+          errorDetails: {
+            name: error instanceof Error ? error.name : 'UnknownError',
+            timestamp: new Date().toISOString()
+          }
         }), {
           status: 500,
           headers: { 'Content-Type': 'application/json' }

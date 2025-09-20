@@ -387,7 +387,14 @@ function processQuizzesWithSemanticMapping(
               medicationText.includes(med) || med.includes(medicationText)
             );
             
-            if (isValidMedication) {
+            // 🚨 CORREÇÃO CRÍTICA: Tratar "nao", "não" e variações como negativa/ausência de medicamentos
+            const isNegativeAnswer = /^(nao|não|n|negativo|sem|ausente|nenhum|zero|nada|nenhuma)$/i.test(medicationText);
+            
+            if (isNegativeAnswer) {
+              console.log(`✅ Resposta negativa processada: "${answer}" (sem medicamento de resgate)`);
+              if (!reportData.observations) reportData.observations = '';
+              reportData.observations += `[${dayKey}] Sem medicamento de resgate utilizado; `;
+            } else if (isValidMedication) {
               // Armazenar dados brutos para análise posterior
               (reportData as any).rawMedicationTexts = (reportData as any).rawMedicationTexts || [];
               (reportData as any).rawMedicationTexts.push({
@@ -398,8 +405,9 @@ function processQuizzesWithSemanticMapping(
               });
               console.log(`✅ Medicamento de resgate válido: "${answer}"`);
             } else {
-              // Log medicamento suspeito/fictício
+              // 🔧 MELHORIA NO ERROR HANDLING: Log com mais detalhes
               console.warn(`⚠️ Medicamento suspeito/não reconhecido: "${answer}" - ignorando`);
+              console.warn(`🔍 DEBUG: texto processado: "${medicationText}", data: ${dayKey}, tipo: ${quiz.tipo}`);
               if (!reportData.observations) reportData.observations = '';
               reportData.observations += `[${dayKey}] Medicamento não reconhecido: ${answer}; `;
             }

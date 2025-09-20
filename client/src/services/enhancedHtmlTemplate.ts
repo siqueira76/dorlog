@@ -354,7 +354,7 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
                 
                 <div class="metric-tile tile-info">
                     <div class="tile-icon">📅</div>
-                    <div class="tile-value">${monitoredDays}<span class="tile-unit">d</span></div>
+                    <div class="tile-value">${reportData.totalDays}<span class="tile-unit">d</span></div>
                     <div class="tile-label">Dias</div>
                     <div class="tile-trend trend-stable">📊</div>
                 </div>
@@ -1006,7 +1006,7 @@ function generateQuantifiedCorrelationsSection(reportData: EnhancedReportData): 
   const correlations = [
     {
       type: 'Sono ↔ Dor',
-      value: sleepPainInsights?.correlationAnalysis?.correlationCoefficient || 0.82,
+      value: sleepPainInsights?.correlationAnalysis?.correlation || 0.82,
       significance: sleepPainInsights?.correlationAnalysis?.significance || 'HIGH',
       description: 'Forte correlação entre qualidade do sono e intensidade da dor matinal (82% significância)'
     },
@@ -1599,10 +1599,10 @@ function generateCrisisTemporalSection(crisisAnalysis: any): string {
                         
                         <div class="analysis-details">
                             <strong>📊 Horários de Pico Absoluto:</strong><br>
-                            ${peakHours.map(hour => `🔥 ${hour} - Maior concentração de crises`).join('<br>')}
+                            ${peakHours.map((hour: string) => `🔥 ${hour} - Maior concentração de crises`).join('<br>')}
                             
                             <br><br><strong>🎯 Fatores de Risco Identificados:</strong><br>
-                            ${insights.slice(0, 3).map(insight => `• ${insight}`).join('<br>')}
+                            ${insights.slice(0, 3).map((insight: string) => `• ${insight}`).join('<br>')}
                         </div>
                         
                         <div class="insights-details">
