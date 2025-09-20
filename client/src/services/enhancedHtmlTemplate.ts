@@ -973,15 +973,17 @@ function generateDoctorsSectionStandalone(reportData: EnhancedReportData): strin
                         </div>
                         <div class="doctors-list">
                             ${normalizedDoctors.slice(0, 4).map((doctor: any) => 
-                              `👨‍⚕️ Dr(a). ${escapeHtml(doctor.name)} (${escapeHtml(doctor.specialty)})`
-                            ).join('<br>')}
-                            ${normalizedDoctors.length > 4 ? `<br>• +${normalizedDoctors.length - 4} outros médicos` : ''}
+                              `👨‍⚕️ Dr(a). ${escapeHtml(doctor.name)} (${escapeHtml(doctor.specialty)})<br>   └ CRM: ${escapeHtml(doctor.crm)}`
+                            ).join('<br><br>')}
+                            ${normalizedDoctors.length > 4 ? `<br><br>• +${normalizedDoctors.length - 4} outros médicos` : ''}
                         </div>
                         
                         <div class="analysis-details">
-                            <strong>📊 Especialidades:</strong><br>
-                            ${specialties.slice(0, 3).map((spec: any) => `• ${escapeHtml(String(spec))}`).join('<br>')}
-                            ${specialties.length > 3 ? `<br>• +${specialties.length - 3} outras especialidades` : ''}
+                            <strong>📊 Equipe Detalhada:</strong><br>
+                            ${normalizedDoctors.slice(0, 3).map((doctor: any) => 
+                              `• ${escapeHtml(doctor.specialty)}: Dr(a). ${escapeHtml(doctor.name)} (CRM ${escapeHtml(doctor.crm)})`
+                            ).join('<br>')}
+                            ${normalizedDoctors.length > 3 ? `<br>• +${normalizedDoctors.length - 3} outros profissionais` : ''}
                         </div>
                     </div>
                 </div>
@@ -1047,15 +1049,15 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                         
                         <div class="medications-list">
                             ${normalizedMedications.slice(0, 4).map((med: any) => 
-                              `💊 ${escapeHtml(String(med.name || ''))} - ${escapeHtml(String(med.dosage || ''))}`
-                            ).join('<br>')}
-                            ${normalizedMedications.length > 4 ? `<br>• +${normalizedMedications.length - 4} outros medicamentos` : ''}
+                              `💊 ${escapeHtml(String(med.name || ''))} - ${escapeHtml(String(med.dosage || ''))}<br>   └ Frequência: ${escapeHtml(String(med.frequency || 'Não especificada'))}`
+                            ).join('<br><br>')}
+                            ${normalizedMedications.length > 4 ? `<br><br>• +${normalizedMedications.length - 4} outros medicamentos` : ''}
                         </div>
                         
                         <div class="analysis-details">
-                            <strong>📊 Frequências:</strong><br>
+                            <strong>📊 Detalhamento dos Medicamentos:</strong><br>
                             ${normalizedMedications.slice(0, 3).map((med: any) => 
-                              `• ${escapeHtml(String(med.name || ''))}: ${escapeHtml(String(med.frequency || ''))}`
+                              `• ${escapeHtml(String(med.name || ''))}: ${escapeHtml(String(med.dosage || 'Dosagem não especificada'))} • ${escapeHtml(String(med.frequency || 'Frequência não especificada'))}`
                             ).join('<br>')}
                         </div>
                     </div>
