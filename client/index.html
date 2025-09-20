@@ -56,8 +56,12 @@
     <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
-        // Only register service worker in production
-        if (import.meta.env && import.meta.env.MODE === 'production') {
+        // Only register service worker in production (check if we're not on localhost/replit)
+        const isProduction = !window.location.hostname.includes('localhost') && 
+                            !window.location.hostname.includes('replit') &&
+                            !window.location.hostname.includes('127.0.0.1');
+        
+        if (isProduction) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
               .then((registration) => {
