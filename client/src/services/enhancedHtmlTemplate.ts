@@ -259,17 +259,53 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
                 <div class="fibro-logo-premium">
                     <div class="fibro-logo-premium-svg">
                         <svg width="56" height="56" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="50" cy="50" r="45" fill="url(#premiumGradient)" stroke="white" stroke-width="2"/>
-                            <path d="M30 50C30 50 40 35 50 50C60 35 70 50 70 50C70 60 60 65 50 60C40 65 30 60 30 50Z" fill="white" opacity="0.9"/>
-                            <circle cx="42" cy="45" r="3" fill="white"/>
-                            <circle cx="58" cy="45" r="3" fill="white"/>
-                            <circle cx="50" cy="70" r="8" fill="white" opacity="0.8"/>
-                            <text x="50" y="75" text-anchor="middle" fill="#1e3a8a" font-size="8" font-weight="bold">AI</text>
+                            <!-- Flor amarela (elemento distintivo) -->
+                            <circle cx="50" cy="20" r="8" fill="#F6E05E" stroke="#E69E00" stroke-width="1"/>
+                            <circle cx="42" cy="25" r="3" fill="#FFD700"/>
+                            <circle cx="58" cy="25" r="3" fill="#FFD700"/>
+                            <circle cx="50" cy="32" r="3" fill="#FFD700"/>
+                            <circle cx="50" cy="18" r="3" fill="#FFD700"/>
+                            <circle cx="46" cy="18" r="2" fill="#FFA500"/>
+                            <circle cx="54" cy="18" r="2" fill="#FFA500"/>
+                            
+                            <!-- Corpo da borboleta -->
+                            <ellipse cx="50" cy="50" rx="2.5" ry="25" fill="#4A5568" stroke="#2D3748" stroke-width="0.5"/>
+                            <circle cx="50" cy="35" r="1.5" fill="#2D3748"/>
+                            
+                            <!-- Asas superiores esquerda e direita -->
+                            <ellipse cx="35" cy="42" rx="14" ry="10" fill="url(#butterflyGradient)" stroke="#7C2D92" stroke-width="1"/>
+                            <ellipse cx="65" cy="42" rx="14" ry="10" fill="url(#butterflyGradient)" stroke="#7C2D92" stroke-width="1"/>
+                            
+                            <!-- Asas inferiores esquerda e direita -->
+                            <ellipse cx="37" cy="58" rx="11" ry="8" fill="url(#butterflyGradientLight)" stroke="#B794F6" stroke-width="1"/>
+                            <ellipse cx="63" cy="58" rx="11" ry="8" fill="url(#butterflyGradientLight)" stroke="#B794F6" stroke-width="1"/>
+                            
+                            <!-- Detalhes decorativos nas asas -->
+                            <circle cx="32" cy="40" r="2" fill="#E9D8FD" opacity="0.8"/>
+                            <circle cx="38" cy="45" r="1.5" fill="#E9D8FD" opacity="0.8"/>
+                            <circle cx="68" cy="40" r="2" fill="#E9D8FD" opacity="0.8"/>
+                            <circle cx="62" cy="45" r="1.5" fill="#E9D8FD" opacity="0.8"/>
+                            
+                            <!-- Antenas -->
+                            <line x1="48" y1="35" x2="45" y2="30" stroke="#4A5568" stroke-width="1" stroke-linecap="round"/>
+                            <line x1="52" y1="35" x2="55" y2="30" stroke="#4A5568" stroke-width="1" stroke-linecap="round"/>
+                            <circle cx="45" cy="30" r="1" fill="#9C27B0"/>
+                            <circle cx="55" cy="30" r="1" fill="#9C27B0"/>
+                            
+                            <!-- Badge "AI" discreto -->
+                            <circle cx="75" cy="25" r="10" fill="rgba(156, 39, 176, 0.9)" stroke="white" stroke-width="1"/>
+                            <text x="75" y="29" text-anchor="middle" fill="white" font-size="8" font-weight="bold">AI</text>
+                            
                             <defs>
-                                <linearGradient id="premiumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
-                                    <stop offset="50%" style="stop-color:#3730a3;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                                <linearGradient id="butterflyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#9C27B0;stop-opacity:1" />
+                                    <stop offset="60%" style="stop-color:#7C2D92;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#5A1A6B;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="butterflyGradientLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#B794F6;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#9C27B0;stop-opacity:0.8" />
+                                    <stop offset="100%" style="stop-color:#7C2D92;stop-opacity:0.6" />
                                 </linearGradient>
                             </defs>
                         </svg>
@@ -358,14 +394,43 @@ function generateAIInsightsZone(reportData: EnhancedReportData): string {
             <div class="ai-header">
                 <div class="ai-icon-header">
                     <div class="ai-icon-svg">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" fill="url(#aiIconGradient)" stroke="white" stroke-width="1"/>
-                            <path d="M12 6v6l4 2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <circle cx="12" cy="12" r="2" fill="white"/>
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Mini borboleta consistente com a identidade visual -->
+                            <!-- Flor amarela pequena -->
+                            <circle cx="16" cy="8" r="3" fill="#F6E05E" stroke="#E69E00" stroke-width="0.5"/>
+                            <circle cx="14" cy="9" r="1" fill="#FFD700"/>
+                            <circle cx="18" cy="9" r="1" fill="#FFD700"/>
+                            
+                            <!-- Corpo da borboleta -->
+                            <ellipse cx="16" cy="16" rx="1" ry="8" fill="#4A5568"/>
+                            <circle cx="16" cy="12" r="0.8" fill="#2D3748"/>
+                            
+                            <!-- Asas superiores mini -->
+                            <ellipse cx="12" cy="14" rx="4" ry="3" fill="url(#aiIconGradient)" stroke="#7C2D92" stroke-width="0.5"/>
+                            <ellipse cx="20" cy="14" rx="4" ry="3" fill="url(#aiIconGradient)" stroke="#7C2D92" stroke-width="0.5"/>
+                            
+                            <!-- Asas inferiores mini -->
+                            <ellipse cx="13" cy="18" rx="3" ry="2.5" fill="url(#aiIconGradientLight)" stroke="#B794F6" stroke-width="0.5"/>
+                            <ellipse cx="19" cy="18" rx="3" ry="2.5" fill="url(#aiIconGradientLight)" stroke="#B794F6" stroke-width="0.5"/>
+                            
+                            <!-- Antenas mini -->
+                            <line x1="15" y1="12" x2="14" y2="10" stroke="#4A5568" stroke-width="0.5"/>
+                            <line x1="17" y1="12" x2="18" y2="10" stroke="#4A5568" stroke-width="0.5"/>
+                            <circle cx="14" cy="10" r="0.5" fill="#9C27B0"/>
+                            <circle cx="18" cy="10" r="0.5" fill="#9C27B0"/>
+                            
+                            <!-- Badge AI no canto -->
+                            <circle cx="25" cy="7" r="4" fill="rgba(156, 39, 176, 0.9)" stroke="white" stroke-width="0.5"/>
+                            <text x="25" y="9" text-anchor="middle" fill="white" font-size="4" font-weight="bold">AI</text>
+                            
                             <defs>
                                 <linearGradient id="aiIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+                                    <stop offset="0%" style="stop-color:#9C27B0;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#7C2D92;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="aiIconGradientLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#B794F6;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#9C27B0;stop-opacity:0.8" />
                                 </linearGradient>
                             </defs>
                         </svg>
@@ -2773,24 +2838,36 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* 🏆 NÍVEL 1: Executive Dashboard */
         .executive-dashboard {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 3px solid #f59e0b;
+            background: linear-gradient(135deg, #F3E8FF 0%, #E9D8FD 50%, #F6E05E 100%);
+            border: 3px solid #9C27B0;
             border-radius: 1.5rem;
             padding: var(--space-8);
-            margin-bottom: var(--space-8);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            margin-bottom: var(--space-12);
+            box-shadow: 0 20px 25px -5px rgba(156, 39, 176, 0.15), 0 10px 10px -5px rgba(156, 39, 176, 0.08);
             position: relative;
             overflow: hidden;
         }
         
-        .executive-dashboard::before {
+        /* Separador visual após Executive Dashboard */
+        .executive-dashboard::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent 0%, #9C27B0 20%, #7C2D92 50%, #B794F6 80%, transparent 100%);
+            border-radius: 2px;
+        }
+        
+        .executive-dashboard::before {
+            content: '🦋';
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+            font-size: 5rem;
+            opacity: 0.08;
             z-index: 0;
         }
         
@@ -2807,7 +2884,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         .title-executive {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(45deg, #92400e, #d97706);
+            background: linear-gradient(45deg, #7C2D92, #9C27B0);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -2816,7 +2893,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         .dashboard-subtitle {
             font-size: var(--text-lg);
-            color: #92400e;
+            color: #7C2D92;
             font-weight: 600;
         }
         
@@ -2877,23 +2954,36 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* 🧠 NÍVEL 2: AI Insights Zone */
         .ai-insights-zone {
-            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-            border: 3px solid #4f46e5;
+            background: linear-gradient(135deg, #E9D8FD 0%, #D6BCFA 100%);
+            border: 3px solid #7C2D92;
             border-radius: 1.5rem;
             padding: var(--space-8);
-            margin-bottom: var(--space-8);
-            box-shadow: 0 16px 24px rgba(79, 70, 229, 0.15);
+            margin-bottom: var(--space-10);
+            box-shadow: 0 16px 24px rgba(124, 45, 146, 0.15);
             position: relative;
             overflow: hidden;
         }
         
+        /* Separador visual após AI Insights Zone */
+        .ai-insights-zone::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #B794F6 30%, #9C27B0 70%, transparent 100%);
+            border-radius: 1px;
+        }
+        
         .ai-insights-zone::before {
-            content: '🧠';
+            content: '🦋';
             position: absolute;
             top: 1rem;
-            right: 1rem;
-            font-size: 4rem;
-            opacity: 0.1;
+            right: 1.5rem;
+            font-size: 3rem;
+            opacity: 0.08;
             z-index: 0;
         }
         
@@ -2917,7 +3007,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         .ai-icon-svg {
             border-radius: 50%;
-            background: rgba(79, 70, 229, 0.2);
+            background: rgba(156, 39, 176, 0.15);
             padding: 8px;
             display: flex;
             align-items: center;
@@ -2927,7 +3017,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         .title-ai-insights {
             font-size: 1.75rem;
             font-weight: 700;
-            background: linear-gradient(45deg, #312e81, #4f46e5);
+            background: linear-gradient(45deg, #5A1A6B, #7C2D92);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -2935,7 +3025,7 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         .ai-subtitle {
             font-size: var(--text-lg);
-            color: #312e81;
+            color: #5A1A6B;
             font-weight: 600;
             margin-bottom: var(--space-6);
         }
@@ -2949,19 +3039,19 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         .confidence-label {
             font-size: var(--text-sm);
             font-weight: 600;
-            color: #312e81;
+            color: #5A1A6B;
             margin-bottom: var(--space-2);
         }
         
         .confidence-progress {
-            background: rgba(79, 70, 229, 0.2);
+            background: rgba(156, 39, 176, 0.2);
             border-radius: 0.5rem;
             height: 8px;
             overflow: hidden;
         }
         
         .confidence-fill {
-            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            background: linear-gradient(90deg, #9C27B0, #B794F6);
             height: 100%;
             border-radius: 0.5rem;
             transition: width 0.3s ease;
@@ -2975,12 +3065,25 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* 📊 NÍVEL 3: Data Analytics */
         .data-analytics-section {
-            background: var(--surface-elevated);
-            border: 2px solid #d1d5db;
+            background: linear-gradient(135deg, #FEFCFF 0%, #F9F7FF 100%);
+            border: 2px solid #B794F6;
             border-radius: 1rem;
             padding: var(--space-6);
-            margin-bottom: var(--space-6);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: var(--space-8);
+            box-shadow: 0 8px 12px -2px rgba(156, 39, 176, 0.08);
+            position: relative;
+        }
+        
+        /* Separador visual após Data Analytics */
+        .data-analytics-section::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #D6BCFA 40%, #B794F6 60%, transparent 100%);
         }
         
         .analytics-header {
@@ -2991,13 +3094,16 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         .title-data-section {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #374151;
+            background: linear-gradient(45deg, #7C2D92, #9C27B0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: var(--space-2);
         }
         
         .analytics-subtitle {
             font-size: var(--text-base);
-            color: #6b7280;
+            color: #7C2D92;
             font-weight: 500;
         }
         
@@ -3008,12 +3114,12 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* 📋 NÍVEL 4: Clinical Data */
         .clinical-data-section {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #FDFDFF 0%, #F8F7FF 100%);
+            border: 1px solid #D6BCFA;
             border-radius: 0.75rem;
             padding: var(--space-4);
-            margin-bottom: var(--space-4);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: var(--space-6);
+            box-shadow: 0 2px 4px 0 rgba(156, 39, 176, 0.05);
         }
         
         .clinical-header {
@@ -3024,13 +3130,13 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         .title-standard {
             font-size: 1.25rem;
             font-weight: 500;
-            color: #4b5563;
+            color: #7C2D92;
             margin-bottom: var(--space-1);
         }
         
         .clinical-subtitle {
             font-size: var(--text-sm);
-            color: #6b7280;
+            color: #9C27B0;
             font-weight: 400;
         }
         
@@ -3041,22 +3147,33 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         /* Cards especializados */
         .predictive-insights-card, .correlation-card {
-            background: rgba(255, 255, 255, 0.8);
-            border: 2px solid #8b5cf6;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 245, 255, 0.9) 100%);
+            border: 2px solid #9C27B0;
             border-radius: 1rem;
             padding: var(--space-6);
             backdrop-filter: blur(10px);
+            box-shadow: 0 4px 8px -2px rgba(156, 39, 176, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .predictive-insights-card:hover, .correlation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(156, 39, 176, 0.15);
         }
         
         .insights-title, .correlation-title {
             font-size: var(--text-lg);
             font-weight: 700;
-            color: #6b46c1;
+            background: linear-gradient(45deg, #7C2D92, #9C27B0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: var(--space-4);
         }
         
         .insight-item, .correlation-item {
-            background: rgba(139, 92, 246, 0.1);
+            background: rgba(156, 39, 176, 0.08);
+            border: 1px solid rgba(156, 39, 176, 0.2);
             border-radius: 0.5rem;
             padding: var(--space-3);
             margin-bottom: var(--space-3);
@@ -3064,13 +3181,13 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
         
         .insight-probability {
             font-weight: 600;
-            color: #6b46c1;
+            color: #7C2D92;
             margin-bottom: var(--space-1);
         }
         
         .correlation-vars {
             font-weight: 600;
-            color: #374151;
+            color: #5A1A6B;
             margin-bottom: var(--space-1);
         }
         
