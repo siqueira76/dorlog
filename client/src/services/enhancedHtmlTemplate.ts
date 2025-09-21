@@ -1940,44 +1940,126 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
       
       <div class="app-card">
         <div class="card-grid-2">
-          <div class="metric-card morning-card">
-            <div class="card-icon">🌅</div>
-            <h3>Manhãs</h3>
+          <div class="pain-period-card morning-card">
+            <div class="card-header">
+              <div class="period-icon">🌅</div>
+              <div class="period-info">
+                <h3 class="period-title">Manhãs</h3>
+                <span class="period-subtitle">Período matinal</span>
+              </div>
+              ${morningData.hasPainData ? `
+                <div class="pain-score ${morningData.averagePain <= 3 ? 'low' : morningData.averagePain <= 6 ? 'medium' : 'high'}">
+                  <span class="score-value">${morningData.averagePain}</span>
+                  <span class="score-max">/10</span>
+                </div>
+              ` : `
+                <div class="pain-score no-data">
+                  <span class="score-value">--</span>
+                </div>
+              `}
+            </div>
+            
             ${morningData.hasPainData ? `
-              <div class="metric-value">${morningData.averagePain}/10</div>
-              <div class="metric-label">Intensidade Matinal</div>
-              <div class="metric-details">
-                • ${morningData.recordCount} registro(s) de dor matinal<br>
-                • Humor predominante: ${morningData.mood}<br>
-                • Sintomas frequentes: ${morningData.symptoms}
+              <div class="pain-indicator">
+                <div class="indicator-bar">
+                  <div class="indicator-fill" style="width: ${(morningData.averagePain/10)*100}%"></div>
+                </div>
+                <span class="indicator-label">🌅 Intensidade da dor matinal</span>
+              </div>
+              
+              <div class="period-insights">
+                <div class="insight-row">
+                  <span class="insight-icon">📊</span>
+                  <span class="insight-text">${morningData.recordCount} registros coletados</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">😊</span>
+                  <span class="insight-text">Humor: ${morningData.mood}</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">🔍</span>
+                  <span class="insight-text">${morningData.symptoms}</span>
+                </div>
               </div>
             ` : `
-              <div class="metric-value">--</div>
-              <div class="metric-label">Dados Não Disponíveis</div>
-              <div class="metric-details">
-                • Nenhum quiz matinal registrado<br>
-                • Complete alguns quizzes matinais para ver análises
+              <div class="pain-indicator">
+                <div class="indicator-bar">
+                  <div class="indicator-fill" style="width: 0%"></div>
+                </div>
+                <span class="indicator-label">🌅 Intensidade da dor matinal</span>
+              </div>
+              
+              <div class="period-insights">
+                <div class="insight-row">
+                  <span class="insight-icon">📋</span>
+                  <span class="insight-text">Nenhum quiz matinal registrado</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">💡</span>
+                  <span class="insight-text">Complete alguns quizzes matinais para análises</span>
+                </div>
               </div>
             `}
           </div>
           
-          <div class="metric-card evening-card">
-            <div class="card-icon">🌙</div>
-            <h3>Noites</h3>
+          <div class="pain-period-card evening-card">
+            <div class="card-header">
+              <div class="period-icon">🌙</div>
+              <div class="period-info">
+                <h3 class="period-title">Noites</h3>
+                <span class="period-subtitle">Período noturno</span>
+              </div>
+              ${eveningData.hasPainData ? `
+                <div class="pain-score ${eveningData.averagePain <= 3 ? 'low' : eveningData.averagePain <= 6 ? 'medium' : 'high'}">
+                  <span class="score-value">${eveningData.averagePain}</span>
+                  <span class="score-max">/10</span>
+                </div>
+              ` : `
+                <div class="pain-score no-data">
+                  <span class="score-value">--</span>
+                </div>
+              `}
+            </div>
+            
             ${eveningData.hasPainData ? `
-              <div class="metric-value">${eveningData.averagePain}/10</div>
-              <div class="metric-label">Intensidade Noturna</div>
-              <div class="metric-details">
-                • ${eveningData.recordCount} registro(s) de dor noturna<br>
-                • Qualidade do sono: ${eveningData.sleepQuality}<br>
-                • Atividades realizadas: ${eveningData.activities}
+              <div class="pain-indicator">
+                <div class="indicator-bar">
+                  <div class="indicator-fill" style="width: ${(eveningData.averagePain/10)*100}%"></div>
+                </div>
+                <span class="indicator-label">🌙 Intensidade da dor noturna</span>
+              </div>
+              
+              <div class="period-insights">
+                <div class="insight-row">
+                  <span class="insight-icon">📊</span>
+                  <span class="insight-text">${eveningData.recordCount} registros coletados</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">😴</span>
+                  <span class="insight-text">Sono: ${eveningData.sleepQuality}</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">🏃</span>
+                  <span class="insight-text">${eveningData.activities}</span>
+                </div>
               </div>
             ` : `
-              <div class="metric-value">--</div>
-              <div class="metric-label">Dados Não Disponíveis</div>
-              <div class="metric-details">
-                • Nenhum quiz noturno registrado<br>
-                • Complete alguns quizzes noturnos para ver análises
+              <div class="pain-indicator">
+                <div class="indicator-bar">
+                  <div class="indicator-fill" style="width: 0%"></div>
+                </div>
+                <span class="indicator-label">🌙 Intensidade da dor noturna</span>
+              </div>
+              
+              <div class="period-insights">
+                <div class="insight-row">
+                  <span class="insight-icon">📋</span>
+                  <span class="insight-text">Nenhum quiz noturno registrado</span>
+                </div>
+                <div class="insight-row">
+                  <span class="insight-icon">💡</span>
+                  <span class="insight-text">Complete alguns quizzes noturnos para análises</span>
+                </div>
               </div>
             `}
           </div>
@@ -5314,15 +5396,158 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             max-height: 1000px;
         }
 
-        /* 🌅 CSS para Seção Manhãs e Noites Restaurada */
+        /* 🌅 CSS para Seção Manhãs e Noites Modernizada */
+        .pain-period-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pain-period-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-color);
+        }
+        
         .morning-card {
-            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-            border-left: 4px solid #f39c12;
+            --accent-color: #f39c12;
+            --bg-subtle: #fff8f0;
         }
         
         .evening-card {
-            background: linear-gradient(135deg, #e8f4fd, #74b9ff);
-            border-left: 4px solid #0984e3;
+            --accent-color: #0984e3;
+            --bg-subtle: #f0f8ff;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .period-icon {
+            font-size: 32px;
+            line-height: 1;
+        }
+        
+        .period-info {
+            flex: 1;
+            margin-left: 16px;
+        }
+        
+        .period-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0 0 4px 0;
+        }
+        
+        .period-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        
+        .pain-score {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--accent-color);
+        }
+        
+        .pain-score.low {
+            --accent-color: #22c55e;
+            --bg-subtle: #f0fdf4;
+        }
+        
+        .pain-score.medium {
+            --accent-color: #f59e0b;
+            --bg-subtle: #fffbeb;
+        }
+        
+        .pain-score.high {
+            --accent-color: #ef4444;
+            --bg-subtle: #fef2f2;
+        }
+        
+        .pain-score.no-data {
+            --accent-color: #6b7280;
+            --bg-subtle: #f9fafb;
+        }
+        
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+        
+        .score-max {
+            font-size: 16px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .pain-indicator {
+            margin-bottom: 24px;
+        }
+        
+        .indicator-bar {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .indicator-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-color));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .indicator-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .period-insights {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .insight-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .insight-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .insight-text {
+            font-size: 14px;
+            color: #4b5563;
+            font-weight: 400;
         }
         
         .card-grid-2 {
@@ -5620,6 +5845,31 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             .card-grid-2 {
                 grid-template-columns: 1fr;
             }
+            
+            .pain-period-card {
+                padding: 20px;
+            }
+            
+            .card-header {
+                margin-bottom: 16px;
+            }
+            
+            .period-icon {
+                font-size: 28px;
+            }
+            
+            .period-title {
+                font-size: 18px;
+            }
+            
+            .score-value {
+                font-size: 20px;
+            }
+            
+            .pain-score {
+                padding: 6px 12px;
+            }
+        }
             
             .crisis-stat-grid {
                 grid-template-columns: 1fr;
