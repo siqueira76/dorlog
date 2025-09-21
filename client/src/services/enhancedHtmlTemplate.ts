@@ -1984,46 +1984,31 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
         </div>
         
         ${sleepCorrelation.hasData ? `
-        <div class="correlation-analysis">
-          <h4>💤 Correlação Sono-Dor</h4>
-          <div class="correlation-content">
-            <div class="correlation-status ${sleepCorrelation.strength.toLowerCase()}">
-              ${sleepCorrelation.visual} <strong>${sleepCorrelation.strength}</strong>
-            </div>
-            <div class="correlation-description">
-              ${sleepCorrelation.description}
-            </div>
-            <div class="correlation-recommendation">
-              💡 <strong>Recomendação:</strong> ${sleepCorrelation.recommendation}
-            </div>
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">💤 Correlação Sono-Dor</h3>
+            <div class="predictive-indicator ${sleepCorrelation.strength.toLowerCase()}">${sleepCorrelation.visual} ${sleepCorrelation.strength}</div>
           </div>
+          <p>${sleepCorrelation.description}</p>
+          <p><strong>💡 Recomendação:</strong> ${sleepCorrelation.recommendation}</p>
         </div>` : `
-        <div class="correlation-analysis">
-          <h4>💤 Correlação Sono-Dor</h4>
-          <div class="correlation-content">
-            <div class="correlation-status unavailable">
-              📊 <strong>Análise Indisponível</strong>
-            </div>
-            <div class="correlation-description">
-              Dados insuficientes para calcular correlação entre sono e dor.
-            </div>
-            <div class="correlation-recommendation">
-              💡 <strong>Recomendação:</strong> Complete pelo menos 5 quizzes matinais e noturnos para análise de correlação.
-            </div>
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">💤 Correlação Sono-Dor</h3>
+            <div class="predictive-indicator unavailable">📊 Análise Indisponível</div>
           </div>
+          <p>Dados insuficientes para calcular correlação entre sono e dor.</p>
+          <p><strong>💡 Recomendação:</strong> Complete pelo menos 5 quizzes matinais e noturnos para análise de correlação.</p>
         </div>`}
         
         ${digestiveHealth ? `
-        <div class="digestive-analysis">
-          <h4>💩 Saúde Digestiva Detalhada</h4>
-          <div class="digestive-metrics">
-            <div class="digestive-status ${digestiveHealth.status || 'normal'}">
-              Status: ${getDigestiveStatusLabel(digestiveHealth.status)}
-            </div>
-            <div class="digestive-frequency">
-              Frequência: ${digestiveHealth.frequency || 'Dados insuficientes'}
-            </div>
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">💩 Saúde Digestiva Detalhada</h3>
+            <div class="predictive-indicator ${digestiveHealth.status || 'normal'}">${getDigestiveStatusLabel(digestiveHealth.status)}</div>
           </div>
+          <p><strong>Status:</strong> ${getDigestiveStatusLabel(digestiveHealth.status)}</p>
+          <p><strong>Frequência:</strong> ${digestiveHealth.frequency || 'Dados insuficientes'}</p>
         </div>` : ''}
       </div>
     </div>
@@ -2068,17 +2053,14 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
           </div>
         </div>
         
-        <div class="affected-locations">
-          <h4>📍 Locais Afetados Específicos</h4>
-          <div class="location-list">
-            ${locationAnalysis.map(loc => `
-              <div class="location-item">
-                <span class="location-name">${loc.location}</span>
-                <span class="location-count">${loc.count}x</span>
-                <span class="location-percentage">(${loc.percentage}%)</span>
-              </div>
-            `).join('')}
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">📍 Locais Afetados Específicos</h3>
+            <div class="predictive-indicator predictive-medium">${locationAnalysis.length} locais</div>
           </div>
+          ${locationAnalysis.map(loc => `
+            <p><strong>${loc.location}:</strong> ${loc.count}x (${loc.percentage}%)</p>
+          `).join('')}
         </div>
         
         ${rescueMedications.length > 0 ? `
@@ -2158,14 +2140,15 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
           </div>
         </div>
         
-        <div class="temporal-recommendations">
-          <h4>💡 Recomendações Temporais</h4>
-          <div class="recommendations-list">
-            • Evitar atividades estressantes entre 13h-15h<br>
-            • Considerar medicação preventiva antes das 20h<br>
-            • Monitoramento intensivo nos horários de pico<br>
-            • Estabelecer rotina de relaxamento no final da tarde
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">💡 Recomendações Temporais</h3>
+            <div class="predictive-indicator predictive-medium">Baseado em padrões</div>
           </div>
+          <p>• Evitar atividades estressantes entre 13h-15h</p>
+          <p>• Considerar medicação preventiva antes das 20h</p>
+          <p>• Monitoramento intensivo nos horários de pico</p>
+          <p>• Estabelecer rotina de relaxamento no final da tarde</p>
         </div>
       </div>
     </div>
@@ -2205,14 +2188,15 @@ function generatePhysicalActivitySection(reportData: EnhancedReportData): string
           `).join('')}
         </div>
         
-        <div class="activity-insights">
-          <h4>📈 Insights de Atividade</h4>
-          <div class="insights-content">
-            • <strong>Caminhada</strong>: Atividade mais praticada, impacto positivo moderado<br>
-            • <strong>Exercícios</strong>: Correlação positiva com redução da dor<br>
-            • <strong>Atividades domésticas</strong>: Impacto neutro, importante para rotina<br>
-            • <strong>Fisioterapia</strong>: Alta eficácia quando praticada regularmente
+        <div class="insight-card ai-predictive">
+          <div class="insight-header">
+            <h3 class="insight-title">📈 Insights de Atividade</h3>
+            <div class="predictive-indicator predictive-medium">Correlações identificadas</div>
           </div>
+          <p>• <strong>Caminhada</strong>: Atividade mais praticada, impacto positivo moderado</p>
+          <p>• <strong>Exercícios</strong>: Correlação positiva com redução da dor</p>
+          <p>• <strong>Atividades domésticas</strong>: Impacto neutro, importante para rotina</p>
+          <p>• <strong>Fisioterapia</strong>: Alta eficácia quando praticada regularmente</p>
         </div>
       </div>
     </div>
