@@ -42,6 +42,8 @@ export interface ReportData {
   observations: string;
   dataSource: 'firestore';
   generatedAt: string;
+  hasError?: boolean;
+  errorMessage?: string;
 }
 
 // Função de resolução removida - pós-migração todos os dados usam Firebase UID diretamente
@@ -852,20 +854,23 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
   } catch (error) {
     console.error('❌ Erro ao buscar dados do Firestore:', error);
     
-    // Retornar dados de exemplo em caso de erro
+    // Retornar estrutura vazia com mensagem informativa
     return {
       ...reportData,
       totalDays: 0,
-      observations: `Erro ao carregar dados: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Os dados mostrados são exemplos para demonstração.`,
-      medications: [
-        { nome: 'Dados não disponíveis', posologia: 'Erro na consulta', frequencia: 'N/A' }
-      ],
-      doctors: [
-        { nome: 'Dados não disponíveis', especialidade: 'Erro na consulta', crm: 'N/A' }
-      ],
-      painPoints: [
-        { local: 'Dados não disponíveis', occurrences: 0 }
-      ]
+      crisisEpisodes: 0,
+      averagePain: 0,
+      adherenceRate: 0,
+      medications: [], // Array vazio em vez de dados fictícios
+      doctors: [], // Array vazio em vez de dados fictícios
+      painPoints: [], // Array vazio em vez de dados fictícios
+      painEvolution: [],
+      rescueMedications: [],
+      observations: `Não foi possível carregar os dados do período selecionado. Verifique sua conexão com a internet e tente novamente. Se o problema persistir, contate o suporte.`,
+      dataSource: 'firestore',
+      generatedAt: new Date().toISOString(),
+      hasError: true,
+      errorMessage: error instanceof Error ? error.message : 'Erro desconhecido'
     };
   }
 }

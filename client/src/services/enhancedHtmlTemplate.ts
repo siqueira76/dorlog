@@ -916,11 +916,8 @@ function generateDoctorsSectionStandalone(reportData: EnhancedReportData): strin
       .replace(/'/g, '&#x27;');
   };
   
-  // 👨‍⚕️ PHASE 3: Implementar médicos específicos com CRMs se não há dados
-  let doctorsList = doctors.length > 0 ? doctors : [
-    { nome: 'Dr. Jéssica', especialidade: 'Médica da dor', crm: 'CRM/SP 123.456' },
-    { nome: 'Dr. Edilio', especialidade: 'Proctologista', crm: 'CRM/SP 789.012' }
-  ];
+  // 👨‍⚕️ PHASE 3: Usar apenas médicos reais, sem dados fictícios
+  let doctorsList = doctors;
   
   const normalizedDoctors = doctorsList.map((d: any) => ({
     name: d.nome || d.name || 'Nome não informado',
@@ -974,7 +971,12 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                 <div class="metric-item">
                     <div class="metric-title">💊 Medicamentos:</div>
                     <div class="metric-status">📊 Nenhum medicamento cadastrado</div>
-                    <div class="metric-subtitle">└ Vá para "Medicamentos" no menu principal para cadastrar</div>
+                    <div class="metric-subtitle">
+                        ← Para análises mais precisas:<br>
+                        • Cadastre seus medicamentos no menu "Medicamentos"<br>
+                        • Complete quizzes emergenciais quando usar medicação de resgate<br>
+                        • Mantenha registros regulares para insights de eficácia
+                    </div>
                 </div>
             </div>`;
   }
@@ -986,14 +988,8 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
     frequency: med.frequencia || med.frequency || 'Não especificada'
   }));
   
-  // 🩺 PHASE 3: Implementar medicamentos específicos Dr. Jéssica/Edilio
-  if (normalizedMedications.length === 0) {
-    normalizedMedications.push(
-      { name: 'Sotalol', dosage: '120mg', frequency: '2x ao dia', doctor: 'Dr. Jéssica' },
-      { name: 'Rosuvastatina', dosage: '20mg', frequency: '1x ao dia', doctor: 'Dr. Edilio' },
-      { name: 'Losartana', dosage: '20mg', frequency: '1x ao dia', doctor: 'Dr. Jéssica' }
-    );
-  }
+  // 🩺 PHASE 3: Usar apenas medicamentos reais, sem dados fictícios
+  // normalizedMedications permanece vazio se não há medicamentos reais
 
   // Normalizar nomes de campos para medicamentos de resgate
   const normalizedRescueMedications = rescueMedications.map((med: any) => ({
@@ -1002,13 +998,8 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
     riskLevel: med.riskLevel || 'medium'
   }));
   
-  // Adicionar medicamentos de resgate específicos se os dados estão vazios
-  if (normalizedRescueMedications.length === 0) {
-    normalizedRescueMedications.push(
-      { name: 'Paracetamol', frequency: 8, riskLevel: 'low' },
-      { name: 'Dimorf', frequency: 3, riskLevel: 'high' }
-    );
-  }
+  // Usar apenas medicamentos de resgate reais, sem dados fictícios
+  // normalizedRescueMedications permanece vazio se não há medicamentos reais
 
   const totalMedications = normalizedMedications.length;
   const totalRescueMedications = normalizedRescueMedications.length;
@@ -1430,8 +1421,13 @@ function generateMedicalAnalysisSection(reportData: EnhancedReportData): string 
             <div class="metric-row">
                 <div class="metric-item">
                     <div class="metric-title">👨‍⚕️ Análise Médica:</div>
-                    <div class="metric-status">📊 Cadastre médicos e medicamentos para análises detalhadas</div>
-                    <div class="metric-subtitle">└ Vá para "Médicos" e "Medicamentos" no menu principal</div>
+                    <div class="metric-status">📊 Para análises médicas completas:</div>
+                    <div class="metric-subtitle">
+                        • Cadastre seus médicos no menu "Médicos" (especialidades, CRM, contatos)<br>
+                        • Adicione seus medicamentos com posologias corretas<br>
+                        • Complete quizzes diários para correlacionar tratamentos com sintomas<br>
+                        • Mantenha histórico de consultas para insights longitudinais
+                    </div>
                 </div>
             </div>`;
   }
@@ -2068,7 +2064,41 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
 function generateTemporalPatternsSection(reportData: EnhancedReportData): string {
   const temporalAnalysis = reportData.crisisTemporalAnalysis || {};
   const riskPeriods = calculateRiskPeriods(reportData);
-  const peakHours = ['13h', '22h']; // Dados específicos identificados
+  // Calcular horários de pico baseado em dados reais se disponíveis
+  const painEvolution = reportData.painEvolution || [];
+  const peakHours: string[] = [];
+  
+  if (painEvolution.length > 0) {
+    const hourlyPain = new Map<number, number[]>();
+    
+    painEvolution.forEach(pain => {
+      try {
+        const date = new Date(pain.date);
+        const hour = date.getHours();
+        if (!hourlyPain.has(hour)) {
+          hourlyPain.set(hour, []);
+        }
+        hourlyPain.get(hour)?.push(pain.level);
+      } catch (error) {
+        console.warn('Erro ao processar data de dor:', pain.date);
+      }
+    });
+    
+    // Encontrar os horários com maior média de dor
+    const hourlyAverages = Array.from(hourlyPain.entries())
+      .map(([hour, levels]) => ({
+        hour,
+        avgPain: levels.reduce((sum, level) => sum + level, 0) / levels.length,
+        count: levels.length
+      }))
+      .filter(h => h.count >= 2) // Pelo menos 2 registros
+      .sort((a, b) => b.avgPain - a.avgPain)
+      .slice(0, 2); // Top 2 horários
+    
+    hourlyAverages.forEach(h => {
+      peakHours.push(`${h.hour}h`);
+    });
+  }
   
   return `
     <div class="app-section">
@@ -2341,14 +2371,9 @@ function analyzeAffectedLocations(reportData: EnhancedReportData): Array<{locati
     }
   });
   
-  // Se não há dados suficientes, retornar dados de exemplo baseados no contexto
+  // Se não há dados suficientes, retornar array vazio sem dados fictícios
   if (locationCounts.size === 0) {
-    return [
-      { location: 'Pernas', count: 4, percentage: 57 },
-      { location: 'Braços', count: 1, percentage: 14 },
-      { location: 'Cabeça', count: 1, percentage: 14 },
-      { location: 'Costas', count: 1, percentage: 14 }
-    ];
+    return [];
   }
   
   const total = Array.from(locationCounts.values()).reduce((sum, count) => sum + count, 0);
@@ -2360,26 +2385,99 @@ function analyzeAffectedLocations(reportData: EnhancedReportData): Array<{locati
 }
 
 function calculateRiskPeriods(reportData: EnhancedReportData): any {
-  return {
-    afternoon: { percentage: 43, hours: ['13h', '14h', '15h'] },
-    evening: { percentage: 30, hours: ['20h', '21h', '22h'] },
-    morning: { percentage: 20, hours: ['8h', '9h', '10h'] },
-    dawn: { percentage: 7, hours: ['2h', '3h', '4h'] }
-  };
+  // Analisar dados reais se disponíveis
+  const painEvolution = reportData.painEvolution || [];
+  if (painEvolution.length === 0) {
+    return {}; // Retornar objeto vazio se não há dados
+  }
+  
+  // Implementar análise real baseada nos dados de evolução da dor
+  const hourlyData = new Map<string, number[]>();
+  
+  painEvolution.forEach(pain => {
+    const date = new Date(pain.date);
+    const hour = date.getHours();
+    const hourKey = hour < 6 ? 'dawn' : hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+    
+    if (!hourlyData.has(hourKey)) {
+      hourlyData.set(hourKey, []);
+    }
+    hourlyData.get(hourKey)?.push(pain.level);
+  });
+  
+  // Calcular percentuais baseados em dados reais
+  const result: any = {};
+  const total = painEvolution.length;
+  
+  hourlyData.forEach((levels, period) => {
+    const avgLevel = levels.reduce((sum, level) => sum + level, 0) / levels.length;
+    result[period] = {
+      percentage: Math.round((levels.length / total) * 100),
+      averageLevel: Math.round(avgLevel * 10) / 10,
+      count: levels.length
+    };
+  });
+  
+  return result;
 }
 
 function extractPhysicalActivities(reportData: EnhancedReportData): Array<{name: string, frequency: number, impact: string, impactClass: string}> {
-  return [
-    { name: 'Caminhada', frequency: 4, impact: 'Positivo', impactClass: 'positive' },
-    { name: 'Atividade física', frequency: 2, impact: 'Muito Positivo', impactClass: 'very-positive' },
-    { name: 'Exercícios', frequency: 3, impact: 'Positivo', impactClass: 'positive' },
-    { name: 'Cuidou da casa', frequency: 5, impact: 'Neutro', impactClass: 'neutral' },
-    { name: 'Fisioterapia', frequency: 1, impact: 'Muito Positivo', impactClass: 'very-positive' }
-  ];
+  // Usar dados reais de atividades físicas se disponíveis
+  const physicalActivitiesData = (reportData as any).physicalActivitiesData || [];
+  
+  if (physicalActivitiesData.length === 0) {
+    return []; // Retornar array vazio se não há dados reais
+  }
+  
+  // Processar dados reais de atividades
+  const activityCounts = new Map<string, number>();
+  physicalActivitiesData.forEach((activity: any) => {
+    const activityName = activity.activity || activity.name || 'Atividade não especificada';
+    activityCounts.set(activityName, (activityCounts.get(activityName) || 0) + 1);
+  });
+  
+  // Converter para formato esperado
+  return Array.from(activityCounts.entries()).map(([name, frequency]) => {
+    // Determinar impacto baseado na frequência (lógica simplificada)
+    let impact = 'Neutro';
+    let impactClass = 'neutral';
+    
+    if (frequency >= 5) {
+      impact = 'Muito Positivo';
+      impactClass = 'very-positive';
+    } else if (frequency >= 3) {
+      impact = 'Positivo';
+      impactClass = 'positive';
+    }
+    
+    return {
+      name,
+      frequency,
+      impact,
+      impactClass
+    };
+  }).sort((a, b) => b.frequency - a.frequency);
 }
 
 function calculateActivityPainCorrelation(reportData: EnhancedReportData): number {
-  return 0.71; // Valor específico identificado no contexto
+  // Calcular correlação real baseada nos dados disponíveis
+  const physicalActivitiesData = (reportData as any).physicalActivitiesData || [];
+  const painEvolution = reportData.painEvolution || [];
+  
+  if (physicalActivitiesData.length === 0 || painEvolution.length === 0) {
+    return 0; // Retornar 0 se não há dados suficientes para calcular correlação
+  }
+  
+  // Lógica simplificada de correlação baseada na quantidade de atividades vs níveis de dor
+  const activityDays = physicalActivitiesData.length;
+  const totalDays = painEvolution.length;
+  const avgPain = painEvolution.reduce((sum, p) => sum + p.level, 0) / painEvolution.length;
+  
+  // Correlação baseada na proporção de dias com atividade vs dor média
+  const activityRatio = Math.min(activityDays / totalDays, 1);
+  const painFactor = Math.max(0, (10 - avgPain) / 10); // Inverso da dor (mais atividade = menos dor)
+  
+  return Math.round((activityRatio * painFactor) * 100) / 100;
 }
 
 function getDigestiveStatusLabel(status: string): string {
