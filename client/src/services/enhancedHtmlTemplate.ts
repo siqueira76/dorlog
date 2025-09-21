@@ -1047,13 +1047,6 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                             ).join('<br><br>')}
                             ${normalizedMedications.length > 4 ? `<br><br>• +${normalizedMedications.length - 4} outros medicamentos` : ''}
                         </div>
-                        
-                        <div class="analysis-details">
-                            <strong>📊 Detalhamento dos Medicamentos:</strong><br>
-                            ${normalizedMedications.slice(0, 3).map((med: any) => 
-                              `• ${escapeHtml(String(med.name || ''))}: ${escapeHtml(String(med.dosage || 'Dosagem não especificada'))} • ${escapeHtml(String(med.frequency || 'Frequência não especificada'))}`
-                            ).join('<br>')}
-                        </div>
                     </div>
                 </div>
                 ` : ''}
