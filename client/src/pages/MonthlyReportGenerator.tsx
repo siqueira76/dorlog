@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Download, Share2, FileText, Calendar, Mail, Clock, CheckCircle, Loader2, X, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Download, Share2, FileText, Calendar, Mail, Clock, CheckCircle, Loader2, X, CalendarDays, Brain, BarChart3 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { createNavigate } from '@/lib/navigation';
 import { format, subMonths, startOfMonth, endOfMonth, addMonths } from 'date-fns';
@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 type SelectionMode = 'single' | 'range';
+type TemplateType = 'standard' | 'enhanced';
 
 export default function MonthlyReportGenerator(): JSX.Element {
   const [, routerNavigate] = useLocation();
@@ -24,6 +25,7 @@ export default function MonthlyReportGenerator(): JSX.Element {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [fromPeriod, setFromPeriod] = useState<string>('');
   const [toPeriod, setToPeriod] = useState<string>('');
+  const [templateType, setTemplateType] = useState<TemplateType>('enhanced');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
 
@@ -150,7 +152,8 @@ export default function MonthlyReportGenerator(): JSX.Element {
         body: JSON.stringify({
           userId: firebaseUser.uid,
           periods: periods,
-          periodsText: getSelectedPeriodsText()
+          periodsText: getSelectedPeriodsText(),
+          templateType: templateType
         }),
       });
       
@@ -308,7 +311,8 @@ _Este relatório foi gerado automaticamente pelo aplicativo DorLog._`;
         body: JSON.stringify({
           userId: firebaseUser.uid,
           periods: periods,
-          periodsText: getSelectedPeriodsText()
+          periodsText: getSelectedPeriodsText(),
+          templateType: templateType
         }),
       });
       
@@ -491,6 +495,99 @@ Este relatório foi gerado automaticamente pelo aplicativo DorLog.`;
                   </div>
                 </div>
               )}
+
+              <Separator />
+
+              {/* Template Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Tipo de Relatório</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      templateType === 'standard' 
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => setTemplateType('standard')}
+                    data-testid="card-template-standard"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">Relatório Básico</h3>
+                        <p className="text-xs text-muted-foreground">Dados essenciais e resumo clínico</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Clock className="h-3 w-3 text-green-600" />
+                          <span className="text-xs text-green-600">~30 segundos</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      templateType === 'enhanced' 
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}
+                    onClick={() => setTemplateType('enhanced')}
+                    data-testid="card-template-enhanced"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Brain className="h-5 w-5 text-purple-600" />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">Relatório Avançado com IA</h3>
+                        <p className="text-xs text-muted-foreground">Análise NLP e insights inteligentes</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Clock className="h-3 w-3 text-orange-600" />
+                          <span className="text-xs text-orange-600">~2-3 minutos</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Template Features Preview */}
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    {templateType === 'standard' ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>Dados de medicamentos e médicos</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>Episódios de dor e evolução</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>Estatísticas básicas de saúde</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-purple-600" />
+                          <span>Tudo do relatório básico +</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-3 w-3 text-purple-600" />
+                          <span>Análise de sentimento e NLP</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Brain className="h-3 w-3 text-purple-600" />
+                          <span>Insights preditivos e correlações</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-3 w-3 text-purple-600" />
+                          <span>Visualizações avançadas</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <Separator />
 

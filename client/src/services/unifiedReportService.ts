@@ -8,6 +8,7 @@ export interface UnifiedReportOptions {
   userId: string;
   periods: string[];
   periodsText: string;
+  templateType?: 'standard' | 'enhanced';
   withPassword?: boolean;
   password?: string;
 }

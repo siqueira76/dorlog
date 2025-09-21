@@ -22,18 +22,26 @@ export const patchApiCallsUnified = () => {
       
       try {
         const body = JSON.parse(init.body as string);
-        const { userId, periods, periodsText } = body;
+        const { userId, periods, periodsText, templateType = 'enhanced' } = body;
         
-        console.log(`🧠 Gerando relatório enhanced inteligente:`, { userId, periodsText, periodsCount: periods.length });
+        console.log(`📊 Gerando relatório ${templateType}:`, { userId, periodsText, periodsCount: periods.length, templateType });
         
-        // Use unified report service
+        // Use appropriate report service based on template choice
         const options: UnifiedReportOptions = {
           userId,
           periods,
-          periodsText
+          periodsText,
+          templateType
         };
         
-        const result = await EnhancedUnifiedReportService.generateIntelligentReport(options);
+        let result;
+        if (templateType === 'standard') {
+          console.log('📄 Usando UnifiedReportService (relatório básico)');
+          result = await UnifiedReportService.generateReport(options);
+        } else {
+          console.log('🧠 Usando EnhancedUnifiedReportService (relatório avançado)');
+          result = await EnhancedUnifiedReportService.generateIntelligentReport(options);
+        }
         
         if (result.success) {
           // Return success response (compatible with existing code)
@@ -47,10 +55,10 @@ export const patchApiCallsUnified = () => {
             dataSource: 'firestore',
             storageProvider: 'firebase_storage',
             environment: 'enhanced_unified_client_side',
-            analysisType: result.analysisType || 'enhanced',
-            nlpProcessed: result.nlpProcessed || false,
-            chartsGenerated: result.chartsGenerated || false,
-            alertsGenerated: result.alertsGenerated || 0
+            analysisType: (result as any).analysisType || templateType,
+            nlpProcessed: (result as any).nlpProcessed || (templateType === 'enhanced'),
+            chartsGenerated: (result as any).chartsGenerated || (templateType === 'enhanced'),
+            alertsGenerated: (result as any).alertsGenerated || 0
           }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
@@ -143,15 +151,23 @@ export const checkUnifiedReportReadiness = (): boolean => {
 /**
  * Test function for unified report generation
  */
-export const testUnifiedReport = async (userId: string, periods: string[], periodsText: string) => {
-  console.log('🧪 Testando geração de relatório unificado...');
+export const testUnifiedReport = async (userId: string, periods: string[], periodsText: string, templateType: 'standard' | 'enhanced' = 'enhanced') => {
+  console.log(`🧪 Testando geração de relatório ${templateType}...`);
   
   try {
-    const result = await UnifiedReportService.generateReport({
-      userId,
-      periods,
-      periodsText
-    });
+    const result = templateType === 'standard' 
+      ? await UnifiedReportService.generateReport({
+          userId,
+          periods,
+          periodsText,
+          templateType
+        })
+      : await EnhancedUnifiedReportService.generateIntelligentReport({
+          userId,
+          periods,
+          periodsText,
+          templateType
+        });
     
     if (result.success) {
       console.log('✅ Teste bem-sucedido:', result);
