@@ -67,17 +67,17 @@ export async function* generateEnhancedReportHTMLStream(
     //   size: executiveDashboardHtml.length
     // };
 
-    // 3. Seção AI Insights Zone (nova seção premium de IA)
-    console.time('🧠 AI Insights Zone');
-    const aiInsightsHtml = generateAIInsightsZone(reportData);
-    console.timeEnd('🧠 AI Insights Zone');
-    
-    yield {
-      id: 'ai-insights',
-      content: aiInsightsHtml,
-      order: 2.5,
-      size: aiInsightsHtml.length
-    };
+    // 3. Seção AI Insights Zone (REMOVIDA)
+    // console.time('🧠 AI Insights Zone');
+    // const aiInsightsHtml = generateAIInsightsZone(reportData);
+    // console.timeEnd('🧠 AI Insights Zone');
+    // 
+    // yield {
+    //   id: 'ai-insights',
+    //   content: aiInsightsHtml,
+    //   order: 2.5,
+    //   size: aiInsightsHtml.length
+    // };
 
 
     // 4.1. 🌅 Seção Manhãs e Noites (RESTAURADA)
@@ -274,7 +274,6 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
          `<div class="content">
-            ${generateAIInsightsZone(reportData)}
             ${generateMorningEveningSection(reportData)}
             ${generateDetailedCrisisEpisodesSection(reportData)}
             ${generateTemporalPatternsSection(reportData)}
@@ -438,96 +437,13 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
 }
 
 /**
- * 🧠 NÍVEL 2: AI Insights Zone - Destaque alto para IA/NLP
+ * 🧠 NÍVEL 2: AI Insights Zone - REMOVIDA
+ * (Seção removida conforme solicitação do usuário)
  */
-function generateAIInsightsZone(reportData: EnhancedReportData): string {
-  // Determinar sentimento geral dos dados
-  const sentimentData = (reportData as any).nlpInsights?.sentimentAnalysis;
-  const rawSentiment = sentimentData?.overallSentiment || 'neutro';
-  // Mapear para as classes CSS existentes 
-  const overallSentiment = rawSentiment === 'positivo' ? 'positive' :
-                           rawSentiment === 'negativo' ? 'negative' : 'neutral';
-  const sentimentLabel = rawSentiment === 'positivo' ? 'Positivo' :
-                        rawSentiment === 'negativo' ? 'Negativo' : 'Neutro';
-  
-  // Analisar padrões detectados
-  const patternsDetected = (reportData.patternInsights as any)?.patterns?.length || 
-                           (reportData.patternInsights as any)?.correlations?.length || 
-                           (reportData.patternInsights as any)?.insights?.length || 0;
-  const patternStatus = patternsDetected > 3 ? 'many' : patternsDetected > 0 ? 'some' : 'none';
-  const patternLabel = patternStatus === 'many' ? `${patternsDetected} Padrões` :
-                      patternStatus === 'some' ? `${patternsDetected} Padrões` : 'Nenhum';
-  
-  // Determinar prioridade das recomendações
-  const avgPain = reportData.painEvolution && reportData.painEvolution.length > 0
-    ? (reportData.painEvolution.reduce((sum, p) => sum + p.level, 0) / reportData.painEvolution.length)
-    : 0;
-  const recommendationPriority = avgPain > 6 ? 'high' : avgPain > 4 ? 'medium' : 'low';
-  const recommendationLabel = recommendationPriority === 'high' ? 'Prioritária' :
-                             recommendationPriority === 'medium' ? 'Moderada' : 'Baixa';
-  
-  return `
-        <div class="ai-insights-zone">
-            <div class="ai-header">
-                <h2 class="title-ai-insights">🤖 Zona de Insights de Inteligência Artificial</h2>
-                <div class="ai-subtitle">Análise avançada com processamento de linguagem natural</div>
-                <div class="ai-confidence-bar">
-                    <div class="confidence-label">Confiabilidade: 85%</div>
-                    <div class="confidence-progress">
-                        <div class="confidence-fill" style="width: 85%"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="ai-cards-grid">
-                <!-- CARD 1: Análise de Sentimento -->
-                <div class="insight-card ai-sentiment">
-                    <div class="insight-header">
-                        <h3 class="insight-title">🎯 Análise de Sentimento</h3>
-                        <div class="sentiment-indicator sentiment-${overallSentiment}">${sentimentLabel}</div>
-                    </div>
-                    <p>Análise de sentimento geral dos seus registros de dor e bem-estar.</p>
-                </div>
-
-                <!-- CARD 2: Padrões Detectados -->
-                <div class="insight-card ai-patterns">
-                    <div class="insight-header">
-                        <h3 class="insight-title">🔍 Padrões Detectados</h3>
-                        <div class="pattern-indicator pattern-${patternStatus}">${patternLabel}</div>
-                    </div>
-                    <div class="pattern-summary">
-                        <div class="pattern-item">• Correlação sono-dor identificada</div>
-                        <div class="pattern-item">• Padrão de atividade detectado</div>
-                        <div class="pattern-item">• Tendência de melhoria observada</div>
-                    </div>
-                </div>
-
-                <!-- CARD 3: Recomendações IA -->
-                <div class="insight-card ai-recommendations">
-                    <div class="insight-header">
-                        <h3 class="insight-title">💡 Recomendações IA</h3>
-                        <div class="recommendation-indicator recommendation-${recommendationPriority}">${recommendationLabel}</div>
-                    </div>
-                    <p>Atividade moderada detectada. Considere estabelecer uma rotina mais regular de exercícios leves.</p>
-                </div>
-
-                <!-- CARD 4: Insights Preditivos -->
-                <div class="insight-card ai-predictive">
-                    <div class="insight-header">
-                        <h3 class="insight-title">🔮 Insights Preditivos</h3>
-                        <div class="predictive-indicator predictive-medium">Moderada</div>
-                    </div>
-                    <p>Com base nos padrões identificados, há potencial para melhoria com as orientações sugeridas.</p>
-                </div>
-            </div>
-            
-            <!-- Conteúdo adicional da IA original (se necessário) -->
-            <div class="ai-additional-content">
-                ${generateTextInsightsSection(reportData)}
-                ${generatePredictiveInsights(reportData)}
-            </div>
-        </div>`;
-}
+// function generateAIInsightsZone(reportData: EnhancedReportData): string {
+//   // Função removida - seção "Zona de Insights de Inteligência Artificial" não é mais exibida
+//   return '';
+// }
 
 
 /**
