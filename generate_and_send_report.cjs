@@ -403,7 +403,7 @@ function generateReportHTML(userId, reportMonth, reportData) {
                 Gerado em: ${currentDate}
             </div>
             <div class="header-content">
-                <h1 class="logo">🩺 DorLog</h1>
+                <h1 class="logo">DorLog</h1>
                 <p class="subtitle">Relatório de Saúde</p>
                 <p class="user-info">
                     📅 ${formatPeriod(reportData?.periodsText || reportMonth)}<br>

@@ -310,7 +310,7 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
                         <div style="position: absolute; top: -2px; right: -2px; background: #9C27B0; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">AI</div>
                     </div>
                 </div>
-                    <h1 class="title-premium">🗺️ FibroDiário Premium</h1>
+                    <h1 class="title-premium">FibroDiário Relatorio</h1>
             </div>
             <div class="subtitle-premium">
                 Análise do Diário da Dor - ${periodsText}
