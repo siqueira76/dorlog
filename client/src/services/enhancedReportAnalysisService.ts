@@ -245,7 +245,13 @@ export class EnhancedReportAnalysisService {
       console.log('🧠 Executando análises médicas avançadas...');
       console.time('⚡ Advanced Medical Analysis');
       
-      enhanced.medicalNLPAnalysis = this.performAdvancedMedicalAnalysis(enhanced, textResponses || []);
+      // Normalizar textResponses para o formato esperado pelo método
+      const normalizedTextResponses = (textResponses || []).map(response => 
+        typeof response === 'string' 
+          ? { text: response, date: new Date().toISOString().split('T')[0], timestamp: new Date().toISOString(), quizType: 'unknown' }
+          : response
+      );
+      enhanced.medicalNLPAnalysis = this.performAdvancedMedicalAnalysis(enhanced, normalizedTextResponses);
       enhanced.medicationAdherenceCharts = this.generateMedicationAdherenceCharts(enhanced);
       
       console.timeEnd('⚡ Advanced Medical Analysis');

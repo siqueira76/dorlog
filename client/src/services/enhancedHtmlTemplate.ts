@@ -2036,7 +2036,7 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
         <div class="rescue-medications">
           <h4>🏥 Medicamentos de Resgate Utilizados</h4>
           <div class="rescue-list">
-            ${rescueMedications.map(med => `
+            ${rescueMedications.map((med: any) => `
               <div class="rescue-item">
                 <span class="med-name">${med.text}</span>
                 <span class="med-date">(${formatDate(med.date)})</span>
@@ -2320,7 +2320,7 @@ function analyzeAffectedLocations(reportData: EnhancedReportData): Array<{locati
     if (typeof point === 'string') {
       locationName = point;
     } else if (typeof point === 'object' && point !== null) {
-      locationName = point.local || point.location || point.name || point.parte || 'Local não especificado';
+      locationName = (point as any).local || (point as any).location || (point as any).name || (point as any).parte || 'Local não especificado';
     }
     
     if (locationName) {
