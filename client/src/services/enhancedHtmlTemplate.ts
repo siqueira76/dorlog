@@ -55,17 +55,17 @@ export async function* generateEnhancedReportHTMLStream(
       size: headerHtml.length
     };
 
-    // 2. Seção Executive Dashboard (destaque máximo)
-    console.time('🏆 Executive Dashboard');
-    const executiveDashboardHtml = generateExecutiveDashboard(reportData);
-    console.timeEnd('🏆 Executive Dashboard');
-    
-    yield {
-      id: 'executive-dashboard',
-      content: executiveDashboardHtml,
-      order: 2,
-      size: executiveDashboardHtml.length
-    };
+    // 2. Seção Executive Dashboard (REMOVIDA)
+    // console.time('🏆 Executive Dashboard');
+    // const executiveDashboardHtml = generateExecutiveDashboard(reportData);
+    // console.timeEnd('🏆 Executive Dashboard');
+    // 
+    // yield {
+    //   id: 'executive-dashboard',
+    //   content: executiveDashboardHtml,
+    //   order: 2,
+    //   size: executiveDashboardHtml.length
+    // };
 
     // 3. Seção AI Insights Zone (nova seção premium de IA)
     console.time('🧠 AI Insights Zone');
@@ -274,7 +274,6 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
          `<div class="content">
-            ${generateExecutiveDashboard(reportData)}
             ${generateAIInsightsZone(reportData)}
             ${generateMorningEveningSection(reportData)}
             ${generateDetailedCrisisEpisodesSection(reportData)}
