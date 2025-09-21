@@ -45,6 +45,12 @@ export class UnifiedReportService {
       }
 
       const subscriptionData = subscriptionSnap.data();
+      
+      // Check if there's an explicit active field first
+      if ('active' in subscriptionData && typeof subscriptionData.active === 'boolean') {
+        return subscriptionData.active;
+      }
+      
       const subscriptionDate = subscriptionData.data;
       const currentDate = new Date();
 
@@ -58,6 +64,8 @@ export class UnifiedReportService {
         subscriptionDateObj = new Date(subscriptionDate as any);
       }
 
+      // Check if subscription date is in the past (which means it was created/activated)
+      // This assumes subscriptions remain active until explicitly deactivated
       return subscriptionDateObj < currentDate;
     } catch (error) {
       console.error('❌ Erro ao verificar acesso premium:', error);

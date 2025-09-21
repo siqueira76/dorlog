@@ -1059,7 +1059,7 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
  * 🆕 Gera seção de saúde digestiva no formato do relatório analisado
  */
 function generateDigestiveHealthSection(digestiveAnalysis: any): string {
-  if (!digestiveAnalysis) {
+  if (!digestiveAnalysis || !digestiveAnalysis.status) {
     return `
             <div class="metric-row">
                 <div class="metric-item">
