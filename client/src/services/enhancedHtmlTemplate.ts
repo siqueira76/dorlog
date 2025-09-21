@@ -954,14 +954,6 @@ function generateDoctorsSectionStandalone(reportData: EnhancedReportData): strin
                             ).join('<br><br>')}
                             ${normalizedDoctors.length > 4 ? `<br><br>• +${normalizedDoctors.length - 4} outros médicos` : ''}
                         </div>
-                        
-                        <div class="analysis-details">
-                            <strong>📊 Equipe Detalhada:</strong><br>
-                            ${normalizedDoctors.slice(0, 3).map((doctor: any) => 
-                              `• ${escapeHtml(doctor.specialty)}: Dr(a). ${escapeHtml(doctor.name)} (CRM ${escapeHtml(doctor.crm)})`
-                            ).join('<br>')}
-                            ${normalizedDoctors.length > 3 ? `<br>• +${normalizedDoctors.length - 3} outros profissionais` : ''}
-                        </div>
                     </div>
                 </div>
             </div>`;
