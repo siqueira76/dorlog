@@ -456,8 +456,6 @@ function generateClinicalDataSection(reportData: EnhancedReportData): string {
             <div class="clinical-detailed-content">
                 ${generateDoctorsSectionStandalone(reportData)}
                 ${generateMedicationsSectionStandalone(reportData)}
-                ${generateDetailedCrisisEpisodesSection(reportData)}
-                ${generateTemporalPatternsSection(reportData)}
             </div>
         </div>`;
 }
