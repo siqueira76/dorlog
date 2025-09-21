@@ -319,6 +319,9 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
             <div class="user-info-premium">
                 👤 ${userEmail}
             </div>
+            <div class="expiration-notice">
+                ⏰ <strong>Importante:</strong> Este relatório será automaticamente removido após 1 dia.
+            </div>
         </div>`;
 }
 
@@ -1801,6 +1804,7 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
                     <p><strong>Relatório ID:</strong> ${reportId}</p>
                     <p><strong>Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}</p>
                     <p><strong>Versão:</strong> Enhanced 3.0</p>
+                    <p><strong>⏰ Validade:</strong> Este relatório será removido automaticamente após 1 dia</p>
                 </div>
                 <div class="footer-disclaimer">
                     <p>⚠️ <strong>Importante:</strong> Este relatório é uma ferramenta de acompanhamento e não substitui consulta médica profissional.</p>
@@ -2951,6 +2955,20 @@ function getEnhancedReportCSS(): string {
             border: 2px solid rgba(255, 255, 255, 0.2);
             font-weight: 500;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .expiration-notice {
+            font-size: var(--text-sm);
+            opacity: 0.9;
+            background: rgba(255, 193, 7, 0.2);
+            color: #fff3cd;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            font-weight: 500;
+            margin-top: var(--space-3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         @keyframes gentle-pulse {

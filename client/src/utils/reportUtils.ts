@@ -210,5 +210,7 @@ Aqui está meu relatório de saúde gerado pelo DorLog. O relatório contém inf
 
 🔗 Visualizar relatório: ${reportUrl}
 
+⏰ *Importante:* Este relatório será automaticamente removido após 1 dia.
+
 _Este relatório foi gerado automaticamente pelo aplicativo DorLog._`;
 };
