@@ -1,7 +1,8 @@
 import { fetchUserReportData, ReportData } from './firestoreDataService';
 import { generateEnhancedReportHTML, EnhancedReportTemplateData } from './enhancedHtmlTemplate';
 import { uploadReportToStorage, generateReportId, generatePasswordHash } from './firebaseStorageService';
-import { auth, db } from '@/lib/firebase';
+import { EnhancedReportAnalysisService } from './enhancedReportAnalysisService';
+import { auth, db, storage } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export interface UnifiedReportOptions {
@@ -99,6 +100,11 @@ export class UnifiedReportService {
         medicationsCount: reportData.medications.length,
         doctorsCount: reportData.doctors.length
       });
+      
+      // 3.1. Add digestive health analysis to basic report
+      console.log(`💩 Processando análise de saúde digestiva...`);
+      (reportData as any).digestiveAnalysis = EnhancedReportAnalysisService.analyzeDigestiveIntervals(reportData);
+      console.log(`✅ Análise digestiva concluída:`, (reportData as any).digestiveAnalysis.status);
       
       // 4. Prepare enhanced template data
       // Resolve UID to email for proper display in template
@@ -231,6 +237,3 @@ export class UnifiedReportService {
   }
 }
 
-// Import Firebase dependencies (they need to be available)
-import { db } from '@/lib/firebase';
-import { storage } from '@/lib/firebase';

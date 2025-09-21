@@ -92,6 +92,18 @@ export async function* generateEnhancedReportHTMLStream(
       size: morningEveningHtml.length
     };
 
+    // 4.1.5. 💩 Seção Saúde Digestiva (NOVA)
+    console.time('💩 Digestive Health Section');
+    const digestiveHtml = generateDigestiveHealthSection((reportData as any).digestiveAnalysis);
+    console.timeEnd('💩 Digestive Health Section');
+    
+    yield {
+      id: 'digestive-health',
+      content: digestiveHtml,
+      order: 3.15,
+      size: digestiveHtml.length
+    };
+
     // 4.2. 🚨 Seção Episódios de Crise Detalhados (RESTAURADA)
     console.time('🚨 Crisis Episodes Section');
     const crisisEpisodesHtml = generateDetailedCrisisEpisodesSection(reportData);
@@ -275,6 +287,7 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
          generateEnhancedHeader(userEmail, periodsText, reportData) +
          `<div class="content">
             ${generateMorningEveningSection(reportData)}
+            ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
             ${generateDetailedCrisisEpisodesSection(reportData)}
             ${generateTemporalPatternsSection(reportData)}
             ${generatePhysicalActivitySection(reportData)}
