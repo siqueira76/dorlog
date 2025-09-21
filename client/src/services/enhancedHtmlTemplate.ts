@@ -1964,7 +1964,7 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                 <div class="indicator-bar">
                   <div class="indicator-fill" style="width: ${(morningData.averagePain/10)*100}%"></div>
                 </div>
-                <span class="indicator-label">🌅 Intensidade da dor matinal</span>
+                <span class="indicator-label">${morningData.averagePain <= 3 ? '😊' : morningData.averagePain <= 6 ? '😐' : '😰'} 🌅 Intensidade da dor matinal</span>
               </div>
               
               <div class="period-insights">
@@ -2026,7 +2026,7 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                 <div class="indicator-bar">
                   <div class="indicator-fill" style="width: ${(eveningData.averagePain/10)*100}%"></div>
                 </div>
-                <span class="indicator-label">🌙 Intensidade da dor noturna</span>
+                <span class="indicator-label">${eveningData.averagePain <= 3 ? '😊' : eveningData.averagePain <= 6 ? '😐' : '😰'} 🌙 Intensidade da dor noturna</span>
               </div>
               
               <div class="period-insights">
