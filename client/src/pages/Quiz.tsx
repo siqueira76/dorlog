@@ -162,9 +162,8 @@ export default function QuizPage() {
             },
             "9": {
               id: 9,
-              texto: "Como está seu humor agora?",
-              tipo: "emojis",
-              opcoes: ["Ansioso", "Triste", "Irritado", "Calmo", "Feliz", "Depressivo"]
+              texto: "Quer descrever algo a mais?",
+              tipo: "texto"
             }
           }} : {
           nome: "Quiz Matinal - Demonstração",
@@ -342,9 +341,8 @@ export default function QuizPage() {
             },
             "9": {
               id: 9,
-              texto: "Como está seu humor agora?",
-              tipo: "emojis",
-              opcoes: ["Ansioso", "Triste", "Irritado", "Calmo", "Feliz", "Depressivo"]
+              texto: "Quer descrever algo a mais?",
+              tipo: "texto"
             }
           }} : {
           nome: "Quiz Matinal - Demonstração",
@@ -555,9 +553,8 @@ export default function QuizPage() {
             },
             "9": {
               id: 9,
-              texto: "Como está seu humor agora?",
-              tipo: "emojis",
-              opcoes: ["Ansioso", "Triste", "Irritado", "Calmo", "Feliz", "Depressivo"]
+              texto: "Quer descrever algo a mais?",
+              tipo: "texto"
             }
           }} : {
           nome: "Quiz Matinal - Demonstração",

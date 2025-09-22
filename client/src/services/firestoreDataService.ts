@@ -269,6 +269,11 @@ function getQuestionSemanticType(questionId: string, quizType: string, answer: a
   if (typeof answer === 'string' && answer.trim().length > 0) {
     const lowerAnswer = answer.toLowerCase();
     
+    // Análise contextual específica para pergunta 9 do quiz noturno
+    if (quizType === 'noturno' && questionId === '9') {
+      return 'nightly_reflection';
+    }
+    
     // Análise contextual para medicamentos de resgate
     if (quizType === 'emergencial' && questionId === '2') {
       return 'rescue_medication';
