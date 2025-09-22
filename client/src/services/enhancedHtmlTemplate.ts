@@ -7,6 +7,7 @@
 
 import { EnhancedReportData } from './enhancedReportAnalysisService';
 import { MedicalCorrelationService, Doctor, Medication, MedicalInsight, MedicationEffectiveness, DoctorSpecialtyAnalysis } from './medicalCorrelationService';
+import { SleepPainAnalysisService } from './sleepPainAnalysisService';
 
 // 🛠️ Constantes para Análises Estatísticas Válidas
 const MIN_CRISIS_SAMPLE = 3;
@@ -1972,7 +1973,6 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
 function generateMorningEveningSection(reportData: EnhancedReportData): string {
   const morningData = extractRealMorningData(reportData);
   const eveningData = extractRealEveningData(reportData);
-  const sleepCorrelation = calculateRealSleepPainCorrelation(reportData);
   const digestiveHealth = reportData.digestiveAnalysis;
   
   return `
@@ -2032,15 +2032,15 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                     </div>
                   </div>
                   <div class="insight-item-modern">
-                    <div class="insight-badge morning-badge">😊</div>
+                    <div class="insight-badge morning-badge">😴</div>
                     <div class="insight-content">
-                      <span class="insight-label">Humor: ${morningData.mood}</span>
+                      <span class="insight-label">Sono: ${morningData.sleepQuality} (${morningData.sleepAverage}/4)</span>
                     </div>
                   </div>
                   <div class="insight-item-modern">
-                    <div class="insight-badge morning-badge">🔍</div>
+                    <div class="insight-badge morning-badge">🔗</div>
                     <div class="insight-content">
-                      <span class="insight-label">${morningData.symptoms}</span>
+                      <span class="insight-label">Correlação: ${morningData.sleepPainCorrelation}</span>
                     </div>
                   </div>
                 </div>
@@ -2119,15 +2119,15 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                     </div>
                   </div>
                   <div class="insight-item-modern">
-                    <div class="insight-badge evening-badge">😴</div>
+                    <div class="insight-badge evening-badge">😊</div>
                     <div class="insight-content">
-                      <span class="insight-label">Sono: ${eveningData.sleepQuality}</span>
+                      <span class="insight-label">Humor: ${eveningData.moodQuality} (${eveningData.moodAverage}/4)</span>
                     </div>
                   </div>
                   <div class="insight-item-modern">
-                    <div class="insight-badge evening-badge">🏃</div>
+                    <div class="insight-badge evening-badge">🔗</div>
                     <div class="insight-content">
-                      <span class="insight-label">${eveningData.activities}</span>
+                      <span class="insight-label">Correlação: ${eveningData.moodPainCorrelation}</span>
                     </div>
                   </div>
                 </div>
@@ -2162,27 +2162,6 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
           </div>
         </div>
       </div>
-        
-        <div class="insight-section">
-          <h3 class="insight-section-title">💤 Correlação Sono-Dor</h3>
-          ${sleepCorrelation.hasData ? `
-          <div class="insight-block">
-            <div class="insight-primary">Correlação: ${sleepCorrelation.strength}</div>
-            <div class="insight-secondary">${sleepCorrelation.description}</div>
-          </div>
-          <div class="insight-block">
-            <div class="insight-primary">Recomendação: ${sleepCorrelation.visual}</div>
-            <div class="insight-secondary">${sleepCorrelation.recommendation}</div>
-          </div>` : `
-          <div class="insight-block">
-            <div class="insight-primary">Status: Análise Indisponível</div>
-            <div class="insight-secondary">Dados insuficientes para calcular correlação entre sono e dor</div>
-          </div>
-          <div class="insight-block">
-            <div class="insight-primary">Recomendação: Complete mais registros</div>
-            <div class="insight-secondary">Complete pelo menos 5 quizzes matinais e noturnos para análise</div>
-          </div>`}
-        </div>
         
         ${digestiveHealth ? `
         <div class="insight-section">
@@ -2525,19 +2504,35 @@ function extractRealMorningData(reportData: EnhancedReportData): {
   hasPainData: boolean;
   averagePain: number;
   recordCount: number;
-  mood: string;
-  symptoms: string;
+  sleepQuality: string;
+  sleepAverage: number;
+  hasSleepData: boolean;
+  sleepPainCorrelation: string;
 } {
   const painData = reportData.painEvolution || [];
   const morningPain = painData.filter(p => p.period === 'matinal');
+  
+  // Extrair dados de sono usando o novo serviço
+  const sleepData = SleepPainAnalysisService.extractMorningSleepData(reportData as any);
+  
+  // Calcular correlação sono-dor
+  const sleepPainData = SleepPainAnalysisService.extractSleepPainData ? 
+    SleepPainAnalysisService.extractSleepPainData(reportData as any) : [];
+  const correlation = sleepPainData.length >= 3 ? 
+    SleepPainAnalysisService.analyzeSleepPainCorrelation ? 
+    SleepPainAnalysisService.analyzeSleepPainCorrelation(sleepPainData) : 
+    { description: 'Análise não disponível' } :
+    { description: 'Dados insuficientes para correlação' };
   
   if (morningPain.length === 0) {
     return {
       hasPainData: false,
       averagePain: 0,
       recordCount: 0,
-      mood: 'Não registrado',
-      symptoms: 'Não registrados'
+      sleepQuality: sleepData.sleepQualityLabel,
+      sleepAverage: sleepData.averageSleepQuality,
+      hasSleepData: sleepData.hasData,
+      sleepPainCorrelation: correlation.description
     };
   }
   
@@ -2547,8 +2542,10 @@ function extractRealMorningData(reportData: EnhancedReportData): {
     hasPainData: true,
     averagePain: avgPain,
     recordCount: morningPain.length,
-    mood: 'Variável', // Pode ser expandido para extrair dados reais de humor
-    symptoms: 'Dados coletados' // Pode ser expandido para extrair sintomas reais
+    sleepQuality: sleepData.sleepQualityLabel,
+    sleepAverage: sleepData.averageSleepQuality,
+    hasSleepData: sleepData.hasData,
+    sleepPainCorrelation: correlation.description
   };
 }
 
@@ -2559,19 +2556,29 @@ function extractRealEveningData(reportData: EnhancedReportData): {
   hasPainData: boolean;
   averagePain: number;
   recordCount: number;
-  sleepQuality: string;
-  activities: string;
+  moodQuality: string;
+  moodAverage: number;
+  hasMoodData: boolean;
+  moodPainCorrelation: string;
 } {
   const painData = reportData.painEvolution || [];
   const eveningPain = painData.filter(p => p.period === 'noturno');
+  
+  // Extrair dados de humor usando o novo serviço
+  const moodData = SleepPainAnalysisService.extractEveningMoodData(reportData as any);
+  
+  // Calcular correlação humor-dor
+  const correlation = SleepPainAnalysisService.analyzeMoodPainCorrelation(reportData as any);
   
   if (eveningPain.length === 0) {
     return {
       hasPainData: false,
       averagePain: 0,
       recordCount: 0,
-      sleepQuality: 'Não registrada',
-      activities: 'Não registradas'
+      moodQuality: moodData.moodQualityLabel,
+      moodAverage: moodData.averageMoodQuality,
+      hasMoodData: moodData.hasData,
+      moodPainCorrelation: correlation.description
     };
   }
   
@@ -2581,8 +2588,10 @@ function extractRealEveningData(reportData: EnhancedReportData): {
     hasPainData: true,
     averagePain: avgPain,
     recordCount: eveningPain.length,
-    sleepQuality: 'Coletada', // Pode ser expandido para extrair dados reais de sono
-    activities: 'Registradas' // Pode ser expandido para extrair atividades reais
+    moodQuality: moodData.moodQualityLabel,
+    moodAverage: moodData.averageMoodQuality,
+    hasMoodData: moodData.hasData,
+    moodPainCorrelation: correlation.description
   };
 }
 

@@ -92,6 +92,90 @@ export class SleepPainAnalysisService {
   }
   
   /**
+   * Mapeia respostas de humor/estado emocional para valores numéricos
+   * Escala: 0 (muito negativo) a 4 (muito positivo)
+   */
+  private static mapMoodQuality(moodAnswer: any): number {
+    if (!moodAnswer) {
+      console.warn('⚠️ mapMoodQuality: resposta inválida:', moodAnswer);
+      return 2; // Neutro como padrão
+    }
+
+    // Se for array (checkbox de emojis/estados), pegar o primeiro
+    let moodStr = Array.isArray(moodAnswer) ? moodAnswer[0] : moodAnswer;
+    
+    if (typeof moodStr !== 'string') {
+      console.warn('⚠️ mapMoodQuality: tipo não suportado:', typeof moodStr);
+      return 2;
+    }
+
+    // Normalizar resposta: lowercase, trim, remover acentos
+    const normalized = moodStr
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+
+    // Mapeamento de humor para escala numérica
+    const moodMap: { [key: string]: number } = {
+      // Estados muito positivos
+      'feliz': 4,
+      'alegre': 4,
+      'otimo': 4,
+      'excelente': 4,
+      'bem': 4,
+      '😊': 4,
+      '😄': 4,
+      '😁': 4,
+      
+      // Estados positivos
+      'calmo': 3,
+      'tranquilo': 3,
+      'bom': 3,
+      'sereno': 3,
+      '🙂': 3,
+      '😌': 3,
+      
+      // Estados neutros
+      'neutro': 2,
+      'normal': 2,
+      'ok': 2,
+      'regular': 2,
+      'mais ou menos': 2,
+      '😐': 2,
+      
+      // Estados negativos
+      'ansioso': 1,
+      'preocupado': 1,
+      'irritado': 1,
+      'chateado': 1,
+      'mal': 1,
+      '😟': 1,
+      '😠': 1,
+      
+      // Estados muito negativos
+      'triste': 0,
+      'depressivo': 0,
+      'pessimo': 0,
+      'horrivel': 0,
+      'desesperancoso': 0,
+      '😢': 0,
+      '😭': 0,
+      '😰': 0
+    };
+
+    const mappedValue = moodMap[normalized];
+
+    if (mappedValue === undefined) {
+      console.warn(`⚠️ mapMoodQuality: humor não mapeado: "${moodStr}" (normalizado: "${normalized}")`);
+      return 2; // Neutro como fallback
+    }
+
+    console.log(`✅ mapMoodQuality: "${moodStr}" -> ${mappedValue}`);
+    return mappedValue;
+  }
+
+  /**
    * Mapeia respostas textuais de qualidade de sono para valores numéricos
    * Robusto contra variações de case, acentos e espaços
    */
@@ -154,7 +238,7 @@ export class SleepPainAnalysisService {
   /**
    * Extrai dados de sono e dor dos quizzes matinais reais
    */
-  private static extractSleepPainData(reportData: ReportData): Array<{
+  static extractSleepPainData(reportData: ReportData): Array<{
     date: string;
     sleep: number;
     pain: number;
@@ -246,7 +330,7 @@ export class SleepPainAnalysisService {
   /**
    * Análise de correlação sono-dor
    */
-  private static analyzeSleepPainCorrelation(data: Array<{sleep: number, pain: number}>): {
+  static analyzeSleepPainCorrelation(data: Array<{sleep: number, pain: number}>): {
     correlation: number;
     significance: 'LOW' | 'MEDIUM' | 'HIGH';
     sampleSize: number;
@@ -461,6 +545,225 @@ export class SleepPainAnalysisService {
     return weeklyPatterns;
   }
   
+  /**
+   * Extrai dados de sono dos quizzes matinais para cálculo de média
+   */
+  static extractMorningSleepData(reportData: ReportData): {
+    averageSleepQuality: number;
+    sleepRecordCount: number;
+    hasData: boolean;
+    sleepQualityLabel: string;
+  } {
+    console.log('😴 Extraindo dados de sono dos quizzes matinais...');
+    
+    if (!reportData.rawQuizData || reportData.rawQuizData.length === 0) {
+      return {
+        averageSleepQuality: 0,
+        sleepRecordCount: 0,
+        hasData: false,
+        sleepQualityLabel: 'Não registrado'
+      };
+    }
+
+    const matinalQuizzes = reportData.rawQuizData.filter(quiz => quiz.tipo === 'matinal');
+    const sleepData: number[] = [];
+
+    matinalQuizzes.forEach((quiz) => {
+      const respostas = quiz.respostas || {};
+      const sleepAnswer = respostas['1']; // "Como você dormiu?"
+      
+      if (sleepAnswer) {
+        const sleepValue = this.mapSleepQuality(sleepAnswer as string);
+        sleepData.push(sleepValue);
+      }
+    });
+
+    if (sleepData.length === 0) {
+      return {
+        averageSleepQuality: 0,
+        sleepRecordCount: 0,
+        hasData: false,
+        sleepQualityLabel: 'Não registrado'
+      };
+    }
+
+    const avgSleep = sleepData.reduce((sum, val) => sum + val, 0) / sleepData.length;
+    
+    // Converter para label descritivo
+    let sleepLabel = 'Regular';
+    if (avgSleep >= 3.5) sleepLabel = 'Boa';
+    else if (avgSleep >= 2.5) sleepLabel = 'Regular';
+    else if (avgSleep >= 1) sleepLabel = 'Ruim';
+    else sleepLabel = 'Muito Ruim';
+
+    console.log(`✅ Dados de sono extraídos: ${sleepData.length} registros, média: ${avgSleep.toFixed(1)}`);
+
+    return {
+      averageSleepQuality: Math.round(avgSleep * 10) / 10,
+      sleepRecordCount: sleepData.length,
+      hasData: true,
+      sleepQualityLabel: sleepLabel
+    };
+  }
+
+  /**
+   * Extrai dados de humor dos quizzes noturnos para cálculo de média
+   */
+  static extractEveningMoodData(reportData: ReportData): {
+    averageMoodQuality: number;
+    moodRecordCount: number;
+    hasData: boolean;
+    moodQualityLabel: string;
+  } {
+    console.log('😊 Extraindo dados de humor dos quizzes noturnos...');
+    
+    if (!reportData.rawQuizData || reportData.rawQuizData.length === 0) {
+      return {
+        averageMoodQuality: 0,
+        moodRecordCount: 0,
+        hasData: false,
+        moodQualityLabel: 'Não registrado'
+      };
+    }
+
+    const noturnoQuizzes = reportData.rawQuizData.filter(quiz => quiz.tipo === 'noturno');
+    const moodData: number[] = [];
+
+    noturnoQuizzes.forEach((quiz) => {
+      const respostas = quiz.respostas || {};
+      // Tentar várias perguntas de humor (P1, P9 são comuns para estado emocional)
+      const moodAnswer = respostas['1'] || respostas['9'] || respostas['3'];
+      
+      if (moodAnswer) {
+        const moodValue = this.mapMoodQuality(moodAnswer);
+        moodData.push(moodValue);
+      }
+    });
+
+    if (moodData.length === 0) {
+      return {
+        averageMoodQuality: 0,
+        moodRecordCount: 0,
+        hasData: false,
+        moodQualityLabel: 'Não registrado'
+      };
+    }
+
+    const avgMood = moodData.reduce((sum, val) => sum + val, 0) / moodData.length;
+    
+    // Converter para label descritivo
+    let moodLabel = 'Neutro';
+    if (avgMood >= 3.5) moodLabel = 'Muito Positivo';
+    else if (avgMood >= 2.5) moodLabel = 'Positivo';
+    else if (avgMood >= 1.5) moodLabel = 'Neutro';
+    else if (avgMood >= 0.5) moodLabel = 'Negativo';
+    else moodLabel = 'Muito Negativo';
+
+    console.log(`✅ Dados de humor extraídos: ${moodData.length} registros, média: ${avgMood.toFixed(1)}`);
+
+    return {
+      averageMoodQuality: Math.round(avgMood * 10) / 10,
+      moodRecordCount: moodData.length,
+      hasData: true,
+      moodQualityLabel: moodLabel
+    };
+  }
+
+  /**
+   * Analisa correlação humor-dor para seção noturna
+   */
+  static analyzeMoodPainCorrelation(reportData: ReportData): {
+    correlation: number;
+    significance: 'LOW' | 'MEDIUM' | 'HIGH';
+    sampleSize: number;
+    description: string;
+  } {
+    console.log('🌙 Analisando correlação humor-dor noturna...');
+    
+    if (!reportData.rawQuizData || reportData.rawQuizData.length === 0) {
+      return {
+        correlation: 0,
+        significance: 'LOW',
+        sampleSize: 0,
+        description: 'Dados insuficientes para análise'
+      };
+    }
+
+    const noturnoQuizzes = reportData.rawQuizData.filter(quiz => quiz.tipo === 'noturno');
+    const moodPainData: Array<{mood: number, pain: number}> = [];
+
+    noturnoQuizzes.forEach((quiz) => {
+      const respostas = quiz.respostas || {};
+      const moodAnswer = respostas['1'] || respostas['9'] || respostas['3'];
+      const painAnswer = respostas['2']; // "Qual é o seu nível de dor agora?"
+      
+      if (moodAnswer && painAnswer !== undefined) {
+        const moodValue = this.mapMoodQuality(moodAnswer);
+        const painValue = typeof painAnswer === 'number' ? painAnswer : 
+                         (typeof painAnswer === 'string' ? parseInt(painAnswer) || 0 : 0);
+        
+        if (painValue >= 0 && painValue <= 10) {
+          moodPainData.push({
+            mood: moodValue,
+            pain: painValue
+          });
+        }
+      }
+    });
+
+    if (moodPainData.length < 3) {
+      return {
+        correlation: 0,
+        significance: 'LOW',
+        sampleSize: moodPainData.length,
+        description: 'Dados insuficientes para análise'
+      };
+    }
+
+    // Calcular correlação de Pearson
+    const n = moodPainData.length;
+    const sumMood = moodPainData.reduce((sum, d) => sum + d.mood, 0);
+    const sumPain = moodPainData.reduce((sum, d) => sum + d.pain, 0);
+    const avgMood = sumMood / n;
+    const avgPain = sumPain / n;
+
+    let numerator = 0;
+    let denomMood = 0;
+    let denomPain = 0;
+
+    moodPainData.forEach(d => {
+      const moodDiff = d.mood - avgMood;
+      const painDiff = d.pain - avgPain;
+      numerator += moodDiff * painDiff;
+      denomMood += moodDiff * moodDiff;
+      denomPain += painDiff * painDiff;
+    });
+
+    const correlation = denomMood === 0 || denomPain === 0 ? 0 : 
+      numerator / Math.sqrt(denomMood * denomPain);
+
+    let significance: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+    let description = '';
+
+    if (Math.abs(correlation) > 0.6) {
+      significance = 'HIGH';
+      description = correlation < -0.6 ? 
+        'Forte correlação negativa: Melhor humor relaciona-se com menos dor' :
+        'Forte correlação positiva: Humor e dor tendem a variar juntos';
+    } else if (Math.abs(correlation) > 0.3) {
+      significance = 'MEDIUM';
+      description = correlation < -0.3 ? 
+        'Correlação moderada: Humor positivo pode reduzir percepção da dor' :
+        'Correlação moderada: Humor e dor mostram relação moderada';
+    } else {
+      description = 'Correlação fraca: Humor e dor parecem independentes no período noturno';
+    }
+
+    console.log(`✅ Correlação humor-dor calculada: ${correlation.toFixed(3)} (${significance})`);
+
+    return { correlation, significance, sampleSize: n, description };
+  }
+
   /**
    * Retorna insights padrão quando dados são insuficientes
    */
