@@ -92,7 +92,23 @@ export class SleepPainAnalysisService {
   }
   
   /**
-   * Extrai dados de sono e dor dos quizzes matinais e noturnos
+   * Mapeia respostas textuais de qualidade de sono para valores numéricos
+   */
+  private static mapSleepQuality(sleepAnswer: string): number {
+    const sleepMap: { [key: string]: number } = {
+      'Bem': 4,
+      'Médio': 2,
+      'Ruim': 1,
+      'Não dormi': 0
+    };
+    
+    // Normalizar resposta e buscar correspondência
+    const normalizedAnswer = sleepAnswer?.trim();
+    return sleepMap[normalizedAnswer] ?? 0;
+  }
+  
+  /**
+   * Extrai dados de sono e dor dos quizzes matinais reais
    */
   private static extractSleepPainData(reportData: ReportData): Array<{
     date: string;
@@ -107,22 +123,59 @@ export class SleepPainAnalysisService {
       dayOfWeek: string;
     }> = [];
     
-    // Processar dados de painEvolution que podem conter dados de quizzes
-    if (reportData.painEvolution && reportData.painEvolution.length > 0) {
-      reportData.painEvolution.forEach(painEntry => {
-        // Assumir que temos dados matinais de dor
-        const date = new Date(painEntry.date);
-        const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+    console.log('😴 Extraindo dados reais de sono-dor dos quizzes matinais...');
+    
+    // Extrair dados dos quizzes matinais armazenados em rawQuizData
+    if ((reportData as any).rawQuizData && (reportData as any).rawQuizData.length > 0) {
+      const matinalQuizzes = (reportData as any).rawQuizData.filter((quiz: any) => quiz.tipo === 'matinal');
+      
+      console.log(`🔍 Encontrados ${matinalQuizzes.length} quizzes matinais para análise`);
+      
+      matinalQuizzes.forEach((quiz: any) => {
+        const respostas = quiz.respostas || {};
+        const sleepAnswer = respostas['1']; // "Como você dormiu?"
+        const painAnswer = respostas['2'];  // "Qual a intensidade da dor essa manhã?"
         
-        sleepPainData.push({
-          date: painEntry.date,
-          sleep: 5 + Math.random() * 3, // Dados simulados de 5-8 para demonstração
-          pain: painEntry.level,
-          dayOfWeek
-        });
+        if (sleepAnswer && painAnswer !== undefined) {
+          const date = quiz.date || quiz.dayKey;
+          const dayOfWeek = new Date(date).toLocaleDateString('pt-BR', { weekday: 'long' });
+          
+          const sleepValue = this.mapSleepQuality(sleepAnswer);
+          const painValue = typeof painAnswer === 'number' ? painAnswer : parseInt(painAnswer) || 0;
+          
+          sleepPainData.push({
+            date: date,
+            sleep: sleepValue,
+            pain: painValue,
+            dayOfWeek
+          });
+          
+          console.log(`✅ Quiz matinal processado [${date}]: Sono "${sleepAnswer}" -> ${sleepValue}, Dor ${painValue}`);
+        } else {
+          console.log(`⚠️ Quiz matinal incompleto: sono=${sleepAnswer}, dor=${painAnswer}`);
+        }
       });
     }
     
+    // Fallback: usar dados de painEvolution se não houver rawQuizData
+    if (sleepPainData.length === 0 && reportData.painEvolution && reportData.painEvolution.length > 0) {
+      console.log('⚠️ Usando fallback - dados de painEvolution sem dados de sono reais');
+      reportData.painEvolution.forEach(painEntry => {
+        if (painEntry.period === 'matinal') {
+          const date = new Date(painEntry.date);
+          const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+          
+          sleepPainData.push({
+            date: painEntry.date,
+            sleep: 2, // Valor padrão médio quando não há dados de sono
+            pain: painEntry.level,
+            dayOfWeek
+          });
+        }
+      });
+    }
+    
+    console.log(`📊 Total de ${sleepPainData.length} registros sono-dor extraídos`);
     return sleepPainData;
   }
   
