@@ -913,9 +913,20 @@ function generateQuantifiedCorrelationsSection(reportData: EnhancedReportData): 
                         
                         <div class="insights-details">
                             <strong>💡 Insights Clínicos:</strong><br>
-                            • Sono de qualidade reduz dor matinal em até 82%<br>
-                            • Humor noturno prediz 65% das crises do dia seguinte<br>
-                            • Atividade física acelera recuperação em 71% dos casos
+                            ${correlations.length > 0 ? 
+                              correlations.map(corr => {
+                                const percentage = Math.round(Math.abs(corr.value) * 100);
+                                if (corr.type.includes('Sono')) {
+                                  return `• Sono de qualidade reduz dor matinal em até ${percentage}%`;
+                                } else if (corr.type.includes('Humor')) {
+                                  return `• Humor noturno prediz ${percentage}% das crises do dia seguinte`;
+                                } else if (corr.type.includes('Atividade')) {
+                                  return `• Atividade física acelera recuperação em ${percentage}% dos casos`;
+                                }
+                                return `• ${corr.type}: Impacto de ${percentage}% observado nos dados`;
+                              }).join('<br>') :
+                              'Continue registrando dados para obter insights clínicos personalizados'
+                            }
                         </div>
                     </div>
                 </div>
