@@ -1875,137 +1875,191 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
   
   return `
     <div class="app-section">
-      <div class="section-header">
-        <h2 class="section-title">🌅 Análise Detalhada: Manhãs e Noites</h2>
-        <div class="section-subtitle">Padrões circadianos baseados em dados reais coletados</div>
+      <div class="section-header-enhanced">
+        <div class="header-gradient-background"></div>
+        <div class="header-content">
+          <h2 class="section-title-modern">🌅 Análise Detalhada: Manhãs e Noites</h2>
+          <div class="section-subtitle-modern">Padrões circadianos baseados em dados reais coletados</div>
+        </div>
       </div>
       
-      <div class="app-card">
-        <div class="card-grid-2">
-          <div class="pain-period-card morning-card">
-            <div class="card-header">
-              <div class="period-icon">🌅</div>
-              <div class="period-info">
-                <h3 class="period-title">Manhãs</h3>
-                <span class="period-subtitle">Período matinal</span>
+      <div class="app-card-enhanced">
+        <div class="period-cards-container">
+          <div class="period-card morning-card-enhanced">
+            <div class="card-gradient-overlay morning-gradient"></div>
+            <div class="card-content">
+              <div class="period-header-modern">
+                <div class="period-icon-enhanced morning-icon">🌅</div>
+                <div class="period-info-enhanced">
+                  <h3 class="period-title-modern">Manhãs</h3>
+                  <span class="period-subtitle-modern">Período matinal</span>
+                </div>
+                ${morningData.hasPainData ? `
+                  <div class="pain-score-enhanced ${morningData.averagePain <= 3 ? 'score-low' : morningData.averagePain <= 6 ? 'score-medium' : 'score-high'}">
+                    <div class="score-circle">
+                      <span class="score-value-large">${morningData.averagePain}</span>
+                      <span class="score-max-small">/10</span>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="pain-score-enhanced score-empty">
+                    <div class="score-circle">
+                      <span class="score-value-large">--</span>
+                    </div>
+                  </div>
+                `}
               </div>
+            
               ${morningData.hasPainData ? `
-                <div class="pain-score ${morningData.averagePain <= 3 ? 'low' : morningData.averagePain <= 6 ? 'medium' : 'high'}">
-                  <span class="score-value">${morningData.averagePain}</span>
-                  <span class="score-max">/10</span>
+                <div class="pain-indicator-enhanced morning-indicator">
+                  <div class="indicator-label-modern">
+                    <span class="emoji-indicator">${morningData.averagePain <= 3 ? '😊' : morningData.averagePain <= 6 ? '😐' : '😰'}</span>
+                    <span class="indicator-text">🌅 Intensidade da dor matinal</span>
+                  </div>
+                  <div class="progress-bar-modern morning-progress">
+                    <div class="progress-fill morning-fill" style="width: ${(morningData.averagePain/10)*100}%"></div>
+                    <div class="progress-percentage">${Math.round((morningData.averagePain/10)*100)}%</div>
+                  </div>
+                </div>
+                
+                <div class="insights-grid">
+                  <div class="insight-item-modern">
+                    <div class="insight-badge morning-badge">📊</div>
+                    <div class="insight-content">
+                      <span class="insight-label">${morningData.recordCount} registros coletados</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern">
+                    <div class="insight-badge morning-badge">😊</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Humor: ${morningData.mood}</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern">
+                    <div class="insight-badge morning-badge">🔍</div>
+                    <div class="insight-content">
+                      <span class="insight-label">${morningData.symptoms}</span>
+                    </div>
+                  </div>
                 </div>
               ` : `
-                <div class="pain-score no-data">
-                  <span class="score-value">--</span>
+                <div class="pain-indicator-enhanced morning-indicator empty-state">
+                  <div class="indicator-label-modern">
+                    <span class="emoji-indicator">💤</span>
+                    <span class="indicator-text">🌅 Intensidade da dor matinal</span>
+                  </div>
+                  <div class="progress-bar-modern morning-progress">
+                    <div class="progress-fill morning-fill" style="width: 0%"></div>
+                    <div class="progress-placeholder">Sem dados</div>
+                  </div>
+                </div>
+                
+                <div class="insights-grid">
+                  <div class="insight-item-modern empty">
+                    <div class="insight-badge morning-badge-empty">📋</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Nenhum quiz matinal registrado</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern empty">
+                    <div class="insight-badge morning-badge-empty">💡</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Complete alguns quizzes matinais para análises</span>
+                    </div>
+                  </div>
                 </div>
               `}
             </div>
-            
-            ${morningData.hasPainData ? `
-              <div class="pain-indicator">
-                <div class="indicator-bar">
-                  <div class="indicator-fill" style="width: ${(morningData.averagePain/10)*100}%"></div>
-                </div>
-                <span class="indicator-label">${morningData.averagePain <= 3 ? '😊' : morningData.averagePain <= 6 ? '😐' : '😰'} 🌅 Intensidade da dor matinal</span>
-              </div>
-              
-              <div class="period-insights">
-                <div class="insight-row">
-                  <span class="insight-icon">📊</span>
-                  <span class="insight-text">${morningData.recordCount} registros coletados</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">😊</span>
-                  <span class="insight-text">Humor: ${morningData.mood}</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">🔍</span>
-                  <span class="insight-text">${morningData.symptoms}</span>
-                </div>
-              </div>
-            ` : `
-              <div class="pain-indicator">
-                <div class="indicator-bar">
-                  <div class="indicator-fill" style="width: 0%"></div>
-                </div>
-                <span class="indicator-label">🌅 Intensidade da dor matinal</span>
-              </div>
-              
-              <div class="period-insights">
-                <div class="insight-row">
-                  <span class="insight-icon">📋</span>
-                  <span class="insight-text">Nenhum quiz matinal registrado</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">💡</span>
-                  <span class="insight-text">Complete alguns quizzes matinais para análises</span>
-                </div>
-              </div>
-            `}
           </div>
           
-          <div class="pain-period-card evening-card">
-            <div class="card-header">
-              <div class="period-icon">🌙</div>
-              <div class="period-info">
-                <h3 class="period-title">Noites</h3>
-                <span class="period-subtitle">Período noturno</span>
+          <div class="period-card evening-card-enhanced">
+            <div class="card-gradient-overlay evening-gradient"></div>
+            <div class="card-content">
+              <div class="period-header-modern">
+                <div class="period-icon-enhanced evening-icon">🌙</div>
+                <div class="period-info-enhanced">
+                  <h3 class="period-title-modern">Noites</h3>
+                  <span class="period-subtitle-modern">Período noturno</span>
+                </div>
+                ${eveningData.hasPainData ? `
+                  <div class="pain-score-enhanced ${eveningData.averagePain <= 3 ? 'score-low' : eveningData.averagePain <= 6 ? 'score-medium' : 'score-high'}">
+                    <div class="score-circle">
+                      <span class="score-value-large">${eveningData.averagePain}</span>
+                      <span class="score-max-small">/10</span>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="pain-score-enhanced score-empty">
+                    <div class="score-circle">
+                      <span class="score-value-large">--</span>
+                    </div>
+                  </div>
+                `}
               </div>
+            
               ${eveningData.hasPainData ? `
-                <div class="pain-score ${eveningData.averagePain <= 3 ? 'low' : eveningData.averagePain <= 6 ? 'medium' : 'high'}">
-                  <span class="score-value">${eveningData.averagePain}</span>
-                  <span class="score-max">/10</span>
+                <div class="pain-indicator-enhanced evening-indicator">
+                  <div class="indicator-label-modern">
+                    <span class="emoji-indicator">${eveningData.averagePain <= 3 ? '😊' : eveningData.averagePain <= 6 ? '😐' : '😰'}</span>
+                    <span class="indicator-text">🌙 Intensidade da dor noturna</span>
+                  </div>
+                  <div class="progress-bar-modern evening-progress">
+                    <div class="progress-fill evening-fill" style="width: ${(eveningData.averagePain/10)*100}%"></div>
+                    <div class="progress-percentage">${Math.round((eveningData.averagePain/10)*100)}%</div>
+                  </div>
+                </div>
+                
+                <div class="insights-grid">
+                  <div class="insight-item-modern">
+                    <div class="insight-badge evening-badge">📊</div>
+                    <div class="insight-content">
+                      <span class="insight-label">${eveningData.recordCount} registros coletados</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern">
+                    <div class="insight-badge evening-badge">😴</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Sono: ${eveningData.sleepQuality}</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern">
+                    <div class="insight-badge evening-badge">🏃</div>
+                    <div class="insight-content">
+                      <span class="insight-label">${eveningData.activities}</span>
+                    </div>
+                  </div>
                 </div>
               ` : `
-                <div class="pain-score no-data">
-                  <span class="score-value">--</span>
+                <div class="pain-indicator-enhanced evening-indicator empty-state">
+                  <div class="indicator-label-modern">
+                    <span class="emoji-indicator">🌚</span>
+                    <span class="indicator-text">🌙 Intensidade da dor noturna</span>
+                  </div>
+                  <div class="progress-bar-modern evening-progress">
+                    <div class="progress-fill evening-fill" style="width: 0%"></div>
+                    <div class="progress-placeholder">Sem dados</div>
+                  </div>
+                </div>
+                
+                <div class="insights-grid">
+                  <div class="insight-item-modern empty">
+                    <div class="insight-badge evening-badge-empty">📋</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Nenhum quiz noturno registrado</span>
+                    </div>
+                  </div>
+                  <div class="insight-item-modern empty">
+                    <div class="insight-badge evening-badge-empty">💡</div>
+                    <div class="insight-content">
+                      <span class="insight-label">Complete alguns quizzes noturnos para análises</span>
+                    </div>
+                  </div>
                 </div>
               `}
             </div>
-            
-            ${eveningData.hasPainData ? `
-              <div class="pain-indicator">
-                <div class="indicator-bar">
-                  <div class="indicator-fill" style="width: ${(eveningData.averagePain/10)*100}%"></div>
-                </div>
-                <span class="indicator-label">${eveningData.averagePain <= 3 ? '😊' : eveningData.averagePain <= 6 ? '😐' : '😰'} 🌙 Intensidade da dor noturna</span>
-              </div>
-              
-              <div class="period-insights">
-                <div class="insight-row">
-                  <span class="insight-icon">📊</span>
-                  <span class="insight-text">${eveningData.recordCount} registros coletados</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">😴</span>
-                  <span class="insight-text">Sono: ${eveningData.sleepQuality}</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">🏃</span>
-                  <span class="insight-text">${eveningData.activities}</span>
-                </div>
-              </div>
-            ` : `
-              <div class="pain-indicator">
-                <div class="indicator-bar">
-                  <div class="indicator-fill" style="width: 0%"></div>
-                </div>
-                <span class="indicator-label">🌙 Intensidade da dor noturna</span>
-              </div>
-              
-              <div class="period-insights">
-                <div class="insight-row">
-                  <span class="insight-icon">📋</span>
-                  <span class="insight-text">Nenhum quiz noturno registrado</span>
-                </div>
-                <div class="insight-row">
-                  <span class="insight-icon">💡</span>
-                  <span class="insight-text">Complete alguns quizzes noturnos para análises</span>
-                </div>
-              </div>
-            `}
           </div>
         </div>
+      </div>
         
         <div class="insight-section">
           <h3 class="insight-section-title">💤 Correlação Sono-Dor</h3>
@@ -5542,7 +5596,365 @@ function getEnhancedReportJavaScript(withPassword?: boolean, passwordHash?: stri
             max-height: 1000px;
         }
 
-        /* 🌅 CSS para Seção Manhãs e Noites Modernizada */
+        /* 🌅 CSS MODERNIZADO: Seção Manhãs e Noites Enhanced */
+        
+        /* Header da seção com gradiente */
+        .section-header-enhanced {
+            position: relative;
+            margin-bottom: var(--space-2xl);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .header-gradient-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.05;
+        }
+        
+        .header-content {
+            position: relative;
+            padding: var(--space-2xl);
+            text-align: center;
+        }
+        
+        .section-title-modern {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--app-text);
+            margin: 0 0 var(--space-sm) 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .section-subtitle-modern {
+            font-size: 16px;
+            color: var(--app-text-secondary);
+            font-weight: 400;
+        }
+        
+        /* Container dos cards modernizado */
+        .app-card-enhanced {
+            background: var(--app-surface);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--app-border-light);
+            overflow: hidden;
+        }
+        
+        .period-cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-2xl);
+            padding: var(--space-2xl);
+        }
+        
+        /* Cards de período enhanced */
+        .period-card {
+            position: relative;
+            background: var(--app-surface);
+            border-radius: 16px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid var(--app-border);
+            transition: all 0.3s ease;
+        }
+        
+        .period-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* Gradientes temáticos */
+        .card-gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            z-index: 1;
+        }
+        
+        .morning-gradient {
+            background: linear-gradient(90deg, #ff9a56 0%, #ffcb52 100%);
+        }
+        
+        .evening-gradient {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-content {
+            padding: var(--space-2xl);
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Header dos cards */
+        .period-header-modern {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .period-icon-enhanced {
+            font-size: 40px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        
+        .morning-icon {
+            animation: morning-glow 3s ease-in-out infinite alternate;
+        }
+        
+        .evening-icon {
+            animation: evening-glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes morning-glow {
+            0% { filter: drop-shadow(0 0 5px rgba(255, 154, 86, 0.3)); }
+            100% { filter: drop-shadow(0 0 15px rgba(255, 154, 86, 0.6)); }
+        }
+        
+        @keyframes evening-glow {
+            0% { filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.3)); }
+            100% { filter: drop-shadow(0 0 15px rgba(102, 126, 234, 0.6)); }
+        }
+        
+        .period-info-enhanced {
+            flex: 1;
+            margin-left: var(--space-lg);
+        }
+        
+        .period-title-modern {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--app-text);
+            margin: 0 0 var(--space-xs) 0;
+        }
+        
+        .period-subtitle-modern {
+            font-size: 14px;
+            color: var(--app-text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Score circular enhanced */
+        .pain-score-enhanced {
+            position: relative;
+        }
+        
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 3px solid;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .score-low .score-circle {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        }
+        
+        .score-medium .score-circle {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+        
+        .score-high .score-circle {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+        
+        .score-empty .score-circle {
+            border-color: #d1d5db;
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+        }
+        
+        .score-value-large {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        
+        .score-max-small {
+            font-size: 12px;
+            color: var(--app-text-secondary);
+            font-weight: 600;
+        }
+        
+        /* Indicadores de progresso modernos */
+        .pain-indicator-enhanced {
+            margin: var(--space-xl) 0;
+        }
+        
+        .indicator-label-modern {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+        
+        .emoji-indicator {
+            font-size: 20px;
+        }
+        
+        .indicator-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--app-text);
+        }
+        
+        .progress-bar-modern {
+            position: relative;
+            height: 12px;
+            background: var(--app-surface-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            position: relative;
+            transition: width 0.8s ease;
+        }
+        
+        .morning-fill {
+            background: linear-gradient(90deg, #ff9a56, #ffcb52);
+        }
+        
+        .evening-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .progress-percentage {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-placeholder {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--app-text-muted);
+        }
+        
+        /* Grid de insights modernizado */
+        .insights-grid {
+            display: grid;
+            gap: var(--space-md);
+        }
+        
+        .insight-item-modern {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: var(--app-surface-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--app-border-light);
+            transition: all 0.2s ease;
+        }
+        
+        .insight-item-modern:hover {
+            background: var(--app-surface);
+            border-color: var(--app-border);
+        }
+        
+        .insight-item-modern.empty {
+            opacity: 0.6;
+        }
+        
+        .insight-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .morning-badge {
+            background: linear-gradient(135deg, #ff9a56, #ffcb52);
+            color: white;
+        }
+        
+        .evening-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .morning-badge-empty, .evening-badge-empty {
+            background: var(--app-border);
+            color: var(--app-text-muted);
+        }
+        
+        .insight-content {
+            flex: 1;
+        }
+        
+        .insight-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--app-text);
+        }
+        
+        /* Responsive para mobile */
+        @media (max-width: 768px) {
+            .period-cards-container {
+                grid-template-columns: 1fr;
+                gap: var(--space-lg);
+                padding: var(--space-lg);
+            }
+            
+            .period-header-modern {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .period-info-enhanced {
+                margin-left: 0;
+                margin-top: var(--space-md);
+            }
+            
+            .score-circle {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .score-value-large {
+                font-size: 20px;
+            }
+        }
+        
+        /* Legacy classes para compatibilidade */
         .pain-period-card {
             background: white;
             border-radius: 16px;
