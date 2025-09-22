@@ -557,6 +557,24 @@ function processQuizzesWithSemanticMapping(
             console.log(`⚠️ Gatilhos processados: ${(answer as string[]).join(', ')}`);
             break;
             
+          case 'nightly_reflection':
+            // Processar reflexões específicas da pergunta 9 do quiz noturno
+            if (!reportData.observations) reportData.observations = '';
+            reportData.observations += `[${dayKey}] Reflexão noturna: ${answer}; `;
+            
+            // Criar estrutura específica para reflexões noturnas
+            if (!(reportData as any).nightlyReflections) (reportData as any).nightlyReflections = [];
+            (reportData as any).nightlyReflections.push({
+              text: answer as string,
+              date: dayKey,
+              timestamp: quiz.timestamp || new Date(),
+              quizType: quiz.tipo,
+              questionId: questionId
+            });
+            
+            console.log(`🌙 Reflexão noturna processada: "${(answer as string).substring(0, 50)}..." para ${dayKey}`);
+            break;
+            
           case 'free_text':
           case 'medication_text':
             // Processar textos que mencionam medicamentos

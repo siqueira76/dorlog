@@ -111,7 +111,19 @@ export async function* generateEnhancedReportHTMLStream(
       size: morningEveningHtml.length
     };
 
-    // 4.1.5. 💩 Seção Saúde Digestiva (NOVA)
+    // 4.1.5. 🌙 Seção Reflexões Noturnas (NOVA)
+    console.time('🌙 Nightly Reflections Section');
+    const nightlyReflectionsHtml = generateNightlyReflectionsSection(reportData);
+    console.timeEnd('🌙 Nightly Reflections Section');
+    
+    yield {
+      id: 'nightly-reflections',
+      content: nightlyReflectionsHtml,
+      order: 3.12,
+      size: nightlyReflectionsHtml.length
+    };
+
+    // 4.1.6. 💩 Seção Saúde Digestiva
     console.time('💩 Digestive Health Section');
     const digestiveHtml = generateDigestiveHealthSection((reportData as any).digestiveAnalysis);
     console.timeEnd('💩 Digestive Health Section');
@@ -1076,6 +1088,96 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
                     </div>
                 </div>
                 ` : ''}
+            </div>`;
+}
+
+/**
+ * 🌙 Gera seção específica para reflexões noturnas da pergunta 9
+ */
+function generateNightlyReflectionsSection(reportData: EnhancedReportData): string {
+  const nightlyReflections = reportData.textSummaries?.noturno?.nightlyReflections;
+  
+  if (!nightlyReflections || nightlyReflections.textCount === 0) {
+    return `
+            <div class="metric-row">
+                <div class="metric-item">
+                    <div class="metric-title">🌙 Reflexões do Final do Dia:</div>
+                    <div class="metric-status">📊 Aguardando reflexões da pergunta 9</div>
+                    <div class="metric-subtitle">└ Complete o quiz noturno com suas reflexões pessoais</div>
+                </div>
+            </div>`;
+  }
+
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+
+  const getSentimentEmoji = (sentiment: string) => {
+    switch (sentiment.toLowerCase()) {
+      case 'positive': return '😊';
+      case 'negative': return '😔';
+      default: return '😐';
+    }
+  };
+
+  return `
+            <div class="nightly-reflections-section">
+                <h3>🌙 Reflexões do Final do Dia</h3>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">📝 Análise de Reflexões:</div>
+                        <div class="metric-status">
+                            ${nightlyReflections.textCount} reflexão(ões) analisada(s)
+                        </div>
+                        
+                        <div class="reflection-summary">
+                            <strong>📊 Resumo geral:</strong><br>
+                            ${escapeHtml(nightlyReflections.summary)}
+                        </div>
+                        
+                        ${nightlyReflections.keyThemes.length > 0 ? `
+                        <div class="key-themes">
+                            <strong>🔍 Temas principais identificados:</strong><br>
+                            ${nightlyReflections.keyThemes.map(theme => 
+                                `• ${escapeHtml(theme)}`
+                            ).join('<br>')}
+                        </div>
+                        ` : ''}
+                        
+                        ${nightlyReflections.reflectionInsights.length > 0 ? `
+                        <div class="reflection-insights">
+                            <strong>💡 Insights sobre suas reflexões:</strong><br>
+                            ${nightlyReflections.reflectionInsights.map(insight => 
+                                `• ${escapeHtml(insight)}`
+                            ).join('<br>')}
+                        </div>
+                        ` : ''}
+                        
+                        ${nightlyReflections.emotionalTrends.length > 0 ? `
+                        <div class="emotional-timeline">
+                            <strong>📈 Timeline emocional das reflexões:</strong><br>
+                            ${nightlyReflections.emotionalTrends.slice(0, 5).map(trend => 
+                                `${getSentimentEmoji(trend.sentiment)} ${trend.date}: "${escapeHtml(trend.text)}"`
+                            ).join('<br>')}
+                            ${nightlyReflections.emotionalTrends.length > 5 ? 
+                                `<br>... e mais ${nightlyReflections.emotionalTrends.length - 5} reflexão(ões)` : ''}
+                        </div>
+                        ` : ''}
+                        
+                        <div class="reflection-sentiment">
+                            <strong>💭 Sentimento predominante:</strong> 
+                            ${getSentimentEmoji(nightlyReflections.averageSentiment)} 
+                            ${nightlyReflections.averageSentiment === 'positive' ? 'Positivo' : 
+                              nightlyReflections.averageSentiment === 'negative' ? 'Preocupante' : 'Neutro'}
+                        </div>
+                    </div>
+                </div>
             </div>`;
 }
 

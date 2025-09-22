@@ -100,6 +100,14 @@ export interface EnhancedReportData extends ReportData {
       averageLength: number;
       keyPatterns?: string[];
       reflectionDepth?: string;
+      nightlyReflections?: {
+        summary: string;
+        keyThemes: string[];
+        emotionalTrends: Array<{ date: string; sentiment: string; text: string }>;
+        reflectionInsights: string[];
+        averageSentiment: string;
+        textCount: number;
+      };
     };
     emergencial?: {
       summary: string;
@@ -596,9 +604,43 @@ export class EnhancedReportAnalysisService {
     // Identificar padrões nos textos noturnos
     const patterns = this.identifyTextPatterns(texts.map(t => t.text));
     
+    // Processar especificamente reflexões da pergunta 9 "Quer descrever algo a mais?"
+    const nightlyReflectionTexts = texts.filter(t => t.questionId === '9');
+    
+    let nightlyReflections = null;
+    
+    if (nightlyReflectionTexts.length > 0) {
+      console.log(`🌙 Processando ${nightlyReflectionTexts.length} reflexão(ões) noturna(s) da pergunta 9`);
+      
+      // Extrair temas chave das reflexões
+      const keyThemes = this.extractKeyThemes(nightlyReflectionTexts.map(t => t.text));
+      
+      // Criar timeline emocional das reflexões
+      const emotionalTrends = nightlyReflectionTexts.map(t => ({
+        date: t.date,
+        sentiment: this.analyzeSentimentFallback(t.text).toLowerCase(),
+        text: t.text.length > 100 ? t.text.substring(0, 100) + '...' : t.text
+      }));
+      
+      // Gerar insights específicos sobre as reflexões
+      const reflectionInsights = this.generateReflectionInsights(nightlyReflectionTexts, analysis);
+      
+      nightlyReflections = {
+        summary: analysis.summary?.summary || `${nightlyReflectionTexts.length} reflexão(ões) do final do dia analisada(s)`,
+        keyThemes: keyThemes.slice(0, 5),
+        emotionalTrends: emotionalTrends,
+        reflectionInsights: reflectionInsights,
+        averageSentiment: analysis.sentiment?.label?.toLowerCase() || 'neutral',
+        textCount: nightlyReflectionTexts.length
+      };
+      
+      console.log(`✅ Análise das reflexões noturnas concluída: ${keyThemes.length} tema(s) identificado(s)`);
+    }
+    
     return {
       keyPatterns: patterns.slice(0, 3),
-      reflectionDepth: analysis.summary ? 'Alta' : 'Baixa'
+      reflectionDepth: analysis.summary ? 'Alta' : 'Baixa',
+      nightlyReflections: nightlyReflections
     };
   }
 
@@ -1429,5 +1471,106 @@ export class EnhancedReportAnalysisService {
         riskMedications: []
       };
     }
+  }
+
+  /**
+   * Extrai temas principais de um conjunto de textos
+   */
+  private static extractKeyThemes(texts: string[]): string[] {
+    const allWords = texts.join(' ').toLowerCase();
+    const themes = [];
+
+    // Temas relacionados à saúde e bem-estar
+    const healthThemes = {
+      'dor': ['dor', 'dolorido', 'machucou', 'dói'],
+      'sono': ['sono', 'dormir', 'insônia', 'cansado', 'exausto'],
+      'humor': ['humor', 'sentimento', 'emocional', 'triste', 'feliz', 'ansioso'],
+      'medicação': ['medicamento', 'remédio', 'tomei', 'medicação'],
+      'trabalho': ['trabalho', 'profissional', 'escritório', 'reunião'],
+      'família': ['família', 'casa', 'filho', 'marido', 'esposa', 'pai', 'mãe'],
+      'exercício': ['exercício', 'caminhada', 'atividade física', 'ginástica'],
+      'alimentação': ['comida', 'alimentação', 'comer', 'dieta']
+    };
+
+    for (const [theme, keywords] of Object.entries(healthThemes)) {
+      const mentionCount = keywords.reduce((count, keyword) => {
+        return count + (allWords.split(keyword).length - 1);
+      }, 0);
+      
+      if (mentionCount > 0) {
+        themes.push({ theme, count: mentionCount });
+      }
+    }
+
+    return themes
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(t => t.theme);
+  }
+
+  /**
+   * Análise de sentimento simplificada usando regras
+   */
+  private static analyzeSentimentFallback(text: string): string {
+    const textLower = text.toLowerCase();
+    
+    const positiveWords = ['bom', 'bem', 'melhor', 'ótimo', 'calmo', 'tranquilo', 'feliz', 'alegre', 'satisfeito', 'aliviado'];
+    const negativeWords = ['dor', 'mal', 'pior', 'terrível', 'preocupado', 'ansioso', 'triste', 'crise', 'ruim', 'péssimo'];
+    
+    let positiveScore = 0;
+    let negativeScore = 0;
+    
+    positiveWords.forEach(word => {
+      if (textLower.includes(word)) positiveScore++;
+    });
+    
+    negativeWords.forEach(word => {
+      if (textLower.includes(word)) negativeScore++;
+    });
+    
+    if (positiveScore > negativeScore) return 'positive';
+    if (negativeScore > positiveScore) return 'negative';
+    return 'neutral';
+  }
+
+  /**
+   * Gera insights específicos sobre as reflexões noturnas
+   */
+  private static generateReflectionInsights(reflectionTexts: any[], analysis: any): string[] {
+    const insights = [];
+    
+    if (reflectionTexts.length >= 3) {
+      insights.push('Padrão consistente de reflexões diárias identificado');
+    }
+
+    const avgLength = reflectionTexts.reduce((sum, t) => sum + t.text.length, 0) / reflectionTexts.length;
+    if (avgLength > 100) {
+      insights.push('Reflexões detalhadas indicam alta consciência sobre o estado de saúde');
+    } else if (avgLength < 30) {
+      insights.push('Reflexões breves - podem indicar baixa energia ou humor');
+    }
+
+    const sentimentCounts = { positive: 0, negative: 0, neutral: 0 };
+    reflectionTexts.forEach(t => {
+      const sentiment = this.analyzeSentimentFallback(t.text);
+      sentimentCounts[sentiment as keyof typeof sentimentCounts]++;
+    });
+
+    if (sentimentCounts.positive > sentimentCounts.negative * 2) {
+      insights.push('Tendência emocional positiva nas reflexões do fim do dia');
+    } else if (sentimentCounts.negative > sentimentCounts.positive * 2) {
+      insights.push('Padrão de preocupações ou dificuldades relatado com frequência');
+    }
+
+    const allText = reflectionTexts.map(t => t.text).join(' ').toLowerCase();
+    if (allText.includes('trabalho') && allText.includes('estress')) {
+      insights.push('Trabalho identificado como fonte recorrente de estresse');
+    }
+
+    if (allText.includes('dor') && allText.includes('sono')) {
+      insights.push('Correlação entre qualidade do sono e níveis de dor observada');
+    }
+
+    return insights.length > 0 ? insights : ['Reflexões registradas - padrões sendo monitorados'];
   }
 }
