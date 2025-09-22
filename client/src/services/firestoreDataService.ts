@@ -163,6 +163,11 @@ const debugLog = (message: string, ...args: any[]) => {
 function getQuestionSemanticType(questionId: string, quizType: string, answer: any): string {
   debugLog(`🔭 DEBUG: Analisando Q${questionId} (${quizType}): ${JSON.stringify(answer)} [${typeof answer}]`);
   
+  // NOVO: Pergunta 1 do quiz matinal é sobre qualidade de sono
+  if (questionId === '1' && quizType === 'matinal') {
+    return 'sleep_quality';
+  }
+  
   // Tratar respostas de evacuação (sim/não)
   if (typeof answer === 'string') {
     const lowerAnswer = answer.toLowerCase().trim();
@@ -322,6 +327,17 @@ function processQuizzesWithSemanticMapping(
 ) {
   quizzes.forEach((quiz: any) => {
     console.log(`🔍 Auditoria: Processando quiz ${quiz.tipo} para ${dayKey}`);
+    
+    // NOVO: Salvar quizzes matinais para análise sono-dor
+    if (quiz.tipo === 'matinal') {
+      if (!reportData.rawQuizData) reportData.rawQuizData = [];
+      reportData.rawQuizData.push({
+        ...quiz,
+        date: dayKey,
+        dayKey: dayKey
+      });
+      console.log(`😴 Quiz matinal salvo para análise sono-dor: ${dayKey}`);
+    }
     
     // Processar respostas com mapeamento semântico
     if (quiz.respostas && typeof quiz.respostas === 'object') {
