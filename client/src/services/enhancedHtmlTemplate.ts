@@ -519,40 +519,36 @@ function generateExecutiveAlerts(reportData: EnhancedReportData): string {
 }
 
 /**
- * Gera insights preditivos baseados em IA
+ * Gera insights preditivos baseados em IA - usando dados reais
  */
 function generatePredictiveInsights(reportData: EnhancedReportData): string {
+  // Verificar se há dados reais para gerar insights preditivos
+  const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
+  const predictiveInsights = medicalNLPAnalysis?.predictiveInsights || [];
+  
+  if (!hasData(predictiveInsights, 1)) {
+    return `
+      <div class="predictive-insights-card">
+        <h4 class="insights-title">🔮 Insights Preditivos</h4>
+        <div class="insight-item">
+          <div class="insight-text">📊 Dados insuficientes para análise preditiva</div>
+          <div class="insight-text">Continue registrando dados para receber insights personalizados</div>
+        </div>
+      </div>`;
+  }
+  
   return `
     <div class="predictive-insights-card">
       <h4 class="insights-title">🔮 Insights Preditivos</h4>
-      <div class="insight-item">
-        <div class="insight-probability">Probabilidade: 78%</div>
-        <div class="insight-text">Tendência de melhora nas próximas 2 semanas</div>
-      </div>
-      <div class="insight-item">
-        <div class="insight-probability">Risco: Baixo</div>
-        <div class="insight-text">Padrão de sono estável reduz risco de crises</div>
-      </div>
+      ${predictiveInsights.map((insight: any) => `
+        <div class="insight-item">
+          <div class="insight-probability">${insight.priority || 'Normal'}: ${fmtPct(insight.confidence || 0)}%</div>
+          <div class="insight-text">${escapeHtml(insight.title || 'Insight disponível')}</div>
+        </div>
+      `).join('')}
     </div>`;
 }
 
-/**
- * Gera análise de correlações
- */
-function generateCorrelationAnalysis(reportData: EnhancedReportData): string {
-  return `
-    <div class="correlation-card">
-      <h4 class="correlation-title">🔗 Análise de Correlações</h4>
-      <div class="correlation-item">
-        <div class="correlation-vars">Sono ↔ Dor</div>
-        <div class="correlation-strength strong">Forte (0.82)</div>
-      </div>
-      <div class="correlation-item">
-        <div class="correlation-vars">Humor ↔ Dor</div>
-        <div class="correlation-strength moderate">Moderada (0.65)</div>
-      </div>
-    </div>`;
-}
 
 /**
  * Gera seção de resumo inteligente baseada em quiz - FORMATO APRIMORADO
@@ -584,9 +580,9 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                         
                         <div class="analysis-details">
                             <strong>🌅 Análise Matinal:</strong><br>
-                            • Intensidade média: 6.7/10 (dados coletados)<br>
-                            • Qualidade do despertar: Variável<br>
-                            • Correlação sono-dor: 82% (alta significância)<br><br>
+                            • Intensidade média: ${avgPain}/10 (dados reais)<br>
+                            • Qualidade do despertar: ${reportData.sleepPainInsights?.morningQuality || 'Análise em processo'}<br>
+                            • Correlação sono-dor: ${reportData.sleepPainInsights?.correlationAnalysis?.correlation ? fmtPct(reportData.sleepPainInsights.correlationAnalysis.correlation * 100) + '%' : 'Dados insuficientes'} ${reportData.sleepPainInsights?.correlationAnalysis?.significance ? '(' + reportData.sleepPainInsights.correlationAnalysis.significance.toLowerCase() + ' significância)' : ''}<br><br>
                             
                             <strong>🌙 Análise Noturna:</strong><br>
                             • Evolução da dor: ${avgPain}/10 ao final do dia<br>
