@@ -2234,6 +2234,25 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
 function generatePhysicalActivitySection(reportData: EnhancedReportData): string {
   const activities = extractPhysicalActivities(reportData);
   const activityCorrelation = calculateActivityPainCorrelation(reportData);
+  const physicalActivityAnalysis = reportData.physicalActivityAnalysis;
+  
+  // Verificar se há dados suficientes para análise de atividades
+  const hasSufficientActivityData = hasData(activities, 1) && 
+    (physicalActivityAnalysis?.totalDays ?? 0) >= MIN_ACTIVITY_DAYS;
+  
+  // Usar dados reais de correlação
+  const realCorrelation = safe(
+    activityCorrelation,
+    v => v.toFixed(2)
+  );
+  
+  // Obter atividade mais eficaz dos dados reais
+  const mostEffectiveActivity = activities.length > 0 ? 
+    activities.sort((a, b) => b.frequency - a.frequency)[0] : null;
+  
+  // Obter recomendação real baseada no nível de atividade
+  const activityRecommendation = physicalActivityAnalysis?.recommendation || 
+    'Dados insuficientes para gerar recomendação personalizada';
   
   return `
     <div class="app-section">
@@ -2245,32 +2264,50 @@ function generatePhysicalActivitySection(reportData: EnhancedReportData): string
       <div class="app-card">
         <div class="activity-overview">
           <div class="correlation-metric">
-            <div class="correlation-value">${activityCorrelation || 0.71}</div>
+            <div class="correlation-value">${realCorrelation}</div>
             <div class="correlation-label">Correlação Atividade ↔ Recuperação</div>
           </div>
         </div>
         
         <div class="activities-list">
           <h4>🎯 Atividades Realizadas</h4>
-          ${activities.map(activity => `
-            <div class="activity-item">
-              <div class="activity-name">${activity.name}</div>
-              <div class="activity-frequency">${activity.frequency}x por semana</div>
-              <div class="activity-impact ${activity.impactClass}">${activity.impact}</div>
-            </div>
-          `).join('')}
+          ${hasData(activities, 1) ? 
+            activities.map(activity => `
+              <div class="activity-item">
+                <div class="activity-name">${activity.name}</div>
+                <div class="activity-frequency">${activity.frequency}x por semana</div>
+                <div class="activity-impact ${activity.impactClass}">${activity.impact}</div>
+              </div>
+            `).join('') :
+            '<p>Dados insuficientes para análise de atividades físicas</p>'
+          }
         </div>
         
         <div class="insight-section">
           <h3 class="insight-section-title">📈 Insights de Atividade</h3>
+          ${hasSufficientActivityData ? `
           <div class="insight-block">
-            <div class="insight-primary">Correlação atividade-recuperação: ${activityCorrelation || 0.71}</div>
-            <div class="insight-secondary">Exercícios mostram correlação positiva com redução da dor</div>
+            <div class="insight-primary">Correlação atividade-recuperação: ${realCorrelation}</div>
+            <div class="insight-secondary">${realCorrelation !== 'Dados insuficientes para análise' ? 
+              (parseFloat(realCorrelation) > 0.5 ? 'Exercícios mostram correlação positiva com redução da dor' : 
+               'Correlação fraca entre atividades e alívio da dor') : 
+              'Dados insuficientes para determinar correlação'}</div>
           </div>
+          ${mostEffectiveActivity ? `
           <div class="insight-block">
-            <div class="insight-primary">Atividade mais eficaz: Fisioterapia</div>
-            <div class="insight-secondary">Alta eficácia quando praticada regularmente</div>
+            <div class="insight-primary">Atividade mais eficaz: ${mostEffectiveActivity.name}</div>
+            <div class="insight-secondary">Praticada ${mostEffectiveActivity.frequency}x por semana com impacto ${mostEffectiveActivity.impact.toLowerCase()}</div>
+          </div>` : ''}
+          <div class="insight-block">
+            <div class="insight-primary">Recomendação Personalizada</div>
+            <div class="insight-secondary">${activityRecommendation}</div>
           </div>
+          ` : `
+          <div class="insight-block">
+            <div class="insight-primary">Dados insuficientes para análise completa de atividades</div>
+            <div class="insight-secondary">Continue registrando suas atividades físicas para obter insights personalizados</div>
+          </div>
+          `}
         </div>
       </div>
     </div>
