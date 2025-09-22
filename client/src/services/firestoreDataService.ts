@@ -44,6 +44,13 @@ export interface ReportData {
   generatedAt: string;
   hasError?: boolean;
   errorMessage?: string;
+  // NOVO: Dados brutos dos quizzes para análise sono-dor
+  rawQuizData?: Array<{
+    tipo: 'matinal' | 'noturno' | 'emergencial';
+    date: string;
+    dayKey?: string;
+    respostas: Record<string, string | number | string[]>;
+  }>;
 }
 
 // Função de resolução removida - pós-migração todos os dados usam Firebase UID diretamente
@@ -328,16 +335,7 @@ function processQuizzesWithSemanticMapping(
   quizzes.forEach((quiz: any) => {
     console.log(`🔍 Auditoria: Processando quiz ${quiz.tipo} para ${dayKey}`);
     
-    // NOVO: Salvar quizzes matinais para análise sono-dor
-    if (quiz.tipo === 'matinal') {
-      if (!reportData.rawQuizData) reportData.rawQuizData = [];
-      reportData.rawQuizData.push({
-        ...quiz,
-        date: dayKey,
-        dayKey: dayKey
-      });
-      console.log(`😴 Quiz matinal salvo para análise sono-dor: ${dayKey}`);
-    }
+    // Nota: rawQuizData agora é populado durante o processamento principal em fetchUserReportData
     
     // Processar respostas com mapeamento semântico
     if (quiz.respostas && typeof quiz.respostas === 'object') {
@@ -651,7 +649,8 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
     rescueMedications: [],
     observations: '',
     dataSource: 'firestore',
-    generatedAt: new Date().toISOString()
+    generatedAt: new Date().toISOString(),
+    rawQuizData: [] // NOVO: Inicializar array para dados de quizzes matinais
   };
 
   try {
@@ -699,6 +698,26 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
               const normalizedQuizzes = normalizeQuizData(data.quizzes);
               if (normalizedQuizzes.length > 0) {
                 console.log(`📝 Processando ${normalizedQuizzes.length} quiz(es) para ${dayKey}`);
+                
+                // NOVO: Popular rawQuizData para análise sono-dor
+                normalizedQuizzes.forEach(quiz => {
+                  if (quiz.tipo && quiz.respostas) {
+                    reportData.rawQuizData!.push({
+                      tipo: quiz.tipo as 'matinal' | 'noturno' | 'emergencial',
+                      date: docDate.toISOString(),
+                      dayKey: dayKey,
+                      respostas: quiz.respostas
+                    });
+                    
+                    if (quiz.tipo === 'matinal') {
+                      console.log(`😴 Quiz matinal adicionado ao rawQuizData [${dayKey}]:`, {
+                        sono: quiz.respostas['1'],
+                        dor: quiz.respostas['2']
+                      });
+                    }
+                  }
+                });
+                
                 const counters = { totalPainSum, totalPainCount, crisisCount };
                 processQuizzesWithSemanticMapping(normalizedQuizzes, dayKey, reportData, counters);
                 

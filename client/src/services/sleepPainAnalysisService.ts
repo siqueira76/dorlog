@@ -93,18 +93,62 @@ export class SleepPainAnalysisService {
   
   /**
    * Mapeia respostas textuais de qualidade de sono para valores numéricos
+   * Robusto contra variações de case, acentos e espaços
    */
-  private static mapSleepQuality(sleepAnswer: string): number {
+  private static mapSleepQuality(sleepAnswer: string | undefined): number {
+    if (!sleepAnswer || typeof sleepAnswer !== 'string') {
+      console.warn('⚠️ mapSleepQuality: resposta inválida:', sleepAnswer);
+      return 0;
+    }
+    
+    // Normalizar resposta: lowercase, trim, remover acentos
+    const normalized = sleepAnswer
+      .toLowerCase()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+    
+    // Mapeamento robusto incluindo variações comuns
     const sleepMap: { [key: string]: number } = {
-      'Bem': 4,
-      'Médio': 2,
-      'Ruim': 1,
-      'Não dormi': 0
+      // Variações de "Bem"
+      'bem': 4,
+      'bom': 4,
+      'boa': 4,
+      'otimo': 4,
+      'excelente': 4,
+      
+      // Variações de "Médio"
+      'medio': 2,
+      'regular': 2,
+      'ok': 2,
+      'razoavel': 2,
+      'mais ou menos': 2,
+      
+      // Variações de "Ruim"
+      'ruim': 1,
+      'mal': 1,
+      'pessimo': 1,
+      'terrivel': 1,
+      'horrivel': 1,
+      
+      // Variações de "Não dormi"
+      'nao dormi': 0,
+      'nao dormiu': 0,
+      'sem sono': 0,
+      'insonia': 0,
+      'acordado': 0,
+      'nada': 0
     };
     
-    // Normalizar resposta e buscar correspondência
-    const normalizedAnswer = sleepAnswer?.trim();
-    return sleepMap[normalizedAnswer] ?? 0;
+    const mappedValue = sleepMap[normalized];
+    
+    if (mappedValue === undefined) {
+      console.warn(`⚠️ mapSleepQuality: resposta não mapeada: "${sleepAnswer}" (normalizado: "${normalized}")`);
+      return 0;
+    }
+    
+    console.log(`✅ mapSleepQuality: "${sleepAnswer}" -> ${mappedValue}`);
+    return mappedValue;
   }
   
   /**
@@ -126,56 +170,76 @@ export class SleepPainAnalysisService {
     console.log('😴 Extraindo dados reais de sono-dor dos quizzes matinais...');
     
     // Extrair dados dos quizzes matinais armazenados em rawQuizData
-    if ((reportData as any).rawQuizData && (reportData as any).rawQuizData.length > 0) {
-      const matinalQuizzes = (reportData as any).rawQuizData.filter((quiz: any) => quiz.tipo === 'matinal');
+    if (reportData.rawQuizData && reportData.rawQuizData.length > 0) {
+      const matinalQuizzes = reportData.rawQuizData.filter(quiz => quiz.tipo === 'matinal');
       
       console.log(`🔍 Encontrados ${matinalQuizzes.length} quizzes matinais para análise`);
       
-      matinalQuizzes.forEach((quiz: any) => {
+      matinalQuizzes.forEach((quiz) => {
         const respostas = quiz.respostas || {};
         const sleepAnswer = respostas['1']; // "Como você dormiu?"
         const painAnswer = respostas['2'];  // "Qual a intensidade da dor essa manhã?"
         
         if (sleepAnswer && painAnswer !== undefined) {
-          const date = quiz.date || quiz.dayKey;
-          const dayOfWeek = new Date(date).toLocaleDateString('pt-BR', { weekday: 'long' });
+          const dateStr = quiz.date || quiz.dayKey;
           
-          const sleepValue = this.mapSleepQuality(sleepAnswer);
-          const painValue = typeof painAnswer === 'number' ? painAnswer : parseInt(painAnswer) || 0;
+          // Validação robusta de data
+          let dayOfWeek = 'unknown';
+          try {
+            if (dateStr && typeof dateStr === 'string') {
+              const dateObj = new Date(dateStr);
+              if (!isNaN(dateObj.getTime())) {
+                dayOfWeek = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+              } else {
+                console.warn(`⚠️ Data inválida no quiz: ${dateStr}`);
+                return; // Skip this entry
+              }
+            } else {
+              console.warn(`⚠️ Data ausente no quiz:`, quiz);
+              return; // Skip this entry
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao processar data ${dateStr}:`, error);
+            return; // Skip this entry
+          }
           
-          sleepPainData.push({
-            date: date,
-            sleep: sleepValue,
-            pain: painValue,
-            dayOfWeek
-          });
+          const sleepValue = this.mapSleepQuality(sleepAnswer as string);
+          const painValue = typeof painAnswer === 'number' ? painAnswer : 
+                           (typeof painAnswer === 'string' ? parseInt(painAnswer) || 0 : 0);
           
-          console.log(`✅ Quiz matinal processado [${date}]: Sono "${sleepAnswer}" -> ${sleepValue}, Dor ${painValue}`);
+          // Validar que temos dados válidos
+          if (painValue >= 0 && painValue <= 10) {
+            sleepPainData.push({
+              date: dateStr,
+              sleep: sleepValue,
+              pain: painValue,
+              dayOfWeek
+            });
+            
+            console.log(`✅ Quiz matinal processado [${dateStr}]: Sono "${sleepAnswer}" -> ${sleepValue}, Dor ${painValue}`);
+          } else {
+            console.warn(`⚠️ Valor de dor inválido: ${painValue} (esperado 0-10)`);
+          }
         } else {
           console.log(`⚠️ Quiz matinal incompleto: sono=${sleepAnswer}, dor=${painAnswer}`);
         }
       });
     }
     
-    // Fallback: usar dados de painEvolution se não houver rawQuizData
-    if (sleepPainData.length === 0 && reportData.painEvolution && reportData.painEvolution.length > 0) {
-      console.log('⚠️ Usando fallback - dados de painEvolution sem dados de sono reais');
-      reportData.painEvolution.forEach(painEntry => {
-        if (painEntry.period === 'matinal') {
-          const date = new Date(painEntry.date);
-          const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-          
-          sleepPainData.push({
-            date: painEntry.date,
-            sleep: 2, // Valor padrão médio quando não há dados de sono
-            pain: painEntry.level,
-            dayOfWeek
-          });
-        }
-      });
+    // Se não há dados reais de sono, retornar dados insuficientes em vez de fallback sintético
+    if (sleepPainData.length === 0) {
+      console.log('❌ Nenhum dado real de sono-dor encontrado - retornando análise vazia');
+      console.log('💡 Para gerar correlação sono-dor, o usuário precisa responder quizzes matinais completos');
     }
     
-    console.log(`📊 Total de ${sleepPainData.length} registros sono-dor extraídos`);
+    console.log(`📊 Total de ${sleepPainData.length} registros sono-dor reais extraídos`);
+    
+    if (sleepPainData.length > 0) {
+      console.log('✅ Dados reais de sono-dor disponíveis para correlação');
+    } else {
+      console.log('⚠️ Nenhum dado real de sono-dor - correlação será marcada como insuficiente');
+    }
+    
     return sleepPainData;
   }
   
