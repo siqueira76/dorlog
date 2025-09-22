@@ -1,12 +1,13 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Pill, AlertCircle, CheckCircle, Sunrise, Moon, BookOpen, Activity } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
+import { AlertTriangle, Pill, AlertCircle, CheckCircle, Sunrise, Moon, BookOpen, Activity, ExternalLink } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -37,9 +38,87 @@ interface MedicationActivity {
 
 type Activity = QuizActivity | MedicationActivity;
 
+// Interface para produtos afiliados
+interface AffiliateProduct {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  url: string;
+  price?: string;
+}
+
+// Produtos afiliados para o carrossel
+const affiliateProducts: AffiliateProduct[] = [
+  {
+    id: '1',
+    title: 'Monitor de Pressão Digital',
+    description: 'Monitoramento preciso da pressão arterial em casa',
+    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop&auto=format',
+    url: 'https://amazon.com.br/monitor-pressao-digital',
+    price: 'R$ 89,90'
+  },
+  {
+    id: '2', 
+    title: 'Termômetro Infravermelho',
+    description: 'Medição rápida e precisa da temperatura corporal',
+    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&h=200&fit=crop&auto=format',
+    url: 'https://amazon.com.br/termometro-infravermelho',
+    price: 'R$ 45,90'
+  },
+  {
+    id: '3',
+    title: 'Organizador de Medicamentos',
+    description: 'Organize seus remédios por dias da semana',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=200&fit=crop&auto=format',
+    url: 'https://amazon.com.br/organizador-medicamentos-semanal',
+    price: 'R$ 24,90'
+  },
+  {
+    id: '4',
+    title: 'Balança Digital Inteligente',
+    description: 'Controle seu peso com precisão e histórico',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop&auto=format',
+    url: 'https://amazon.com.br/balanca-digital-inteligente',
+    price: 'R$ 129,90'
+  }
+];
+
 export default function Home() {
   const { currentUser, firebaseUser } = useAuth();
   const [, setLocation] = useLocation();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<any>(null);
+
+  // Auto-play do carrossel (respeitando preferência de movimento reduzido)
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [isAutoPlaying, setIsAutoPlaying] = useState(!prefersReducedMotion);
+
+  // Setup do auto-play
+  useEffect(() => {
+    if (!carouselApi || !isAutoPlaying || prefersReducedMotion) return;
+
+    const interval = setInterval(() => {
+      const nextIndex = (currentSlide + 1) % affiliateProducts.length;
+      carouselApi.scrollTo(nextIndex);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [carouselApi, isAutoPlaying, currentSlide, prefersReducedMotion]);
+
+  // Listener para mudanças de slide
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    };
+
+    carouselApi.on('select', onSelect);
+    onSelect();
+
+    return () => carouselApi.off('select', onSelect);
+  }, [carouselApi]);
 
   // Função para formatar o tempo relativo
   const formatRelativeTime = (date: Date): string => {
@@ -183,12 +262,90 @@ export default function Home() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 rounded-2xl p-6 text-primary-foreground mb-6">
-        <h2 className="text-xl font-semibold mb-2" data-testid="text-welcome">
-          Olá, {currentUser?.name || 'Usuário'}!
-        </h2>
-        <p className="text-primary-foreground/80">📊 Registre seu dia a dia para gerar relatórios profissionais e compartilhar insights valiosos com seu médico</p>
+      {/* Carrossel de Produtos Afiliados */}
+      <div className="bg-gradient-to-r from-primary to-primary/90 rounded-2xl p-6 mb-6 relative">
+        <Carousel
+          setApi={setCarouselApi}
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+          onMouseEnter={() => setIsAutoPlaying(false)}
+          onMouseLeave={() => setIsAutoPlaying(true)}
+        >
+          <CarouselContent>
+            {affiliateProducts.map((product) => (
+              <CarouselItem key={product.id}>
+                <a
+                  href={product.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group cursor-pointer"
+                  data-testid={`link-product-${product.id}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-primary-foreground mb-1 truncate group-hover:text-primary-foreground/90 transition-colors">
+                        {product.title}
+                      </h3>
+                      <p className="text-sm text-primary-foreground/70 line-clamp-2 mb-2">
+                        {product.description}
+                      </p>
+                      {product.price && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-primary-foreground/90">
+                            {product.price}
+                          </span>
+                          <ExternalLink className="h-3 w-3 text-primary-foreground/60 group-hover:text-primary-foreground/80 transition-colors" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </a>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          {/* Setas de navegação */}
+          <CarouselPrevious 
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 border-white/30 text-white hover:text-white" 
+            data-testid="button-carousel-prev"
+          />
+          <CarouselNext 
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 border-white/30 text-white hover:text-white"
+            data-testid="button-carousel-next"
+          />
+        </Carousel>
+        
+        {/* Indicadores (dots) */}
+        <div className="flex justify-center gap-2 mt-4">
+          {affiliateProducts.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-primary-foreground' 
+                  : 'bg-primary-foreground/40 hover:bg-primary-foreground/60'
+              }`}
+              onClick={() => {
+                carouselApi?.scrollTo(index);
+                setIsAutoPlaying(false);
+                setTimeout(() => setIsAutoPlaying(true), 3000);
+              }}
+              data-testid={`indicator-${index}`}
+              aria-label={`Ir para produto ${index + 1}`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Quick Actions */}
