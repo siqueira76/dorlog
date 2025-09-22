@@ -844,27 +844,31 @@ function generateQuantifiedCorrelationsSection(reportData: EnhancedReportData): 
       .replace(/'/g, '&#x27;');
   };
   
-  // 🔗 PHASE 3: Implementar correlações específicas identificadas
+  // 🔗 PHASE 3: Implementar correlações específicas identificadas com dados reais
+  const physicalActivityCorrelation = calculateActivityPainCorrelation(reportData);
+  
   const correlations = [
-    {
+    sleepPainInsights?.correlationAnalysis ? {
       type: 'Sono ↔ Dor',
-      value: sleepPainInsights?.correlationAnalysis?.correlation || 0.82,
-      significance: sleepPainInsights?.correlationAnalysis?.significance || 'HIGH',
-      description: 'Forte correlação entre qualidade do sono e intensidade da dor matinal (82% significância)'
-    },
-    {
+      value: sleepPainInsights.correlationAnalysis.correlation,
+      significance: sleepPainInsights.correlationAnalysis.significance,
+      description: `Correlação entre qualidade do sono e intensidade da dor matinal (${Math.round(sleepPainInsights.correlationAnalysis.correlation * 100)}% significância)`
+    } : null,
+    
+    patternInsights?.correlations?.find(c => c.type.includes('humor')) ? {
       type: 'Humor ↔ Dor', 
-      value: patternInsights?.correlations?.find(c => c.type.includes('humor'))?.correlation || 0.65,
+      value: patternInsights.correlations.find(c => c.type.includes('humor'))!.correlation,
       significance: 'MEDIUM',
-      description: 'Correlação moderada entre estado emocional noturno e crises de dor (65% significância)'
-    },
-    {
+      description: `Correlação moderada entre estado emocional noturno e crises de dor (${Math.round(patternInsights.correlations.find(c => c.type.includes('humor'))!.correlation * 100)}% significância)`
+    } : null,
+    
+    physicalActivityCorrelation && physicalActivityCorrelation > 0 ? {
       type: 'Atividade ↔ Recuperação',
-      value: 0.71,
-      significance: 'HIGH', 
-      description: 'Correlação entre atividade física e velocidade de recuperação'
-    }
-  ];
+      value: physicalActivityCorrelation,
+      significance: physicalActivityCorrelation > 0.7 ? 'HIGH' : physicalActivityCorrelation > 0.5 ? 'MEDIUM' : 'LOW', 
+      description: `Correlação entre atividade física e velocidade de recuperação (${Math.round(physicalActivityCorrelation * 100)}% significância)`
+    } : null
+  ].filter(Boolean) as Array<{type: string, value: number, significance: string, description: string}>;
   
   const getSignificanceEmoji = (significance: string) => {
     switch (significance) {
@@ -1374,26 +1378,40 @@ function generateRescueMedicationsInCrisis(rescueMedications: any[]): string {
  * 🆕 Gera seção de análise temporal de crises
  */
 function generateCrisisTemporalSection(crisisAnalysis: any): string {
-  // Dados simulados baseados em análises reais para demonstração
-  const temporalData = {
-    peakPeriods: [
-      { period: 'Tarde', percentage: 43, hours: ['13h', '14h', '15h'] },
-      { period: 'Noite', percentage: 31, hours: ['20h', '21h', '22h'] },
-      { period: 'Manhã', percentage: 16, hours: ['08h', '09h', '10h'] },
-      { period: 'Madrugada', percentage: 10, hours: ['02h', '03h', '04h'] }
-    ],
-    peakHours: ['13h', '22h'],
-    riskFactors: [
-      '🕓 Pico de estresse pós-almoço (13h-15h) - 43% das crises',
-      '🌙 Fadiga acumulada final do dia (20h-22h) - Padrão noturno',
-      '📅 7 crises identificadas em 12 dias de monitoramento',
-      '🕰️ Horários de maior risco: 13h e 22h'
-    ]
-  };
+  // Verificar se há dados reais suficientes para análise
+  const hasRealData = crisisAnalysis && (
+    crisisAnalysis.riskPeriods?.length > 0 || 
+    crisisAnalysis.peakHours?.length > 0 ||
+    crisisAnalysis.insights?.length > 0
+  );
   
-  const highestRiskPeriod = crisisAnalysis?.riskPeriods?.[0] || temporalData.peakPeriods[0];
-  const peakHours = crisisAnalysis?.peakHours || temporalData.peakHours;
-  const insights = crisisAnalysis?.insights || temporalData.riskFactors;
+  if (!hasRealData) {
+    return `
+            <div class="temporal-analysis">
+                <h3>⏰ Padrões Temporais Quantificados</h3>
+                
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <div class="metric-title">Análise Temporal de Crises:</div>
+                        <div class="temporal-summary">
+                            📊 Dados insuficientes para análise temporal
+                        </div>
+                        
+                        <div class="analysis-details">
+                            <strong>💡 Como obter análises temporais:</strong><br>
+                            • Continue registrando crises emergenciais quando ocorrerem<br>
+                            • Mantenha consistência nos horários dos registros<br>
+                            • Após ${MIN_CRISIS_SAMPLE}+ crises, padrões serão identificados automaticamente
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+  }
+  
+  // Usar dados reais do crisisAnalysis
+  const realPeakPeriods = crisisAnalysis.riskPeriods || [];
+  const realPeakHours = crisisAnalysis.peakHours || [];
+  const realInsights = crisisAnalysis.insights || [];
   
   return `
             <div class="temporal-analysis">
@@ -1403,28 +1421,35 @@ function generateCrisisTemporalSection(crisisAnalysis: any): string {
                     <div class="metric-item">
                         <div class="metric-title">Distribuição Temporal das Crises:</div>
                         <div class="temporal-summary">
-                            ${temporalData.peakPeriods.length} períodos analisados • Padrão identificado
+                            ${realPeakPeriods.length} períodos analisados • Padrão identificado
                         </div>
                         
                         <div class="temporal-breakdown">
-                            ${temporalData.peakPeriods.map(period => 
-                              `🕐 <strong>${period.period}: ${period.percentage}%</strong> das crises<br>   └ Horários críticos: ${period.hours.join(', ')}`
+                            ${realPeakPeriods.map((period: any) => 
+                              `🕐 <strong>${period.period}: ${period.percentage}%</strong> das crises<br>   └ Período de risco: ${period.period.toLowerCase()}`
                             ).join('<br><br>')}
                         </div>
                         
                         <div class="analysis-details">
                             <strong>📊 Horários de Pico Absoluto:</strong><br>
-                            ${peakHours.map((hour: string) => `🔥 ${hour} - Maior concentração de crises`).join('<br>')}
+                            ${realPeakHours.length > 0 ? 
+                              realPeakHours.map((hour: string) => `🔥 ${hour} - Maior concentração de crises`).join('<br>') : 
+                              'Dados insuficientes para identificar horários específicos'
+                            }
                             
                             <br><br><strong>🎯 Fatores de Risco Identificados:</strong><br>
-                            ${insights.slice(0, 3).map((insight: string) => `• ${insight}`).join('<br>')}
+                            ${realInsights.length > 0 ? 
+                              realInsights.slice(0, 3).map((insight: string) => `• ${insight}`).join('<br>') :
+                              'Continue registrando crises para identificar padrões específicos'
+                            }
                         </div>
                         
                         <div class="insights-details">
                             <strong>💡 Recomendações Temporais:</strong><br>
-                            • Evitar atividades estressantes entre 13h-15h<br>
-                            • Medicação preventiva antes das 20h<br>
-                            • Monitoramento intensivo nos fins de semana
+                            ${realInsights.length > 3 ? 
+                              realInsights.slice(3).map((insight: string) => `• ${insight}`).join('<br>') :
+                              'Baseadas em análise de dados reais quando disponíveis'
+                            }
                         </div>
                     </div>
                 </div>
