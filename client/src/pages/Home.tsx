@@ -45,7 +45,6 @@ interface AffiliateProduct {
   description: string;
   image: string;
   url: string;
-  price?: string;
 }
 
 // Produtos afiliados para o carrossel
@@ -55,32 +54,28 @@ const affiliateProducts: AffiliateProduct[] = [
     title: 'Monitor de Pressão Digital',
     description: 'Monitoramento preciso da pressão arterial em casa',
     image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/monitor-pressao-digital',
-    price: 'R$ 89,90'
+    url: 'https://amazon.com.br/monitor-pressao-digital'
   },
   {
     id: '2', 
     title: 'Termômetro Infravermelho',
     description: 'Medição rápida e precisa da temperatura corporal',
     image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/termometro-infravermelho',
-    price: 'R$ 45,90'
+    url: 'https://amazon.com.br/termometro-infravermelho'
   },
   {
     id: '3',
     title: 'Organizador de Medicamentos',
     description: 'Organize seus remédios por dias da semana',
     image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/organizador-medicamentos-semanal',
-    price: 'R$ 24,90'
+    url: 'https://amazon.com.br/organizador-medicamentos-semanal'
   },
   {
     id: '4',
     title: 'Balança Digital Inteligente',
     description: 'Controle seu peso com precisão e histórico',
     image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/balanca-digital-inteligente',
-    price: 'R$ 129,90'
+    url: 'https://amazon.com.br/balanca-digital-inteligente'
   }
 ];
 
@@ -285,7 +280,7 @@ export default function Home() {
                   data-testid={`link-product-${product.id}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
+                    <div className="w-28 h-28 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
                       <img
                         src={product.image}
                         alt={product.title}
@@ -297,17 +292,13 @@ export default function Home() {
                       <h3 className="text-lg font-semibold text-primary-foreground mb-1 truncate group-hover:text-primary-foreground/90 transition-colors">
                         {product.title}
                       </h3>
-                      <p className="text-sm text-primary-foreground/70 line-clamp-2 mb-2">
+                      <p className="text-sm text-primary-foreground/70 line-clamp-2 mb-3">
                         {product.description}
                       </p>
-                      {product.price && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-primary-foreground/90">
-                            {product.price}
-                          </span>
-                          <ExternalLink className="h-3 w-3 text-primary-foreground/60 group-hover:text-primary-foreground/80 transition-colors" />
-                        </div>
-                      )}
+                      <div className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-medium text-primary-foreground transition-colors">
+                        <span>Ver produto</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </div>
                     </div>
                   </div>
                 </a>
