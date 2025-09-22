@@ -2087,8 +2087,13 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
 function generateTemporalPatternsSection(reportData: EnhancedReportData): string {
   const temporalAnalysis = reportData.crisisTemporalAnalysis || {};
   const riskPeriods = calculateRiskPeriods(reportData);
-  // Calcular horários de pico baseado em dados reais se disponíveis
   const painEvolution = reportData.painEvolution || [];
+  const crisisEpisodes = reportData.crisisEpisodes || 0;
+  
+  // Verificar se há dados suficientes para análise temporal
+  const hasSufficientData = painEvolution.length >= MIN_PAIN_RECORDS || crisisEpisodes >= MIN_CRISIS_SAMPLE;
+  
+  // Calcular horários de pico baseado em dados reais se disponíveis
   const peakHours: string[] = [];
   
   if (painEvolution.length > 0) {
@@ -2123,6 +2128,21 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
     });
   }
   
+  // Obter percentuais reais ou dados de temporal analysis
+  const morningPct = safe((temporalAnalysis as any).riskPeriods?.morning?.percentage ?? (riskPeriods as any).morning?.percentage, p => `${Math.round(p)}%`);
+  const afternoonPct = safe((temporalAnalysis as any).riskPeriods?.afternoon?.percentage ?? (riskPeriods as any).afternoon?.percentage, p => `${Math.round(p)}%`);
+  const eveningPct = safe((temporalAnalysis as any).riskPeriods?.evening?.percentage ?? (riskPeriods as any).evening?.percentage, p => `${Math.round(p)}%`);
+  const dawnPct = safe((temporalAnalysis as any).riskPeriods?.dawn?.percentage ?? (riskPeriods as any).dawn?.percentage, p => `${Math.round(p)}%`);
+  
+  // Obter insights reais ou usar fallback
+  const insights = (temporalAnalysis as any).insights || [];
+  const hasRealInsights = insights.length > 0;
+  
+  // Determinar o período de maior risco para o destaque
+  const highestRiskPeriod = afternoonPct !== 'Dados insuficientes para análise' ? 'tarde' : 
+                          eveningPct !== 'Dados insuficientes para análise' ? 'noite' :
+                          morningPct !== 'Dados insuficientes para análise' ? 'manhã' : null;
+  
   return `
     <div class="app-section">
       <div class="section-header">
@@ -2131,25 +2151,39 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
       </div>
       
       <div class="app-card">
+        ${hasSufficientData ? `
         <div class="temporal-overview">
           <div class="risk-highlight">
             <div class="risk-stat">
-              <div class="risk-number">43%</div>
-              <div class="risk-label">das crises ocorrem à tarde</div>
+              <div class="risk-number">${afternoonPct}</div>
+              <div class="risk-label">das crises ocorrem à ${highestRiskPeriod || 'tarde'}</div>
             </div>
           </div>
         </div>
+        ` : `
+        <div class="temporal-overview">
+          <div class="risk-highlight">
+            <div class="risk-stat">
+              <div class="risk-number">📊</div>
+              <div class="risk-label">Dados insuficientes para análise temporal</div>
+            </div>
+          </div>
+        </div>
+        `}
         
         <div class="peak-hours">
           <h4>🕐 Horários de Maior Risco Identificados</h4>
           <div class="hour-grid">
-            ${peakHours.map(hour => `
-              <div class="hour-risk-item high-risk">
-                <div class="hour-time">${hour}</div>
-                <div class="hour-status">Alto Risco</div>
-                <div class="hour-description">Maior concentração de crises</div>
-              </div>
-            `).join('')}
+            ${peakHours.length > 0 ? 
+              peakHours.map(hour => `
+                <div class="hour-risk-item high-risk">
+                  <div class="hour-time">${hour}</div>
+                  <div class="hour-status">Alto Risco</div>
+                  <div class="hour-description">Maior concentração de crises</div>
+                </div>
+              `).join('') :
+              '<div class="hour-grid-empty">Dados insuficientes para identificar horários de risco específicos</div>'
+            }
           </div>
         </div>
         
@@ -2158,33 +2192,36 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
           <div class="period-analysis">
             <div class="period-item">
               <span class="period-name">🌅 Manhã (6h-12h)</span>
-              <span class="period-percentage">20%</span>
+              <span class="period-percentage">${morningPct}</span>
             </div>
-            <div class="period-item highlight">
+            <div class="period-item ${afternoonPct !== 'Dados insuficientes para análise' ? 'highlight' : ''}">
               <span class="period-name">🌞 Tarde (12h-18h)</span>
-              <span class="period-percentage">43%</span>
+              <span class="period-percentage">${afternoonPct}</span>
             </div>
             <div class="period-item">
               <span class="period-name">🌙 Noite (18h-00h)</span>
-              <span class="period-percentage">30%</span>
+              <span class="period-percentage">${eveningPct}</span>
             </div>
             <div class="period-item">
               <span class="period-name">🌃 Madrugada (0h-6h)</span>
-              <span class="period-percentage">7%</span>
+              <span class="period-percentage">${dawnPct}</span>
             </div>
           </div>
         </div>
         
         <div class="insight-section">
           <h3 class="insight-section-title">💡 Recomendações Temporais</h3>
-          <div class="insight-block">
-            <div class="insight-primary">Horário de risco: 13h-15h</div>
-            <div class="insight-secondary">Evitar atividades estressantes neste período do dia</div>
-          </div>
-          <div class="insight-block">
-            <div class="insight-primary">Prevenção: Medicação antes das 20h</div>
-            <div class="insight-secondary">Estabelecer rotina de relaxamento no final da tarde</div>
-          </div>
+          ${hasRealInsights ?
+            insights.map((insight: string) => `
+              <div class="insight-block">
+                <div class="insight-primary">${insight}</div>
+              </div>
+            `).join('') :
+            `<div class="insight-block">
+              <div class="insight-primary">Dados insuficientes para gerar recomendações temporais personalizadas</div>
+              <div class="insight-secondary">Continue registrando seus dados para obter insights mais precisos</div>
+            </div>`
+          }
         </div>
       </div>
     </div>
