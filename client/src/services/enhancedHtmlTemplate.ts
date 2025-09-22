@@ -543,7 +543,7 @@ function generatePredictiveInsights(reportData: EnhancedReportData): string {
       ${predictiveInsights.map((insight: any) => `
         <div class="insight-item">
           <div class="insight-probability">${insight.priority || 'Normal'}: ${fmtPct(insight.confidence || 0)}%</div>
-          <div class="insight-text">${escapeHtml(insight.title || 'Insight disponível')}</div>
+          <div class="insight-text">${insight.title || 'Insight disponível'}</div>
         </div>
       `).join('')}
     </div>`;
@@ -581,7 +581,7 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                         <div class="analysis-details">
                             <strong>🌅 Análise Matinal:</strong><br>
                             • Intensidade média: ${avgPain}/10 (dados reais)<br>
-                            • Qualidade do despertar: ${reportData.sleepPainInsights?.morningQuality || 'Análise em processo'}<br>
+                            • Qualidade do despertar: ${reportData.sleepPainInsights?.morningPainTrend?.description || 'Análise em processo'}<br>
                             • Correlação sono-dor: ${reportData.sleepPainInsights?.correlationAnalysis?.correlation ? fmtPct(reportData.sleepPainInsights.correlationAnalysis.correlation * 100) + '%' : 'Dados insuficientes'} ${reportData.sleepPainInsights?.correlationAnalysis?.significance ? '(' + reportData.sleepPainInsights.correlationAnalysis.significance.toLowerCase() + ' significância)' : ''}<br><br>
                             
                             <strong>🌙 Análise Noturna:</strong><br>
@@ -2039,6 +2039,20 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
             <div class="insight-primary">Frequência: ${digestiveHealth.frequency || 'Dados insuficientes'}</div>
             <div class="insight-secondary">Última evacuação há ${digestiveHealth.daysSinceLastBowelMovement || 'N/A'} dias</div>
           </div>
+          ${digestiveHealth.status === 'normal' ? `
+          <div class="insight-block">
+            <div class="insight-row">
+              <span class="insight-icon">🏥</span>
+              <span class="insight-text"><strong>Saúde Digestiva:</strong></span>
+            </div>
+            <div class="insight-row">
+              <span class="insight-icon">✅</span>
+              <span class="insight-text">Normal ✅</span>
+            </div>
+            <div class="insight-secondary" style="margin-left: 28px;">
+              Padrão intestinal dentro da normalidade
+            </div>
+          </div>` : ''}
         </div>` : ''}
       </div>
     </div>
