@@ -1,0 +1,149 @@
+Prompt Detalhado de Refatoração: Eliminação de Dados Hardcoded
+🎯 Objetivo da Refatoração
+Substituir valores hardcoded no template HTML por dados reais já calculados, mantendo robustez e mostrando "Dados insuficientes para análise" apenas quando dados genuinamente não existem.
+
+🔍 Escopo e Arquivos Afetados
+ARQUIVO PRINCIPAL:
+
+client/src/services/enhancedHtmlTemplate.ts - MODIFICAR (template HTML)
+ARQUIVOS DE REFERÊNCIA:
+
+client/src/services/enhancedReportAnalysisService.ts - APENAS LEITURA (fonte dos dados reais)
+client/src/services/patternDetectionService.ts - APENAS LEITURA (análises complementares)
+ARQUIVOS PROIBIDOS:
+
+package.json, vite.config.ts, drizzle.config.ts - NÃO MODIFICAR
+🛠️ Funções Auxiliares Necessárias
+Criar no topo do arquivo enhancedHtmlTemplate.ts:
+
+// Helpers para verificação de dados e formatação
+const hasData = (arrOrNum: any, min: number = 1): boolean => {
+  if (Array.isArray(arrOrNum)) return arrOrNum.length >= min;
+  return typeof arrOrNum === 'number' && !isNaN(arrOrNum);
+};
+const fmtPct = (num: number): string => {
+  return isFinite(num) ? `${Math.round(num)}%` : 'Dados insuficientes para análise';
+};
+const safe = <T>(value: T | null | undefined, render: (v: T) => string): string => {
+  return value != null ? render(value) : 'Dados insuficientes para análise';
+};
+🎯 Mapeamento de Dados: Hardcoded → Real
+1. Padrões Temporais
+// ❌ ATUAL (Hardcoded)
+<span class="period-percentage">20%</span>  <!-- Manhã -->
+<span class="period-percentage">43%</span>  <!-- Tarde -->
+<span class="period-percentage">30%</span>  <!-- Noite -->
+<span class="period-percentage">7%</span>   <!-- Madrugada -->
+// ✅ REFATORADO (Dados Reais)
+${safe(crisisTemporalAnalysis?.riskPeriods?.morning?.percentage, 
+  p => `${Math.round(p)}%`)}
+${safe(crisisTemporalAnalysis?.riskPeriods?.afternoon?.percentage, 
+  p => `${Math.round(p)}%`)}
+FONTE: reportData.crisisTemporalAnalysis.riskPeriods
+FALLBACK: Se não existir, usar calculateRiskPeriods(reportData)
+CRITÉRIO: Mínimo 3 crises para análise válida
+
+2. Correlação de Atividade
+// ❌ ATUAL (Fallback fixo)
+${activityCorrelation || 0.71}
+// ✅ REFATORADO (Dados Reais)
+${safe(
+  reportData.physicalActivityAnalysis?.weeklyAverageCorrelation ?? 
+  calculateActivityPainCorrelation(reportData),
+  v => v.toFixed(2)
+)}
+FONTE: reportData.physicalActivityAnalysis
+CRITÉRIO: Mínimo 5 dias de dados para correlação válida
+
+3. Atividades Físicas
+// ❌ ATUAL (Função ignorada)
+const activities = extractPhysicalActivities(reportData);
+// Template ignora e usa textos fixos
+// ✅ REFATORADO (Usar resultado da função)
+${hasData(activities, 1) ? 
+  activities.map(act => `
+    <div class="activity-item">
+      <div class="activity-name">${act.name}</div>
+      <div class="activity-frequency">${act.frequency}x por semana</div>
+      <div class="activity-impact">${act.impact}</div>
+    </div>
+  `).join('') : 
+  '<p>Dados insuficientes para análise de atividades físicas</p>'
+}
+4. Insights e Recomendações
+// ❌ ATUAL (Textos genéricos)
+<div class="insight-primary">Horário de risco: 13h-15h</div>
+// ✅ REFATORADO (Insights reais)
+${reportData.smartSummary?.keyFindings?.length > 0 ?
+  reportData.smartSummary.keyFindings.map(finding => `
+    <div class="insight-primary">${finding}</div>
+  `).join('') :
+  '<p>Dados insuficientes para gerar insights personalizados</p>'
+}
+🔧 Mudanças por Seção
+generateTemporalPatternsSection()
+Substituir hardcoded 20/43/30/7% por crisisTemporalAnalysis.riskPeriods
+Mapear períodos: Manhã(6-11h), Tarde(12-17h), Noite(18-23h), Madrugada(0-5h)
+Critério mínimo: 3+ crises para análise temporal válida
+Fallback: "Dados insuficientes para análise temporal"
+generatePhysicalActivitySection()
+Eliminar || 0.71 fallback da correlação
+Usar physicalActivityAnalysis.activePercentage real
+População da lista com activityBreakdown real
+Recomendações baseadas em activityLevel calculado
+Critério mínimo: 5+ dias de dados para análise válida
+generateDigestiveHealthSection()
+Usar digestiveAnalysis.frequency real (já implementado corretamente)
+Manter lógica existente (não hardcoded)
+generateCrisisEpisodesSection()
+Usar crisisTemporalAnalysis.peakHours reais
+Insights de crisisTemporalAnalysis.insights
+Eliminar textos fixos de fatores de risco
+🚨 Regras Críticas de Implementação
+1. Semântica de Fallback
+// ❌ ERRADO (Trata 0 como ausência)
+${value || 'fallback'}
+// ✅ CORRETO (Apenas null/undefined são ausência)
+${value ?? 'fallback'}
+2. Verificação de Amostras Mínimas
+// Para análises estatísticas válidas
+const MIN_CRISIS_SAMPLE = 3;
+const MIN_ACTIVITY_DAYS = 5;
+const MIN_PAIN_RECORDS = 7;
+3. Preservação da Estrutura HTML
+NÃO alterar classes CSS existentes
+NÃO modificar estrutura de divs
+APENAS substituir conteúdo de texto/valores
+4. Robustez do Streaming
+// Cada seção do generator deve ser robusta
+yield {
+  id: 'temporal-patterns',
+  content: safeGenerateTemporalSection(reportData), // Nunca throw
+  order: 3.3
+};
+✅ Critérios de Aceitação
+❌ Zero valores hardcoded numéricos no template final
+✅ Dados reais mostrados quando disponíveis e suficientes
+✅ "Dados insuficientes" apenas quando genuinamente não há dados
+✅ HTML válido em todos os cenários (dados ricos, esparsos, ausentes)
+✅ Generator streaming funciona sem errors
+✅ Paridade visual mantida (apenas valores mudam)
+🧪 Cenários de Teste
+Teste 1: Dados Ricos
+Usuário com 20+ dias de registros
+Resultado esperado: Todos os percentuais e correlações reais
+Teste 2: Dados Esparsos
+Usuário com 2-5 dias de registros
+Resultado esperado: Mix de dados reais e "dados insuficientes"
+Teste 3: Dados Ausentes
+Usuário novo sem registros
+Resultado esperado: Todas as seções mostram "dados insuficientes"
+Teste 4: Dados Edge Cases
+Correlação = 0.00 (legítima)
+Resultado esperado: Mostra "0%" não "dados insuficientes"
+🎯 Próximos Passos de Implementação
+Auditoria completa de valores hardcoded em enhancedHtmlTemplate.ts
+Implementação de helpers de verificação e formatação
+Refatoração seção por seção com testes incrementais
+QA manual com datasets variados
+Validação final de todos os cenários de teste

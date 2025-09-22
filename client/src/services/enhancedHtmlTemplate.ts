@@ -8,6 +8,25 @@
 import { EnhancedReportData } from './enhancedReportAnalysisService';
 import { MedicalCorrelationService, Doctor, Medication, MedicalInsight, MedicationEffectiveness, DoctorSpecialtyAnalysis } from './medicalCorrelationService';
 
+// 🛠️ Constantes para Análises Estatísticas Válidas
+const MIN_CRISIS_SAMPLE = 3;
+const MIN_ACTIVITY_DAYS = 5;
+const MIN_PAIN_RECORDS = 7;
+
+// 🛠️ Helpers para Verificação de Dados e Formatação
+const hasData = (arrOrNum: any, min: number = 1): boolean => {
+  if (Array.isArray(arrOrNum)) return arrOrNum.length >= min;
+  return typeof arrOrNum === 'number' && !isNaN(arrOrNum);
+};
+
+const fmtPct = (num: number): string => {
+  return isFinite(num) ? `${Math.round(num)}%` : 'Dados insuficientes para análise';
+};
+
+const safe = <T>(value: T | null | undefined, render: (v: T) => string): string => {
+  return value != null ? render(value) : 'Dados insuficientes para análise';
+};
+
 export interface EnhancedReportTemplateData {
   userEmail: string;
   periodsText: string;
