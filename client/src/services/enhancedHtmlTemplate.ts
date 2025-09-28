@@ -3068,16 +3068,34 @@ function getEnhancedReportCSS(): string {
         .card {
             background: white;
             border-radius: 1rem;
-            padding: 1rem;
+            padding: 1.5rem;
             margin-bottom: 1rem;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .card h2 {
-            margin: 0 0 0.5rem;
+            margin: 0 0 1rem;
             font-size: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+        }
+        .card > div,
+        .card > section,
+        .card .period-data,
+        .card .crisis-item,
+        .card .activity-item,
+        .card .medication-item,
+        .card .doctor-item {
+            margin-bottom: 1rem;
+        }
+        .card > div:last-child,
+        .card > section:last-child,
+        .card .period-data:last-child,
+        .card .crisis-item:last-child,
+        .card .activity-item:last-child,
+        .card .medication-item:last-child,
+        .card .doctor-item:last-child {
+            margin-bottom: 0;
         }
         .pain-emoji {
             font-size: 2.5rem;
@@ -3091,8 +3109,18 @@ function getEnhancedReportCSS(): string {
             margin-bottom: 0.5rem;
         }
         ul, p {
-            margin: 0.5rem 0;
+            margin: 0.75rem 0;
             font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .card ul {
+            padding-left: 1.25rem;
+        }
+        .card li {
+            margin-bottom: 0.5rem;
+        }
+        .card li:last-child {
+            margin-bottom: 0;
         }
         .stat-grid {
             display: grid;
@@ -3102,9 +3130,10 @@ function getEnhancedReportCSS(): string {
         }
         .stat-grid div {
             background: #f1f5f9;
-            padding: 0.5rem;
+            padding: 0.75rem;
             border-radius: 0.5rem;
             font-size: 0.85rem;
+            margin: 0.25rem 0;
         }
         .bottom-nav {
             position: fixed;
