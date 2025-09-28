@@ -300,7 +300,6 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
          ${generateDetailedCrisisEpisodesSection(reportData)}
          ${generateTemporalPatternsSection(reportData)}
          ${generatePhysicalActivitySection(reportData)}
-         ${generateInsightsSection(reportData)}
          ${generateClinicalDataSection(reportData)}
          ${generateEnhancedFooter(reportId, reportData)}
          
