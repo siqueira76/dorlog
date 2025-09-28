@@ -130,10 +130,10 @@ export const generateLocalReport = (reportData: any): string => {
                 Este relatório foi gerado localmente com dados realistas para demonstração do layout profissional.
             </div>
             <ul>
-                <li>Dor média geral: 6.2</li>
-                <li>Total de crises: 12 (últimos 28 dias)</li>
-                <li>Adesão medicação: 92%</li>
-                <li>Atividades principais: Caminhada, Trabalho, Cuidar da casa</li>
+                <li>Dor média geral: ${reportData.averagePain || 'N/A'}</li>
+                <li>Total de crises: ${reportData.crisisCount || 0} (últimos ${reportData.totalDays || 30} dias)</li>
+                <li>Adesão medicação: ${reportData.medicationAdherence || 'N/A'}%</li>
+                <li>Atividades principais: ${reportData.topActivities || 'Dados em coleta'}</li>
             </ul>
         </div>
     </div>
@@ -142,12 +142,12 @@ export const generateLocalReport = (reportData: any): string => {
     <div class="section">
         <div class="card">
             <h2>🌅 Manhãs</h2>
-            <div class="pain-emoji">😐</div>
-            <div class="pain-value">Dor média: 5.7</div>
+            <div class="pain-emoji">${reportData.morningPain <= 3 ? '😊' : reportData.morningPain <= 6 ? '😐' : '😰'}</div>
+            <div class="pain-value">Dor média: ${reportData.morningPain || 'N/A'}</div>
             <ul>
-                <li>28 registros coletados</li>
-                <li>Sono: Regular (3.1/4)</li>
-                <li>Correlação moderada: sono de qualidade pode reduzir a dor matinal</li>
+                <li>${reportData.morningRecords || 0} registros coletados</li>
+                <li>Sono: ${reportData.sleepQuality || 'Não avaliado'} (${reportData.sleepAverage || 'N/A'}/4)</li>
+                <li>Correlação: ${reportData.sleepCorrelation || 'Em análise'}</li>
             </ul>
         </div>
     </div>
@@ -156,12 +156,12 @@ export const generateLocalReport = (reportData: any): string => {
     <div class="section">
         <div class="card">
             <h2>🌙 Noites</h2>
-            <div class="pain-emoji">😰</div>
-            <div class="pain-value">Dor média: 6.5</div>
+            <div class="pain-emoji">${reportData.eveningPain <= 3 ? '😊' : reportData.eveningPain <= 6 ? '😐' : '😰'}</div>
+            <div class="pain-value">Dor média: ${reportData.eveningPain || 'N/A'}</div>
             <ul>
-                <li>28 registros coletados</li>
-                <li>Humor: Neutro (2/4)</li>
-                <li>Correlação fraca: humor e dor parecem independentes</li>
+                <li>${reportData.eveningRecords || 0} registros coletados</li>
+                <li>Humor: ${reportData.moodQuality || 'Não avaliado'} (${reportData.moodAverage || 'N/A'}/4)</li>
+                <li>Correlação: ${reportData.moodCorrelation || 'Em análise'}</li>
             </ul>
         </div>
     </div>
@@ -170,13 +170,13 @@ export const generateLocalReport = (reportData: any): string => {
     <div class="section">
         <div class="card">
             <h2>🚨 Crises</h2>
-            <div class="pain-emoji">😭</div>
-            <div class="pain-value">Intensidade Média: 8.1</div>
+            <div class="pain-emoji">${reportData.crisisCount > 0 ? '😭' : '✅'}</div>
+            <div class="pain-value">Intensidade Média: ${reportData.crisisIntensity || 'N/A'}</div>
             <div class="stat-grid">
-                <div><strong>12</strong><br>Crises em 28 dias</div>
-                <div><strong>43%</strong><br>Frequência</div>
+                <div><strong>${reportData.crisisCount || 0}</strong><br>Crises em ${reportData.totalDays || 30} dias</div>
+                <div><strong>${reportData.crisisFrequency || 0}%</strong><br>Frequência</div>
             </div>
-            <p>Locais afetados: Região lombar (50%), Pescoço (33%)</p>
+            <p>Locais afetados: ${reportData.painLocations || 'Dados em coleta'}</p>
         </div>
     </div>
 
@@ -184,13 +184,13 @@ export const generateLocalReport = (reportData: any): string => {
     <div class="section">
         <div class="card">
             <h2>💩 Saúde Digestiva</h2>
-            <p>Status: Padrão normal ✅</p>
+            <p>Status: ${reportData.digestiveStatus || 'Coletando dados'} ${reportData.digestiveIcon || '📊'}</p>
             <ul>
-                <li>Intervalo médio: 2.1 dias</li>
-                <li>Maior intervalo: 4 dias</li>
-                <li>Última evacuação: há 1 dia</li>
+                <li>Intervalo médio: ${reportData.digestiveInterval || 'N/A'} dias</li>
+                <li>Maior intervalo: ${reportData.digestiveMaxInterval || 'N/A'} dias</li>
+                <li>Última evacuação: há ${reportData.digestiveLastDays || 'N/A'} dias</li>
             </ul>
-            <p><strong>Recomendação:</strong> Continue monitorando regularmente.</p>
+            <p><strong>Recomendação:</strong> ${reportData.digestiveRecommendation || 'Continue monitorando regularmente.'}</p>
         </div>
     </div>
 
@@ -199,13 +199,11 @@ export const generateLocalReport = (reportData: any): string => {
         <div class="card">
             <h2>🏃 Atividades</h2>
             <ul>
-                <li>Cuidou da casa - 5x/semana | Muito Positivo</li>
-                <li>Caminhada - 4x/semana | Positivo</li>
-                <li>Trabalho - 4x/semana | Positivo</li>
-                <li>Atividade física - 3x/semana | Positivo</li>
-                <li>Descanso - 2x/semana | Neutro</li>
+                ${reportData.activities ? reportData.activities.slice(0, 5).map(activity => 
+                  `<li>${activity.name || activity} - ${activity.frequency || 'N/A'}x/semana | ${activity.impact || 'Neutro'}</li>`
+                ).join('') : '<li>Dados de atividades em coleta</li>'}
             </ul>
-            <p>Correlação atividade ↔ recuperação: 0.24 (fraca)</p>
+            <p>Correlação atividade ↔ recuperação: ${reportData.activityCorrelation || 'Em análise'}</p>
         </div>
     </div>
 
@@ -214,9 +212,9 @@ export const generateLocalReport = (reportData: any): string => {
         <div class="card">
             <h2>💡 Insights</h2>
             <ul>
-                <li>Padrão estável de dor sem grandes variações.</li>
-                <li>Atividade física regular correlaciona-se com recuperação positiva.</li>
-                <li>Sono irregular aumenta intensidade da dor matinal.</li>
+                ${reportData.insights ? reportData.insights.slice(0, 3).map(insight => 
+                  `<li>${insight.text || insight}</li>`
+                ).join('') : '<li>Coletando dados para análise de padrões</li><li>Continue registrando suas informações diárias</li><li>Insights serão gerados conforme dados disponíveis</li>'}
             </ul>
         </div>
     </div>
@@ -226,9 +224,9 @@ export const generateLocalReport = (reportData: any): string => {
         <div class="card">
             <h2>💊 Medicamentos</h2>
             <ul>
-                <li>Pregabalina - 150mg, 2x ao dia</li>
-                <li>Amitriptilina - 25mg, 1x ao dia</li>
-                <li>Gabapentina - 300mg, 3x ao dia</li>
+                ${reportData.medications ? reportData.medications.slice(0, 5).map(med => 
+                  `<li>${med.name || med} - ${med.dosage || 'Dose não especificada'}</li>`
+                ).join('') : '<li>Nenhum medicamento cadastrado</li><li>Cadastre seus medicamentos no menu "Medicamentos"</li>'}
             </ul>
         </div>
     </div>
@@ -238,8 +236,9 @@ export const generateLocalReport = (reportData: any): string => {
         <div class="card">
             <h2>🏥 Equipe Médica</h2>
             <ul>
-                <li>Dr. Silva - Reumatologista (CRM 12345)</li>
-                <li>Dr. Santos - Neurologista (CRM 67890)</li>
+                ${reportData.doctors ? reportData.doctors.slice(0, 5).map(doctor => 
+                  `<li>Dr(a). ${doctor.name} - ${doctor.specialty} (CRM ${doctor.crm})</li>`
+                ).join('') : '<li>Nenhum médico cadastrado</li><li>Adicione sua equipe médica no menu "Médicos"</li>'}
             </ul>
         </div>
     </div>
@@ -248,7 +247,7 @@ export const generateLocalReport = (reportData: any): string => {
     <div class="section">
         <div class="card">
             <h2>⏰ Padrões Temporais</h2>
-            <p>Dor mais intensa durante o período noturno (18h - 22h).</p>
+            <p>${reportData.temporalPattern || 'Analisando padrões temporais com base nos registros.'}</p>
         </div>
     </div>
 

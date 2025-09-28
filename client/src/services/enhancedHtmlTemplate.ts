@@ -75,29 +75,29 @@ export async function* generateEnhancedReportHTMLStream(
       size: headerHtml.length
     };
 
-    // 2. Seção Executive Dashboard (REMOVIDA)
-    // console.time('🏆 Executive Dashboard');
-    // const executiveDashboardHtml = generateExecutiveDashboard(reportData);
-    // console.timeEnd('🏆 Executive Dashboard');
-    // 
-    // yield {
-    //   id: 'executive-dashboard',
-    //   content: executiveDashboardHtml,
-    //   order: 2,
-    //   size: executiveDashboardHtml.length
-    // };
+    // 2. Seção Executive Dashboard
+    console.time('🏆 Executive Dashboard');
+    const executiveDashboardHtml = generateExecutiveDashboard(reportData);
+    console.timeEnd('🏆 Executive Dashboard');
+    
+    yield {
+      id: 'executive-dashboard',
+      content: executiveDashboardHtml,
+      order: 2,
+      size: executiveDashboardHtml.length
+    };
 
-    // 3. Seção AI Insights Zone (REMOVIDA)
-    // console.time('🧠 AI Insights Zone');
-    // const aiInsightsHtml = generateAIInsightsZone(reportData);
-    // console.timeEnd('🧠 AI Insights Zone');
-    // 
-    // yield {
-    //   id: 'ai-insights',
-    //   content: aiInsightsHtml,
-    //   order: 2.5,
-    //   size: aiInsightsHtml.length
-    // };
+    // 3. Seção AI Insights Zone
+    console.time('🧠 AI Insights Zone');
+    const aiInsightsHtml = generateAIInsightsZone(reportData);
+    console.timeEnd('🧠 AI Insights Zone');
+    
+    yield {
+      id: 'ai-insights',
+      content: aiInsightsHtml,
+      order: 2.5,
+      size: aiInsightsHtml.length
+    };
 
 
     // 4.1. 🌅 Seção Manhãs e Noites (RESTAURADA)
@@ -318,7 +318,11 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
-         `<!-- Seção Resumo Enhanced com IA -->
+         `<!-- Executive Dashboard e IA -->
+         ${generateExecutiveDashboard(reportData)}
+         ${generateAIInsightsZone(reportData)}
+         
+         <!-- Seção Resumo Enhanced com IA -->
          <div class="section">
              <div class="card">
                  <h2>📊 Resumo Inteligente</h2>
@@ -532,13 +536,41 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
 }
 
 /**
- * 🧠 NÍVEL 2: AI Insights Zone - REMOVIDA
- * (Seção removida conforme solicitação do usuário)
+ * 🧠 NÍVEL 2: AI Insights Zone - Formatação Card Simples
  */
-// function generateAIInsightsZone(reportData: EnhancedReportData): string {
-//   // Função removida - seção "Zona de Insights de Inteligência Artificial" não é mais exibida
-//   return '';
-// }
+function generateAIInsightsZone(reportData: EnhancedReportData): string {
+  const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
+  const insights = medicalNLPAnalysis?.insights || [];
+  const correlations = reportData.correlationInsights || [];
+  const textSummaries = reportData.textSummaries;
+  
+  // Insights básicos se não houver análise de IA
+  const basicInsights = [
+    'Coletando dados para análise de IA.',
+    'Continue registrando suas informações diárias.',
+    'Insights inteligentes serão gerados conforme mais dados ficarem disponíveis.'
+  ];
+  
+  const insightsList = insights.length > 0 ? insights : basicInsights;
+  
+  return `
+        <div class="section">
+            <div class="card">
+                <h2>🧠 Insights de IA</h2>
+                <ul>
+                    ${insightsList.slice(0, 3).map((insight: any) => 
+                      `<li>${typeof insight === 'string' ? insight : insight.description || insight.text || 'Insight disponível'}</li>`
+                    ).join('')}
+                    ${correlations.length > 0 ? 
+                      correlations.slice(0, 2).map((corr: any) => 
+                        `<li>Correlação IA: ${corr.variables || 'Padrão detectado'} (${corr.strength || 'moderada'})</li>`
+                      ).join('') : ''
+                    }
+                </ul>
+                ${textSummaries ? `<p>Análise de ${textSummaries.combined?.totalTexts || 0} textos processados com IA.</p>` : ''}
+            </div>
+        </div>`;
+}
 
 
 /**
