@@ -75,29 +75,6 @@ export async function* generateEnhancedReportHTMLStream(
       size: headerHtml.length
     };
 
-    // 2. Seção Executive Dashboard
-    console.time('🏆 Executive Dashboard');
-    const executiveDashboardHtml = generateExecutiveDashboard(reportData);
-    console.timeEnd('🏆 Executive Dashboard');
-    
-    yield {
-      id: 'executive-dashboard',
-      content: executiveDashboardHtml,
-      order: 2,
-      size: executiveDashboardHtml.length
-    };
-
-    // 3. Seção AI Insights Zone
-    console.time('🧠 AI Insights Zone');
-    const aiInsightsHtml = generateAIInsightsZone(reportData);
-    console.timeEnd('🧠 AI Insights Zone');
-    
-    yield {
-      id: 'ai-insights',
-      content: aiInsightsHtml,
-      order: 2.5,
-      size: aiInsightsHtml.length
-    };
 
 
     // 4.1. 🌅 Seção Manhãs e Noites (RESTAURADA)
@@ -318,17 +295,6 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
-         `<!-- Executive Dashboard e IA -->
-         ${generateExecutiveDashboard(reportData)}
-         ${generateAIInsightsZone(reportData)}
-         
-         <!-- Seção Resumo Enhanced com IA -->
-         <div class="section">
-             <div class="card">
-                 <h2>📊 Resumo Inteligente</h2>
-                 ${generateSummaryContent(reportData)}
-             </div>
-         </div>
          
          ${generateMorningEveningSection(reportData)}
          ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
