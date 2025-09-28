@@ -350,7 +350,7 @@ function generateSummaryContent(reportData: EnhancedReportData): string {
 function generateInsightsSection(reportData: EnhancedReportData): string {
   const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
   const insights = medicalNLPAnalysis?.insights || [];
-  const correlations = reportData.correlationInsights || [];
+  const correlations: any[] = [];
   
   const basicInsights = [
     'Padrão de dor registrado ao longo do período.',
@@ -505,7 +505,7 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
 function generateAIInsightsZone(reportData: EnhancedReportData): string {
   const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
   const insights = medicalNLPAnalysis?.insights || [];
-  const correlations = reportData.correlationInsights || [];
+  const correlations: any[] = [];
   const textSummaries = reportData.textSummaries;
   
   // Insights básicos se não houver análise de IA
