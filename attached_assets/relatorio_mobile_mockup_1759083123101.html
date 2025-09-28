@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>FibroDiário - Relatório Mobile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      background: #f8fafc;
+      color: #1e293b;
+      padding-bottom: 4rem; /* espaço para nav fixa */
+    }
+    header {
+      background: linear-gradient(135deg, #9C27B0, #E1BEE7);
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      border-radius: 0 0 1rem 1rem;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    header p {
+      margin: 0.3rem 0 0;
+      font-size: 0.9rem;
+    }
+    .section {
+      margin: 1rem;
+    }
+    .card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .pain-emoji {
+      font-size: 2.5rem;
+      margin: 0.5rem 0;
+      text-align: center;
+    }
+    .pain-value {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    ul, p {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.5rem;
+      text-align: center;
+    }
+    .stat-grid div {
+      background: #f1f5f9;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      padding: 0.5rem 0;
+    }
+    .bottom-nav button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #64748b;
+    }
+    .bottom-nav button.active {
+      color: #9C27B0;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FibroDiário</h1>
+    <p>Relatório de Dor - Agosto a Setembro 2025</p>
+  </header>
+
+  <!-- Seção Resumo -->
+  <div class="section">
+    <div class="card">
+      <h2>📊 Resumo</h2>
+      <ul>
+        <li>Dor média geral: 6.2</li>
+        <li>Total de crises: 9 (últimos 18 dias)</li>
+        <li>Intervalo intestinal médio: 3.6 dias</li>
+        <li>Atividades mais realizadas: Caminhada, Trabalho, Cuidar da casa</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Manhãs -->
+  <div class="section">
+    <div class="card">
+      <h2>🌅 Manhãs</h2>
+      <div class="pain-emoji">😐</div>
+      <div class="pain-value">Dor média: 5.7</div>
+      <ul>
+        <li>7 registros coletados</li>
+        <li>Sono: Regular (3.1/4)</li>
+        <li>Correlação moderada: sono de qualidade pode reduzir a dor matinal</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Noites -->
+  <div class="section">
+    <div class="card">
+      <h2>🌙 Noites</h2>
+      <div class="pain-emoji">😰</div>
+      <div class="pain-value">Dor média: 6.5</div>
+      <ul>
+        <li>10 registros coletados</li>
+        <li>Humor: Neutro (2/4)</li>
+        <li>Correlação fraca: humor e dor parecem independentes</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Crises -->
+  <div class="section">
+    <div class="card">
+      <h2>🚨 Crises</h2>
+      <div class="pain-emoji">😭</div>
+      <div class="pain-value">Intensidade Média: 8.1</div>
+      <div class="stat-grid">
+        <div><strong>9</strong><br>Crises em 18 dias</div>
+        <div><strong>50%</strong><br>Frequência</div>
+      </div>
+      <p>Locais afetados: Pernas (17%), Cabeça (17%)</p>
+    </div>
+  </div>
+
+  <!-- Seção Digestiva -->
+  <div class="section">
+    <div class="card">
+      <h2>💩 Saúde Digestiva</h2>
+      <p>Status: Constipação severa 🚨</p>
+      <ul>
+        <li>Intervalo médio: 3.6 dias</li>
+        <li>Maior intervalo: 9 dias</li>
+        <li>Última evacuação: há 12 dias</li>
+      </ul>
+      <p><strong>Recomendação:</strong> avaliação médica urgente recomendada.</p>
+    </div>
+  </div>
+
+  <!-- Seção Atividades -->
+  <div class="section">
+    <div class="card">
+      <h2>🏃 Atividades</h2>
+      <ul>
+        <li>Cuidou da casa - 5x/semana | Muito Positivo</li>
+        <li>Caminhada - 4x/semana | Positivo</li>
+        <li>Trabalho - 4x/semana | Positivo</li>
+        <li>Atividade física - 4x/semana | Positivo</li>
+        <li>Não fiz - 1x/semana | Neutro</li>
+      </ul>
+      <p>Correlação atividade ↔ recuperação: 0.24 (fraca)</p>
+    </div>
+  </div>
+
+  <!-- Seção Insights -->
+  <div class="section">
+    <div class="card">
+      <h2>💡 Insights</h2>
+      <ul>
+        <li>Maior risco de crises entre 20h e 2h.</li>
+        <li>Atividade física regular correlaciona-se com recuperação positiva.</li>
+        <li>Sono irregular aumenta intensidade da dor matinal.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Medicamentos -->
+  <div class="section">
+    <div class="card">
+      <h2>💊 Medicamentos</h2>
+      <ul>
+        <li>Dipirona - uso emergencial em crises severas</li>
+        <li>Paracetamol - uso diário</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Equipe Médica -->
+  <div class="section">
+    <div class="card">
+      <h2>🏥 Equipe Médica</h2>
+      <ul>
+        <li>Dra. Maria Silva - Reumatologista (CRM 12345)</li>
+        <li>Dr. João Santos - Neurologista (CRM 67890)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Seção Padrões Temporais -->
+  <div class="section">
+    <div class="card">
+      <h2>⏰ Padrões Temporais</h2>
+      <p>Risco de crises mais alto à noite e madrugada (20h - 2h).</p>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <div class="section">
+    <div class="card">
+      <h2>ℹ️ Informações</h2>
+      <p>Relatório gerado em 24/09/2025 - ID: RPT-20250924</p>
+      <p><em>Este relatório não substitui acompanhamento médico.</em></p>
+    </div>
+  </div>
+
+  <!-- Navegação inferior -->
+  <nav class="bottom-nav">
+    <button class="active">🏠</button>
+    <button>🌅</button>
+    <button>🌙</button>
+    <button>🚨</button>
+    <button>💩</button>
+  </nav>
+</body>
+</html>
