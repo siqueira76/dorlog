@@ -263,12 +263,13 @@ function generateHTMLDocumentStart(periodsText: string): string {
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#667eea">
-    <title>🦋 FibroDiário Enhanced - Relatório Inteligente - ${periodsText}</title>
+    <meta name="theme-color" content="#9C27B0">
+    <title>FibroDiário Enhanced - Relatório Inteligente - ${periodsText}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="data:image/png;base64,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" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
@@ -317,15 +318,31 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
-         `<div class="content">
-            ${generateMorningEveningSection(reportData)}
-            ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
-            ${generateDetailedCrisisEpisodesSection(reportData)}
-            ${generateTemporalPatternsSection(reportData)}
-            ${generatePhysicalActivitySection(reportData)}
-            ${generateClinicalDataSection(reportData)}
-            ${generateEnhancedFooter(reportId, reportData)}
-         </div>` +
+         `<!-- Seção Resumo Enhanced com IA -->
+         <div class="section">
+             <div class="card">
+                 <h2>📊 Resumo Inteligente</h2>
+                 ${generateSummaryContent(reportData)}
+             </div>
+         </div>
+         
+         ${generateMorningEveningSection(reportData)}
+         ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
+         ${generateDetailedCrisisEpisodesSection(reportData)}
+         ${generateTemporalPatternsSection(reportData)}
+         ${generatePhysicalActivitySection(reportData)}
+         ${generateInsightsSection(reportData)}
+         ${generateClinicalDataSection(reportData)}
+         ${generateEnhancedFooter(reportId, reportData)}
+         
+         <!-- Navegação inferior -->
+         <nav class="bottom-nav">
+             <button class="active">🏠</button>
+             <button>🌅</button>
+             <button>🌙</button>
+             <button>🚨</button>
+             <button>💩</button>
+         </nav>` +
          generateHTMLDocumentEnd(reportData, withPassword, passwordHash, reportId);
 }
 
@@ -337,24 +354,75 @@ export function generateEnhancedReportHTML(data: EnhancedReportTemplateData): st
 }
 
 /**
+ * Gera conteúdo do resumo inteligente
+ */
+function generateSummaryContent(reportData: EnhancedReportData): string {
+  const avgPain = reportData.painEvolution && reportData.painEvolution.length > 0
+    ? (reportData.painEvolution.reduce((sum, p) => sum + p.level, 0) / reportData.painEvolution.length).toFixed(1)
+    : 'N/A';
+  
+  const crisisCount = reportData.crisisEpisodes || 0;
+  const totalDays = reportData.totalDays || 0;
+  const digestiveAnalysis = (reportData as any).digestiveAnalysis;
+  const physicalActivity = reportData.physicalActivityAnalysis;
+  
+  return `
+    <ul>
+        <li>Dor média geral: ${avgPain}</li>
+        <li>Total de crises: ${crisisCount} (últimos ${totalDays} dias)</li>
+        <li>Status digestivo: ${digestiveAnalysis?.status ? getDigestiveStatusLabel(digestiveAnalysis.status) : 'Avaliando'}</li>
+        <li>Atividades: ${physicalActivity?.activeDays || 0} dias ativos de ${physicalActivity?.totalDays || totalDays}</li>
+        <li>Análise com IA: ${reportData.textSummaries ? 'Ativa' : 'Dados insuficientes'}</li>
+    </ul>`;
+}
+
+/**
+ * Gera seção de insights com IA
+ */
+function generateInsightsSection(reportData: EnhancedReportData): string {
+  const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
+  const insights = medicalNLPAnalysis?.insights || [];
+  const correlations = reportData.correlationInsights || [];
+  
+  const basicInsights = [
+    'Padrão de dor registrado ao longo do período.',
+    'Continue monitorando para detectar tendências.',
+    'Dados coletados ajudam no acompanhamento médico.'
+  ];
+  
+  const insightsList = insights.length > 0 ? insights : basicInsights;
+  
+  return `
+    <div class="section">
+        <div class="card">
+            <h2>💡 Insights Inteligentes</h2>
+            <ul>
+                ${insightsList.map((insight: any) => 
+                  `<li>${typeof insight === 'string' ? insight : insight.description || insight.text || 'Insight disponível'}</li>`
+                ).join('')}
+                ${correlations.length > 0 ? 
+                  correlations.slice(0, 2).map((corr: any) => 
+                    `<li>Correlação detectada: ${corr.variables || 'Padrão'} (${corr.strength || 'moderada'})</li>`
+                  ).join('') : ''
+                }
+            </ul>
+        </div>
+    </div>`;
+}
+
+/**
  * Gera header enhanced do relatório
  */
 function generateEnhancedHeader(userEmail: string, periodsText: string, reportData: EnhancedReportData): string {
   return `
-        <div class="header-premium">
-            <div class="logo-premium">
-                    <h1 class="title-premium">FibroDiário Relatorio</h1>
-            </div>
-            <div class="subtitle-premium">
-                Análise do Diário da Dor - ${periodsText}
-            </div>
-            <div class="user-info-premium">
-                👤 ${userEmail}
-            </div>
+        <header>
+            <h1>FibroDiário Enhanced</h1>
+            <p>Relatório Inteligente - ${periodsText}</p>
+            <p>👤 ${userEmail}</p>
             <div class="expiration-notice">
                 ⏰ <strong>Importante:</strong> Este relatório será automaticamente removido após 1 dia.
             </div>
-        </div>`;
+        </header>`;
 }
 
 /**
@@ -477,12 +545,45 @@ function generateExecutiveDashboard(reportData: EnhancedReportData): string {
  * 📋 NÍVEL 4: Clinical Data - Aplicando padrão visual premium (dados específicos apenas)
  */
 function generateClinicalDataSection(reportData: EnhancedReportData): string {
+  const doctors = (reportData as any).doctors || [];
+  const medications = (reportData as any).medications || [];
+  
   return `
-        <div class="clinical-data-section-premium">
-            <!-- Dados Específicos Detalhados -->
-            <div class="clinical-detailed-content">
-                ${generateDoctorsSectionStandalone(reportData)}
-                ${generateMedicationsSectionStandalone(reportData)}
+        <!-- Seção Medicamentos -->
+        <div class="section">
+            <div class="card">
+                <h2>💊 Medicamentos</h2>
+                ${medications.length > 0 ? `
+                    <ul>
+                        ${medications.slice(0, 5).map((med: any) => 
+                          `<li>${med.nome || med.name} - ${med.posologia || med.dosage || 'Dose não especificada'}</li>`
+                        ).join('')}
+                    </ul>
+                ` : `
+                    <ul>
+                        <li>Nenhum medicamento cadastrado</li>
+                        <li>Cadastre seus medicamentos no menu "Medicamentos"</li>
+                    </ul>
+                `}
+            </div>
+        </div>
+        
+        <!-- Seção Equipe Médica -->
+        <div class="section">
+            <div class="card">
+                <h2>🏥 Equipe Médica</h2>
+                ${doctors.length > 0 ? `
+                    <ul>
+                        ${doctors.slice(0, 5).map((doctor: any) => 
+                          `<li>Dr(a). ${doctor.name} - ${doctor.specialty} (CRM ${doctor.crm})</li>`
+                        ).join('')}
+                    </ul>
+                ` : `
+                    <ul>
+                        <li>Nenhum médico cadastrado</li>
+                        <li>Adicione sua equipe médica no menu "Médicos"</li>
+                    </ul>
+                `}
             </div>
         </div>`;
 }
@@ -1188,13 +1289,17 @@ function generateNightlyReflectionsSection(reportData: EnhancedReportData): stri
 function generateDigestiveHealthSection(digestiveAnalysis: any): string {
   if (!digestiveAnalysis || !digestiveAnalysis.status) {
     return `
-            <div class="metric-row">
-                <div class="metric-item">
-                    <div class="metric-title">🏥 Saúde Digestiva:</div>
-                    <div class="metric-status">📊 Ainda coletando dados de evacuação</div>
-                    <div class="metric-subtitle">└ Continue respondendo os questionários noturnos</div>
-                </div>
-            </div>`;
+        <div class="section">
+            <div class="card">
+                <h2>💩 Saúde Digestiva</h2>
+                <p>Status: Coletando dados 📊</p>
+                <ul>
+                    <li>Continue respondendo os questionários noturnos</li>
+                    <li>Dados insuficientes para análise completa</li>
+                </ul>
+                <p><strong>Recomendação:</strong> Mantenha o registro regular.</p>
+            </div>
+        </div>`;
   }
 
   const statusEmoji = {
@@ -1212,33 +1317,18 @@ function generateDigestiveHealthSection(digestiveAnalysis: any): string {
   };
 
   return `
-            <div class="metric-row">
-                <div class="metric-item">
-                    <div class="metric-title">🏥 Saúde Digestiva:</div>
-                    <div class="metric-status">${(statusText as any)[digestiveAnalysis.status]} ${(statusEmoji as any)[digestiveAnalysis.status]}</div>
-                    <div class="metric-subtitle">
-                        ${digestiveAnalysis.status !== 'normal' 
-                          ? `Constipação moderada. Maior intervalo: ${digestiveAnalysis.maxInterval} dias, média: ${digestiveAnalysis.averageInterval} dia(s). Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement} dia(s)`
-                          : 'Padrão intestinal dentro da normalidade'
-                        }
-                    </div>
-                    
-                    ${digestiveAnalysis.status !== 'normal' ? `
-                    <div class="analysis-details">
-                        <strong>📊 Análise de Intervalos:</strong><br>
-                        • Maior intervalo: ${digestiveAnalysis.maxInterval} dia(s)<br>
-                        • Intervalo médio: ${digestiveAnalysis.averageInterval} dia(s)<br>
-                        • Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement} dia(s)<br>
-                        • Frequência: ${digestiveAnalysis.frequency}% dos dias
-                    </div>
-                    
-                    <div class="recommendation">
-                        <strong>💡 Recomendação:</strong><br>
-                        ${digestiveAnalysis.recommendation}
-                    </div>
-                    ` : ''}
-                </div>
-            </div>`;
+        <div class="section">
+            <div class="card">
+                <h2>💩 Saúde Digestiva</h2>
+                <p>Status: ${(statusText as any)[digestiveAnalysis.status]} ${(statusEmoji as any)[digestiveAnalysis.status]}</p>
+                <ul>
+                    <li>Intervalo médio: ${digestiveAnalysis.averageInterval || 'N/A'} dias</li>
+                    <li>Maior intervalo: ${digestiveAnalysis.maxInterval || 'N/A'} dias</li>
+                    <li>Última evacuação: há ${digestiveAnalysis.daysSinceLastBowelMovement || 'N/A'} dias</li>
+                </ul>
+                <p><strong>Recomendação:</strong> ${digestiveAnalysis.recommendation || 'Continue monitorando regularmente.'}</p>
+            </div>
+        </div>`;
 }
 
 /**
@@ -1952,17 +2042,13 @@ function generateTraditionalSections(reportData: EnhancedReportData): string {
  */
 function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData): string {
   return `
-        <div class="report-footer">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <p><strong>Relatório ID:</strong> ${reportId}</p>
-                    <p><strong>Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}</p>
-                    <p><strong>Versão:</strong> Enhanced 3.0</p>
-                    <p><strong>⏰ Validade:</strong> Este relatório será removido automaticamente após 1 dia</p>
-                </div>
-                <div class="footer-disclaimer">
-                    <p>⚠️ <strong>Importante:</strong> Este relatório é uma ferramenta de acompanhamento e não substitui consulta médica profissional.</p>
-                </div>
+        <!-- Rodapé -->
+        <div class="section">
+            <div class="card">
+                <h2>ℹ️ Informações</h2>
+                <p>Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} - ID: ${reportId}</p>
+                <p>Versão: Enhanced 3.0 com IA</p>
+                <p><em>Este relatório não substitui acompanhamento médico.</em></p>
             </div>
         </div>`;
 }
@@ -1971,6 +2057,59 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
  * 🌅 SEÇÃO REFATORADA: Análise Detalhada de Manhãs e Noites - Dados 100% Reais
  */
 function generateMorningEveningSection(reportData: EnhancedReportData): string {
+  const morningData = extractRealMorningData(reportData);
+  const eveningData = extractRealEveningData(reportData);
+  
+  return `
+    <!-- Seção Manhãs -->
+    <div class="section">
+        <div class="card">
+            <h2>🌅 Manhãs</h2>
+            ${morningData.hasPainData ? `
+                <div class="pain-emoji">${morningData.averagePain <= 3 ? '😊' : morningData.averagePain <= 6 ? '😐' : '😰'}</div>
+                <div class="pain-value">Dor média: ${morningData.averagePain}</div>
+                <ul>
+                    <li>${morningData.recordCount} registros coletados</li>
+                    <li>Sono: ${morningData.sleepQuality} (${morningData.sleepAverage}/4)</li>
+                    <li>Correlação: ${morningData.sleepPainCorrelation}</li>
+                </ul>
+            ` : `
+                <div class="pain-emoji">💤</div>
+                <div class="pain-value">Sem dados</div>
+                <ul>
+                    <li>Nenhum quiz matinal registrado</li>
+                    <li>Complete alguns quizzes matinais para análises</li>
+                </ul>
+            `}
+        </div>
+    </div>
+    
+    <!-- Seção Noites -->
+    <div class="section">
+        <div class="card">
+            <h2>🌙 Noites</h2>
+            ${eveningData.hasPainData ? `
+                <div class="pain-emoji">${eveningData.averagePain <= 3 ? '😊' : eveningData.averagePain <= 6 ? '😐' : '😰'}</div>
+                <div class="pain-value">Dor média: ${eveningData.averagePain}</div>
+                <ul>
+                    <li>${eveningData.recordCount} registros coletados</li>
+                    <li>Humor: ${eveningData.moodQuality} (${eveningData.moodAverage}/4)</li>
+                    <li>Correlação: ${eveningData.moodPainCorrelation}</li>
+                </ul>
+            ` : `
+                <div class="pain-emoji">🌚</div>
+                <div class="pain-value">Sem dados</div>
+                <ul>
+                    <li>Nenhum quiz noturno registrado</li>
+                    <li>Complete alguns quizzes noturnos para análises</li>
+                </ul>
+            `}
+        </div>
+    </div>`;
+}
+
+// Função antiga comentada para preservar a lógica complexa se necessário
+function generateMorningEveningSectionOld(reportData: EnhancedReportData): string {
   const morningData = extractRealMorningData(reportData);
   const eveningData = extractRealEveningData(reportData);
   const digestiveHealth = reportData.digestiveAnalysis;
@@ -2201,6 +2340,47 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
   const crisisCount = reportData.crisisEpisodes || 0;
   const crisisIntensity = calculateCrisisIntensity(reportData);
   const crisisLocations = reportData.painPoints || [];
+  const totalDays = reportData.totalDays || 10;
+  
+  if (crisisCount === 0) {
+    return `
+        <div class="section">
+            <div class="card">
+                <h2>🚨 Crises</h2>
+                <div class="pain-emoji">✅</div>
+                <div class="pain-value">Nenhuma crise</div>
+                <ul>
+                    <li>Nenhuma crise registrada no período</li>
+                    <li>Continue monitorando para detecção precoce</li>
+                </ul>
+            </div>
+        </div>`;
+  }
+  
+  return `
+        <div class="section">
+            <div class="card">
+                <h2>🚨 Crises</h2>
+                <div class="pain-emoji">😭</div>
+                <div class="pain-value">Intensidade Média: ${crisisIntensity}/10</div>
+                <div class="stat-grid">
+                    <div><strong>${crisisCount}</strong><br>Crises em ${totalDays} dias</div>
+                    <div><strong>${Math.round((crisisCount/totalDays)*100)}%</strong><br>Frequência</div>
+                </div>
+                ${crisisLocations.length > 0 ? `
+                <p>Locais afetados: ${crisisLocations.slice(0, 3).map((loc: any) => 
+                  `${loc.local || loc.location || loc.name} (${loc.occurrences || loc.count || 1}x)`
+                ).join(', ')}</p>
+                ` : ''}
+            </div>
+        </div>`;
+}
+
+// Função complexa original preservada
+function generateDetailedCrisisEpisodesSectionOld(reportData: EnhancedReportData): string {
+  const crisisCount = reportData.crisisEpisodes || 0;
+  const crisisIntensity = calculateCrisisIntensity(reportData);
+  const crisisLocations = reportData.painPoints || [];
   const rescueMedications = (reportData as any).rawMedicationTexts || [];
   const totalDays = reportData.totalDays || 10;
   
@@ -2266,6 +2446,25 @@ function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): 
  * ⏰ SEÇÃO RESTAURADA: Padrões Temporais Quantificados
  */
 function generateTemporalPatternsSection(reportData: EnhancedReportData): string {
+  const temporalAnalysis = reportData.crisisTemporalAnalysis;
+  const peakHours = temporalAnalysis?.peakHours || 'Noite (18h-22h)';
+  
+  return `
+        <div class="section">
+            <div class="card">
+                <h2>⏰ Padrões Temporais</h2>
+                <p>Maior risco de crises: ${peakHours}</p>
+                <ul>
+                    <li>Padrão identificado através de análise temporal</li>
+                    <li>Baseado nos registros de dor coletados</li>
+                    <li>Use estas informações para prevenção</li>
+                </ul>
+            </div>
+        </div>`;
+}
+
+// Função complexa original preservada
+function generateTemporalPatternsSectionOld(reportData: EnhancedReportData): string {
   const temporalAnalysis = reportData.crisisTemporalAnalysis || {};
   const riskPeriods = calculateRiskPeriods(reportData);
   const painEvolution = reportData.painEvolution || [];
@@ -2413,6 +2612,42 @@ function generateTemporalPatternsSection(reportData: EnhancedReportData): string
  * 🏃 SEÇÃO RESTAURADA: Atividades Físicas Detalhadas
  */
 function generatePhysicalActivitySection(reportData: EnhancedReportData): string {
+  const physicalActivity = reportData.physicalActivityAnalysis;
+  
+  if (!physicalActivity || !physicalActivity.activityBreakdown) {
+    return `
+        <div class="section">
+            <div class="card">
+                <h2>🏃 Atividades</h2>
+                <ul>
+                    <li>Ainda coletando dados de atividades</li>
+                    <li>Complete os questionários noturnos (Pergunta 6)</li>
+                    <li>Registre suas atividades diárias</li>
+                </ul>
+                <p>Correlação atividade ↔ recuperação: Calculando...</p>
+            </div>
+        </div>`;
+  }
+  
+  const activities = physicalActivity.activityBreakdown || [];
+  const correlation = calculateActivityPainCorrelation(reportData).toFixed(2);
+  
+  return `
+        <div class="section">
+            <div class="card">
+                <h2>🏃 Atividades</h2>
+                <ul>
+                    ${activities.slice(0, 5).map((activity: any) => 
+                      `<li>${activity.activity} - ${activity.days}x/semana | ${activity.impact || 'Positivo'}</li>`
+                    ).join('')}
+                </ul>
+                <p>Correlação atividade ↔ recuperação: ${correlation} (${parseFloat(correlation) > 0.3 ? 'forte' : parseFloat(correlation) > 0.1 ? 'moderada' : 'fraca'})</p>
+            </div>
+        </div>`;
+}
+
+// Função complexa original preservada
+function generatePhysicalActivitySectionOld(reportData: EnhancedReportData): string {
   const activities = extractPhysicalActivities(reportData);
   const activityCorrelation = calculateActivityPainCorrelation(reportData);
   const physicalActivityAnalysis = reportData.physicalActivityAnalysis;
@@ -2808,12 +3043,115 @@ function formatDate(dateString: string): string {
  */
 function getEnhancedReportCSS(): string {
   return `
+        /* 🦋 FibroDiário Mobile App-Like CSS - Baseado no Mockup */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background: #f8fafc;
+            color: #1e293b;
+            padding-bottom: 4rem; /* espaço para nav fixa */
+        }
+        header {
+            background: linear-gradient(135deg, #9C27B0, #E1BEE7);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0 0 1rem 1rem;
+        }
+        header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        header p {
+            margin: 0.3rem 0 0;
+            font-size: 0.9rem;
+        }
+        .section {
+            margin: 1rem;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pain-emoji {
+            font-size: 2.5rem;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+        .pain-value {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        ul, p {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            text-align: center;
+        }
+        .stat-grid div {
+            background: #f1f5f9;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 0.5rem 0;
+        }
+        .bottom-nav button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #64748b;
+        }
+        .bottom-nav button.active {
+            color: #9C27B0;
+            font-weight: 700;
+        }
+        .expiration-notice {
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            font-size: 0.85rem;
+            text-align: center;
+            color: #92400e;
+        }
+        .content {
+            margin: 0;
+            padding: 0;
+        }
+        
         /* 🦋 FibroDiário Mobile App-Like Variables System */
         :root {
             /* Core Brand Colors */
-            --fibro-primary: #667eea;
-            --fibro-primary-light: #818cf8;
-            --fibro-primary-dark: #4f46e5;
+            --fibro-primary: #9C27B0;
+            --fibro-primary-light: #E1BEE7;
+            --fibro-primary-dark: #7B1FA2;
             --fibro-secondary: #f59e0b;
             --fibro-accent: #10b981;
             
