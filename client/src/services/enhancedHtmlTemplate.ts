@@ -295,8 +295,7 @@ function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): s
   
   return generateHTMLDocumentStart(periodsText) +
          generateEnhancedHeader(userEmail, periodsText, reportData) +
-         
-         ${generateMorningEveningSection(reportData)}
+         `${generateMorningEveningSection(reportData)}
          ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
          ${generateDetailedCrisisEpisodesSection(reportData)}
          ${generateTemporalPatternsSection(reportData)}
