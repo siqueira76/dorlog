@@ -27,6 +27,11 @@ jobs:
           cd functions
           npm install
 
+      - name: Build TypeScript
+        run: |
+          cd functions
+          npm run build
+
       - name: Deploy to Firebase
         run: |
           cd functions
