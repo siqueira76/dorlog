@@ -411,9 +411,42 @@ export const nlpAnalyze = onCall({
 
 ---
 
+## 🤖 **Deploy Automático via GitHub Actions** (Recomendado)
+
+Configurei um workflow inteligente que faz deploy automático quando você modifica `functions/`:
+
+**Arquivo criado:** `.github/workflows/deploy-functions.yml`
+
+**Como ativar (2 passos):**
+
+1. **Gerar token Firebase:**
+   ```bash
+   firebase login:ci
+   ```
+   Copie o token gerado
+
+2. **Adicionar secret no GitHub:**
+   - Vá em **Settings** → **Secrets and variables** → **Actions**
+   - Clique em **New repository secret**
+   - Name: `FIREBASE_TOKEN`
+   - Value: (cole o token)
+
+3. **Pronto!** Agora:
+   ```bash
+   # Modificou functions/ e fez push?
+   git push origin main
+   
+   # → Deploy automático acontece! ✨
+   # → Veja progresso em Actions no GitHub
+   ```
+
+**Documentação completa:** `.github/FUNCTIONS_DEPLOY_SETUP.md`
+
+---
+
 ## 📈 **Próximos Passos**
 
-### **Opcional: CI/CD Automático**
+### **Deploy Manual (Primeira Vez)**
 
 Adicionar deploy automático de Functions via GitHub Actions:
 
