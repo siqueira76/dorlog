@@ -6,7 +6,7 @@
  */
 
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
-import { NLPSingleton } from './nlpAnalysisService';
+import { getNLPInstance } from './nlpAnalysisService';
 import type { NLPAnalysisResult } from './nlpAnalysisService';
 
 /**
@@ -238,7 +238,7 @@ class NLPServiceProxy {
     try {
       const startTime = performance.now();
       
-      const nlpService = await NLPSingleton.getInstance();
+      const nlpService = await getNLPInstance();
       const results = await nlpService.analyzeBatch(texts);
       
       const elapsed = performance.now() - startTime;
