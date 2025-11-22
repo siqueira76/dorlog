@@ -6,7 +6,6 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { nlpService } from './nlpService';
-import type { NLPAnalysisResult } from './nlpService';
 
 /**
  * Function: nlpAnalyze
@@ -16,12 +15,12 @@ import type { NLPAnalysisResult } from './nlpService';
  * @param texts - Array de textos para análise
  * @returns Array de resultados NLP
  */
-export const nlpAnalyze = onCall<{ texts: string[] }, { results: NLPAnalysisResult[] }>({
+export const nlpAnalyze = onCall({
   memory: '2GiB',
   timeoutSeconds: 120,
   concurrency: 80,
   region: 'us-central1'
-}, async (request) => {
+}, async (request: { auth?: any; data: { texts: string[] } }) => {
   console.log('📞 nlpAnalyze invocada');
 
   // Validação de autenticação
