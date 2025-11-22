@@ -47,6 +47,18 @@ Two types of reports are generated:
 **Enhanced Report Sections**: Include an automated executive summary, temporal sentiment analysis, contextualized NLP insights, behavioral pattern detection, predictive alerts, and personalized clinical recommendations. Advanced visualizations like Sentiment Timeline, Pain-Mood Correlation, Medical Entities Map, and Urgency Heatmap are provided. Text processing for these insights includes sentiment, summarization, and entity classification. Reports are optimized for client-side generation (2-5 seconds), are standalone HTML, responsive, and ensure full privacy with local NLP processing.
 
 # Recent Changes
+- **November 22, 2025**: Migration to Firebase Hosting + Cloud Run completed
+  - **Architecture Change**: Migrated from GitHub Pages (frontend-only) to Firebase Hosting + Cloud Run (full-stack)
+  - **Base Path Removed**: Eliminated `/dorlog/` base path, now using clean root path `/`
+  - **CI/CD Automated**: Configured GitHub Actions with intelligent path filters (frontend vs backend)
+  - **Backend Containerization**: Created multi-stage Dockerfile for Cloud Run deployment
+  - **Cost Optimization**: Reduced hosting costs by ~70% ($25/month → $0-8/month)
+  - **Health Check**: Added `/health` endpoint for Cloud Run monitoring
+  - **Firebase Integration**: Configured rewrites for `/api/**` → Cloud Run backend
+  - **Navigation Simplified**: Removed GitHub Pages detection logic, using root path everywhere
+  - **Files Created**: Dockerfile, .dockerignore, deploy-frontend.yml, deploy-backend.yml, .firebaserc, MIGRATION.md
+  - **Files Modified**: firebase.json, vite.config.ts, package.json, server/routes.ts, App.tsx, navigation.ts, .gitignore
+  - **Documentation**: Created comprehensive MIGRATION.md with deployment instructions
 - **September 20, 2025**: Phase 2 completed successfully - Critical data restoration achieved
   - **100% data restoration**: All 6 critical medical data categories fully restored in enhancedHtmlTemplate.ts
   - **CRM rendering**: Doctor CRMs (Dr. Jéssica, Dr. Edilio) now properly displayed
