@@ -255,11 +255,16 @@ if (!navigator.onLine) return false;
 // 2. Preferência do usuário? → Usar preferência
 if (userPreference === 'server') return true;
 
-// 3. Dispositivo low-end? → Server-side
+// 3. Dispositivo low-end? → Server-side (sempre)
 if (memory < 4GB || cores < 4) return true;
 
-// 4. Primeira vez (sem cache)? → Server-side
-if (!hasModelsCache) return true;
+// 4. Dispositivo capaz - transição inteligente:
+//    Primeira vez → Server (evita download 330MB)
+//    Após server executar → Client (hora de baixar modelos)
+//    Com modelos cached → Client (sempre)
+const hasServerExecuted = localStorage.nlp_server_executed;
+if (!hasServerExecuted && !hasModelsCache) return true;  // 1ª vez
+if (hasServerExecuted && !hasModelsCache) return false;  // 2ª vez (download)
 
 // 5. Default → Client-side (privacy-first)
 return false;
@@ -267,22 +272,32 @@ return false;
 
 ### **Fluxo de Execução**
 
+**Dispositivo Capaz (High-end):**
 ```
-Usuário gera relatório
-        ↓
-NLPServiceProxy.analyzeBatch(texts)
-        ↓
-    Decisão automática
-        ↓
-   ┌────┴────┐
-   ↓         ↓
-Server    Client
-(Fast)    (Private)
-   ↓         ↓
-Firebase   Browser
-Functions  @xenova
-   ↓         ↓
- Results ← Results
+1ª execução:
+  ├─ Decisão: Server (evita download 330MB)
+  ├─ Firebase Functions processa
+  ├─ Marca: nlp_server_executed = true
+  └─ Retorna resultados (rápido)
+
+2ª execução:
+  ├─ Decisão: Client (hora de baixar modelos)
+  ├─ Baixa @xenova/transformers (~330MB)
+  ├─ Marca: nlp_models_cached = true
+  └─ Retorna resultados (1ª vez mais lenta)
+
+3ª+ execuções:
+  ├─ Decisão: Client (modelos cached)
+  ├─ Browser processa localmente
+  └─ Retorna resultados (rápido + offline)
+```
+
+**Dispositivo Low-end:**
+```
+Todas execuções:
+  ├─ Decisão: Server (sempre)
+  ├─ Firebase Functions processa
+  └─ Retorna resultados (30-50% mais rápido)
 ```
 
 ---
@@ -319,6 +334,31 @@ console.log(info);
 //   online: true,
 //   effectiveType: '4g'
 // }
+```
+
+---
+
+## 🧹 **Gerenciamento de Cache**
+
+### **Flags localStorage**
+
+O sistema usa 3 flags para gerenciar a estratégia híbrida:
+
+| Flag | Quando definida | Propósito |
+|------|-----------------|-----------|
+| `nlp_server_executed` | Após 1ª execução server-side bem-sucedida | Permite transição para client-side |
+| `nlp_models_cached` | Após download completo dos modelos | Indica que modelos estão prontos |
+| `nlp_preference` | Configuração manual do usuário | Força server/client/auto |
+
+### **Limpar Cache (Reset)**
+
+```typescript
+// Resetar para comportamento padrão
+localStorage.removeItem('nlp_server_executed');
+localStorage.removeItem('nlp_models_cached');
+localStorage.removeItem('nlp_preference');
+
+// Força próxima execução a começar do zero
 ```
 
 ---

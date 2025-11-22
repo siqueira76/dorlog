@@ -125,15 +125,24 @@ class NLPStrategySelector {
       return true;
     }
 
-    // 4. Verificar se modelos já estão em cache
+    // 4. CRITICAL FIX: Estratégia híbrida inteligente para dispositivos capazes
+    // Primeira execução → server (evita download)
+    // Execuções seguintes → client (privacy + offline)
+    const hasServerExecuted = localStorage.getItem('nlp_server_executed') === 'true';
     const hasCachedModels = await DeviceDetector.hasLocalModelsCache();
-    if (!hasCachedModels) {
+
+    if (!hasServerExecuted && !hasCachedModels) {
       console.log('🎯 Auto: server-side (primeira execução, evita download 330MB)');
       return true;
     }
 
-    // 5. Default: client-side (privacy-first)
-    console.log('🎯 Auto: client-side (dispositivo capaz + modelos cached)');
+    if (hasServerExecuted && !hasCachedModels) {
+      console.log('🎯 Auto: client-side (dispositivo capaz, server já executado, hora de fazer download dos modelos)');
+      return false;
+    }
+
+    // 5. Default: client-side (modelos já cached ou já executou server)
+    console.log('🎯 Auto: client-side (dispositivo capaz + modelos cached ou transição pós-server)');
     return false;
   }
 
@@ -191,6 +200,10 @@ class NLPServiceProxy {
       const elapsed = performance.now() - startTime;
       console.log(`⚡ Server-side completado em ${Math.round(elapsed)}ms`);
       
+      // CRITICAL FIX: Marcar server execution bem-sucedida para permitir
+      // transição futura para client-side em dispositivos capazes
+      this.markServerExecutionSuccess();
+      
       return result.data.results;
 
     } catch (error: any) {
@@ -199,6 +212,20 @@ class NLPServiceProxy {
       // Fallback para client-side em caso de erro
       console.log('🔄 Fallback: tentando client-side...');
       return this.analyzeClientSide(texts);
+    }
+  }
+
+  /**
+   * Marca que server-side foi executado com sucesso
+   * Permite que dispositivos capazes transicionem para client-side após primeira execução
+   */
+  private markServerExecutionSuccess(): void {
+    try {
+      localStorage.setItem('nlp_server_executed', 'true');
+      const timestamp = Date.now();
+      localStorage.setItem('nlp_server_last_execution', timestamp.toString());
+    } catch (error) {
+      console.warn('Não foi possível marcar execução server-side:', error);
     }
   }
 
