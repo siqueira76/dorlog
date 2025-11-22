@@ -34,24 +34,35 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker
+    - name: Create Artifact Registry repository (if not exists)
+      run: |
+        gcloud artifacts repositories describe backend \
+          --location=us-central1 \
+          --project=dorlog-fibro-diario 2>/dev/null || \
+        gcloud artifacts repositories create backend \
+          --repository-format=docker \
+          --location=us-central1 \
+          --description="Docker repository for FibroDiario backend" \
+          --project=dorlog-fibro-diario
+
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
     - name: Build Docker image
       run: |
-        docker build -t gcr.io/dorlog-fibro-diario/backend:${{ github.sha }} .
-        docker tag gcr.io/dorlog-fibro-diario/backend:${{ github.sha }} \
-                   gcr.io/dorlog-fibro-diario/backend:latest
+        docker build -t us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:${{ github.sha }} .
+        docker tag us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:${{ github.sha }} \
+                   us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:latest
 
-    - name: Push to Google Container Registry
+    - name: Push to Artifact Registry
       run: |
-        docker push gcr.io/dorlog-fibro-diario/backend:${{ github.sha }}
-        docker push gcr.io/dorlog-fibro-diario/backend:latest
+        docker push us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:${{ github.sha }}
+        docker push us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:latest
 
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy fibrodiario-backend \
-          --image gcr.io/dorlog-fibro-diario/backend:${{ github.sha }} \
+          --image us-central1-docker.pkg.dev/dorlog-fibro-diario/backend/fibrodiario-backend:${{ github.sha }} \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
@@ -74,5 +85,6 @@ jobs:
         URL=$(gcloud run services describe fibrodiario-backend \
           --region us-central1 \
           --format 'value(status.url)')
-        echo "Backend deployed successfully!"
-        echo "Backend URL: $URL"
+        echo "✅ Backend deployed successfully!"
+        echo "🌐 Backend URL: $URL"
+        echo "🏥 Health Check: $URL/health"
