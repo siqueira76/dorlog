@@ -8,7 +8,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import PremiumProtectedRoute from '@/components/PremiumProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 
-// Simplified component for initial redirect - GitHub Pages compatible
+// Simplified component for initial redirect
 function InitialRedirect() {
   const { currentUser, loading } = useAuth();
   const [, navigate] = useLocation();
@@ -21,28 +21,13 @@ function InitialRedirect() {
         pathname: window.location.pathname
       });
       
-      // Handle intended path from 404 redirect using Wouter navigation
-      const intendedPath = sessionStorage.getItem('dorlog_intended_path');
-      if (intendedPath) {
-        sessionStorage.removeItem('dorlog_intended_path');
-        console.log('🔄 Restoring intended path via Wouter navigate:', intendedPath);
-        navigate(intendedPath, { replace: true });
-        return;
-      }
-      
-      // Detectar se estamos na raiz e fazer redirecionamento baseado no ambiente
+      // Check if we're at root and redirect accordingly
       const currentPath = window.location.pathname;
-      const isGitHubPages = window.location.hostname.includes('github.io');
-      const basename = isGitHubPages ? '/dorlog' : '';
-      
-      // Verificar se estamos na raiz considerando o basename
-      const isAtRoot = currentPath === '/' || 
-                       currentPath === basename || 
-                       currentPath === basename + '/';
+      const isAtRoot = currentPath === '/';
       
       if (isAtRoot) {
         const targetPath = currentUser ? '/home' : '/login';
-        console.log('🔄 Redirecting from root to:', { targetPath, basename });
+        console.log('🔄 Redirecting from root to:', targetPath);
         navigate(targetPath, { replace: true });
       }
     }
@@ -85,24 +70,18 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Detectar ambiente e configurar basename
-  const isGitHubPages = window.location.hostname.includes('github.io');
-  const basename = isGitHubPages ? '/dorlog' : '';
-
   useEffect(() => {
     console.log('🔧 App initialized:', {
       hostname: window.location.hostname,
       pathname: window.location.pathname,
-      currentUrl: window.location.href,
-      isGitHubPages,
-      basename
+      currentUrl: window.location.href
     });
-  }, [isGitHubPages, basename]);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router base={basename}>
+        <Router base="/">
           <Switch>
             <Route path="/" component={InitialRedirect} />
             <Route path="/login" component={Login} />

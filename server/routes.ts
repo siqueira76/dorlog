@@ -86,6 +86,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
 
+  // Health check endpoint (required for Cloud Run)
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'fibrodiario-backend'
+    });
+  });
+
   // Endpoint para forçar reset de lembretes (para uso em cronjobs ou testes)
   app.post('/api/reset-reminders', async (req, res) => {
     try {
