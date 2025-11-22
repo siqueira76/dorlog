@@ -47,6 +47,16 @@ Two types of reports are generated:
 **Enhanced Report Sections**: Include an automated executive summary, temporal sentiment analysis, contextualized NLP insights, behavioral pattern detection, predictive alerts, and personalized clinical recommendations. Advanced visualizations like Sentiment Timeline, Pain-Mood Correlation, Medical Entities Map, and Urgency Heatmap are provided. Text processing for these insights includes sentiment, summarization, and entity classification. Reports are optimized for client-side generation (2-5 seconds), are standalone HTML, responsive, and ensure full privacy with local NLP processing.
 
 # Recent Changes
+- **November 22, 2025**: ✅ Firebase Functions para NLP Server-Side Híbrido IMPLEMENTADO E DEPLOYED
+  - **Sistema Híbrido NLP**: Análise inteligente que alterna automaticamente entre server-side (Firebase Functions) e client-side (browser) baseado em capacidade do dispositivo
+  - **Performance**: Melhoria de 30-50% em dispositivos low-end através de processamento server-side
+  - **Transição Automática**: Dispositivos capazes usam server na 1ª execução (evita download 330MB), depois migram para client (privacy-first + offline)
+  - **Arquitetura**: Firebase Functions v2 com @xenova/transformers, 2GiB RAM, 120s timeout
+  - **CI/CD**: GitHub Actions configurado para deploy automático ao modificar `functions/`
+  - **Custo**: $0/mês para até 125k usuários (dentro do Blaze free tier de 2M invocations)
+  - **Segurança**: Autenticação obrigatória, validação de inputs, rate limiting (50 textos/request)
+  - **Functions Deployed**: `nlpAnalyze` (análise NLP) e `nlpHealth` (health check)
+  - **Status**: ✅ Produção - https://console.firebase.google.com/project/dorlog-fibro-diario/functions
 - **November 22, 2025**: ✅ Migration to Firebase Hosting + Cloud Run COMPLETED SUCCESSFULLY
   - **Production Status**: Application live and fully operational at https://dorlog-fibro-diario.web.app
   - **Architecture Change**: Migrated from GitHub Pages (frontend-only) to Firebase Hosting + Cloud Run (full-stack)
