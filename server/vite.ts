@@ -70,16 +70,24 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
 
-  if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+  // In Cloud Run, frontend is served by Firebase Hosting
+  // Only serve static files if they exist (for local production testing)
+  if (fs.existsSync(distPath)) {
+    log("Serving static files from " + distPath);
+    app.use(express.static(distPath));
+
+    // fall through to index.html if the file doesn't exist
+    app.use("*", (_req, res) => {
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
+  } else {
+    log("Static files not found - running in API-only mode (Cloud Run)");
+    // API-only mode: return 404 for non-API routes
+    app.use("*", (_req, res) => {
+      res.status(404).json({ 
+        error: "Not Found",
+        message: "This is an API-only server. Frontend is served by Firebase Hosting."
+      });
+    });
   }
-
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
-  });
 }
