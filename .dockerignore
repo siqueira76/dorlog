@@ -1,0 +1,73 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Build outputs
+dist
+.next
+out
+build
+
+# Development files
+.git
+.github
+.gitignore
+.env*
+*.env
+.DS_Store
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+coverage
+.nyc_output
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+__tests__
+test
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+LICENSE
+docs
+
+# Client-side code (not needed in backend container)
+client
+attached_assets
+
+# Replit-specific
+.replit
+replit.nix
+.config
+.upm
+
+# Temporary files
+*.log
+*.tmp
+tmp
+temp
+
+# Firebase
+.firebaserc
+firebase.json
+.firebase
+
+# GitHub Pages specific
+build-client.js
+
+# Others
+*.tar.gz
+.dockerignore
+Dockerfile*
+docker-compose*.yml
