@@ -12,8 +12,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build backend
-RUN npm run build
+# Build backend only (frontend is excluded by .dockerignore)
+RUN npm run build:backend
 
 # Production stage
 FROM node:20-alpine
