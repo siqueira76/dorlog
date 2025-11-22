@@ -1,5 +1,16 @@
 # 🚀 Migração FibroDiário - GitHub Pages → Firebase + Cloud Run
 
+## ✅ **MIGRAÇÃO COMPLETA E BEM-SUCEDIDA** (22/11/2025)
+
+A aplicação está rodando em produção com a nova arquitetura full-stack!
+
+**URLs Produção:**
+- **Frontend + App**: https://dorlog-fibro-diario.web.app
+- **API Health Check**: https://dorlog-fibro-diario.web.app/api/health
+- **Backend Direto**: https://fibrodiario-backend-v7bhqu5hca-uc.a.run.app
+
+---
+
 ## 📋 Resumo Executivo
 
 Migração de arquitetura Frontend-only (GitHub Pages) para Full-Stack (Firebase Hosting + Cloud Run) para permitir funcionalidade backend completa incluindo geração de relatórios server-side.
