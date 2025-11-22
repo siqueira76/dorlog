@@ -1,4 +1,4 @@
-# Multi-stage build for optimal size and security
+# Multi-stage build for Cloud Run deployment
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -9,10 +9,10 @@ COPY package*.json ./
 # Install ALL dependencies (including devDependencies for build)
 RUN npm ci
 
-# Copy source code
+# Copy source code (client excluded by .dockerignore)
 COPY . .
 
-# Build backend only (frontend is excluded by .dockerignore)
+# Build backend using esbuild
 RUN npm run build:backend
 
 # Production stage
@@ -24,26 +24,27 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ONLY production dependencies
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
-# Copy built files from builder
+# Copy built backend from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy critical files needed at runtime
-COPY generate_and_send_report.cjs ./
-COPY server ./server
-COPY shared ./shared
+# Copy shared types (needed at runtime)
+COPY --from=builder /app/shared ./shared
 
-# Set environment variables
+# Copy critical runtime files
+COPY --from=builder /app/generate_and_send_report.cjs ./
+
+# Set production environment
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Expose port (Cloud Run uses 8080)
+# Expose Cloud Run port
 EXPOSE 8080
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Start server
+# Start the server
 CMD ["node", "dist/index.js"]
