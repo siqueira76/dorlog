@@ -5,7 +5,8 @@
  * insights inteligentes e recomendações personalizadas.
  */
 
-import { nlpService, NLPAnalysisResult } from './nlpAnalysisService';
+import { nlpServiceProxy } from './nlpServiceProxy';
+import type { NLPAnalysisResult } from './nlpAnalysisService';
 import { patternDetectionService, CorrelationResult, TrendResult, PatternResult, ReportData } from './patternDetectionService';
 
 export interface InsightCategory {
@@ -50,17 +51,14 @@ export class InsightGenerationService {
     const insights: HealthInsight[] = [];
 
     try {
-      // Analisar cada texto
-      const nlpResults = await Promise.all(
-        textResponses.map(text => nlpService.analyzeText(text).catch(() => null))
-      );
+      // Analisar textos usando proxy (server-side ou client-side automático)
+      const nlpResults = await nlpServiceProxy.analyzeBatch(textResponses)
+        .catch(() => []);
 
-      const validResults = nlpResults.filter(r => r !== null) as NLPAnalysisResult[];
-
-      if (validResults.length === 0) return insights;
+      if (nlpResults.length === 0) return insights;
 
       // Insight de sentimento geral
-      const sentiments = validResults.map(r => r.sentiment);
+      const sentiments = nlpResults.map(r => r.sentiment);
       const avgSentiment = sentiments.reduce((sum, s) => sum + s.score, 0) / sentiments.length;
       const positiveRatio = sentiments.filter(s => s.label === 'POSITIVE').length / sentiments.length;
 
@@ -70,7 +68,7 @@ export class InsightGenerationService {
           confidence: 0.8,
           impact: 'MEDIUM',
           insight: `Tendência emocional positiva identificada (${(positiveRatio * 100).toFixed(0)}% dos relatos)`,
-          evidence: [`Análise de ${validResults.length} textos livres`, `Score médio: ${avgSentiment.toFixed(2)}`],
+          evidence: [`Análise de ${nlpResults.length} textos livres`, `Score médio: ${avgSentiment.toFixed(2)}`],
           actionable: false
         });
       } else if (positiveRatio < 0.3) {
@@ -79,13 +77,13 @@ export class InsightGenerationService {
           confidence: 0.8,
           impact: 'HIGH',
           insight: `Tendência emocional negativa preocupante detectada (${(positiveRatio * 100).toFixed(0)}% positivos)`,
-          evidence: [`Análise de ${validResults.length} textos livres`, `Baixo score de positividade`],
+          evidence: [`Análise de ${nlpResults.length} textos livres`, `Baixo score de positividade`],
           actionable: true
         });
       }
 
       // Insight de urgência
-      const urgencyLevels = validResults.map(r => r.urgencyLevel);
+      const urgencyLevels = nlpResults.map(r => r.urgencyLevel);
       const avgUrgency = urgencyLevels.reduce((sum, u) => sum + u, 0) / urgencyLevels.length;
       const highUrgencyCount = urgencyLevels.filter(u => u > 7).length;
 
@@ -101,7 +99,7 @@ export class InsightGenerationService {
       }
 
       // Insight de relevância clínica
-      const clinicalRelevance = validResults.map(r => r.clinicalRelevance);
+      const clinicalRelevance = nlpResults.map(r => r.clinicalRelevance);
       const avgClinical = clinicalRelevance.reduce((sum, c) => sum + c, 0) / clinicalRelevance.length;
 
       if (avgClinical > 7) {
@@ -116,10 +114,10 @@ export class InsightGenerationService {
       }
 
       // Insights de entidades médicas
-      const allEntities = validResults.flatMap(r => r.entities);
+      const allEntities = nlpResults.flatMap((r: NLPAnalysisResult) => r.entities);
       const entityCounts = new Map<string, number>();
       
-      allEntities.forEach(entity => {
+      allEntities.forEach((entity: any) => {
         entityCounts.set(entity.entity, (entityCounts.get(entity.entity) || 0) + 1);
       });
 
