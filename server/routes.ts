@@ -95,6 +95,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Health check endpoint for Firebase Hosting rewrites
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      service: 'fibrodiario-backend',
+      route: 'via-firebase-hosting'
+    });
+  });
+
   // Endpoint para forçar reset de lembretes (para uso em cronjobs ou testes)
   app.post('/api/reset-reminders', async (req, res) => {
     try {
