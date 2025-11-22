@@ -35,7 +35,7 @@ jobs:
       - name: Deploy to Firebase
         run: |
           cd functions
-          npx firebase-tools deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+          npx firebase-tools deploy --only functions --force --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
