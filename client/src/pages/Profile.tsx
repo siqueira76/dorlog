@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ExternalLink, Brain } from 'lucide-react';
+import { ExternalLink, Brain, Bell, BellOff } from 'lucide-react';
 import { Link } from 'wouter';
+import { NotificationPermissionDialog } from '@/components/NotificationPermissionDialog';
+import { getNotificationPermission } from '@/lib/fcmUtils';
 
 export default function Profile() {
   const { currentUser, updateUserProfile, updateUserPassword, testFirestoreConnection } = useAuth();
@@ -28,6 +30,11 @@ export default function Profile() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isTestingFirestore, setIsTestingFirestore] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  
+  // Check notification permission status
+  const notificationPermission = getNotificationPermission();
+  const hasNotificationPermission = notificationPermission === 'granted';
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -351,6 +358,62 @@ export default function Profile() {
 
           <Separator />
 
+          {/* Notification Preferences Section */}
+          <div>
+            <h4 className="font-medium text-foreground mb-4">Preferências de Notificação</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configure lembretes e alertas importantes para acompanhar melhor sua saúde.
+            </p>
+            
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border mb-4">
+              <div className="flex items-center gap-3">
+                {hasNotificationPermission ? (
+                  <>
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Notificações Ativadas</p>
+                      <p className="text-xs text-muted-foreground">
+                        {currentUser?.notificationPreferences?.enabled 
+                          ? 'Você receberá lembretes e alertas' 
+                          : 'Configure suas preferências'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <BellOff className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Notificações Desativadas</p>
+                      <p className="text-xs text-muted-foreground">Ative para receber lembretes</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {hasNotificationPermission && currentUser?.notificationPreferences?.enabled && (
+                <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
+                  Ativo
+                </Badge>
+              )}
+            </div>
+            
+            <Button
+              onClick={() => setShowNotificationDialog(true)}
+              variant="outline"
+              className="w-full rounded-xl font-medium transition-colors"
+              data-testid="button-notification-settings"
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              {hasNotificationPermission ? 'Gerenciar Preferências' : 'Ativar Notificações'}
+            </Button>
+          </div>
+
+          <Separator />
+
           {/* Firestore Diagnostics */}
           <div>
             <h4 className="font-medium text-foreground mb-4">Diagnóstico do Sistema</h4>
@@ -370,6 +433,20 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Notification Permission Dialog */}
+      <NotificationPermissionDialog
+        open={showNotificationDialog}
+        onOpenChange={setShowNotificationDialog}
+        userId={currentUser?.id || ''}
+        currentPreferences={currentUser?.notificationPreferences}
+        onPreferencesUpdated={() => {
+          toast({
+            title: 'Preferências atualizadas',
+            description: 'Suas configurações de notificação foram salvas.',
+          });
+        }}
+      />
     </div>
   );
 }
