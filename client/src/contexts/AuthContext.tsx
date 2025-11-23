@@ -186,8 +186,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
         }
         
-        // If user doesn't have notification preferences, initialize them
-        if (!existingUserData.notificationPreferences) {
+        // Defensive normalization: Check if notification preferences are properly initialized
+        // This handles both missing field AND empty object from earlier versions
+        const needsPreferencesInit = !existingUserData.notificationPreferences || 
+          typeof existingUserData.notificationPreferences.enabled === 'undefined';
+        
+        if (needsPreferencesInit) {
           updateData.notificationPreferences = {
             enabled: false,
             morningQuiz: true,
@@ -197,22 +201,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
             emergencyAlerts: true
           };
           userData.notificationPreferences = updateData.notificationPreferences;
+          console.log('🔔 Inicializando preferências de notificação');
         }
         
-        // If user doesn't have fcmTokens array, initialize it
-        if (!existingUserData.fcmTokens) {
+        // Defensive normalization: Initialize fcmTokens if missing or not an array
+        const needsTokensInit = !existingUserData.fcmTokens || !Array.isArray(existingUserData.fcmTokens);
+        
+        if (needsTokensInit) {
           updateData.fcmTokens = [];
           userData.fcmTokens = [];
+          console.log('📱 Inicializando array de tokens FCM');
         }
         
-        // Update the document
-        await updateDoc(userRef, updateData);
-        
-        console.log('🔄 Dados do usuário atualizados:', {
-          isSubscriptionActive,
-          timezoneUpdated: !!updateData.timezone,
-          preferencesInitialized: !!updateData.notificationPreferences
-        });
+        // Only update if there are changes
+        if (Object.keys(updateData).length > 0) {
+          await updateDoc(userRef, updateData);
+          
+          console.log('🔄 Dados do usuário atualizados:', {
+            isSubscriptionActive,
+            timezoneUpdated: !!updateData.timezone,
+            preferencesInitialized: !!updateData.notificationPreferences,
+            fcmTokensInitialized: !!updateData.fcmTokens,
+            fieldsUpdated: Object.keys(updateData)
+          });
+        } else {
+          console.log('ℹ️ Nenhuma atualização necessária');
+        }
         
         return userData;
       }
