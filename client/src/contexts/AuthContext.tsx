@@ -16,6 +16,7 @@ import { auth, db, googleProvider } from '@/lib/firebase';
 import { User, Subscription } from '@/types/user';
 import { useToast } from '@/hooks/use-toast';
 import ReminderService from '@/services/reminderService';
+import { detectUserTimezone, hasTimezoneChanged } from '@/lib/timezoneUtils';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -92,6 +93,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Check subscription status for the user
         const isSubscriptionActive = email ? await checkSubscriptionStatus(email) : false;
         
+        // Detect user's timezone automatically
+        const timezoneInfo = detectUserTimezone();
+        console.log('🌍 Novo usuário - timezone detectado:', timezoneInfo);
+        
         userData = {
           id: firebaseUser.uid,
           name: displayName || additionalData?.name || '',
@@ -100,6 +105,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
           createdAt: new Date(),
           updatedAt: new Date(),
           isSubscriptionActive,
+          
+          // Timezone information (automatically detected)
+          timezone: timezoneInfo.timezone,
+          timezoneOffset: timezoneInfo.timezoneOffset,
+          timezoneAutoDetected: timezoneInfo.timezoneAutoDetected,
+          
+          // Initialize empty FCM tokens array
+          fcmTokens: [],
+          
+          // Initialize notification preferences (all enabled by default)
+          notificationPreferences: {
+            enabled: false, // User needs to explicitly enable notifications
+            morningQuiz: true,
+            eveningQuiz: true,
+            medicationReminders: true,
+            healthInsights: true,
+            emergencyAlerts: true
+          }
         };
 
         console.log('💾 Criando novo documento no Firestore:', {
@@ -131,19 +154,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const isSubscriptionActive = existingUserData.email ? 
           await checkSubscriptionStatus(existingUserData.email) : false;
         
+        // Check if timezone has changed (e.g., user traveling)
+        const currentTimezoneInfo = detectUserTimezone();
+        const timezoneHasChanged = hasTimezoneChanged(existingUserData.timezone);
+        
         // Update the user data with current subscription status
         userData = {
           ...existingUserData,
           isSubscriptionActive,
         };
         
-        // Update the document with the latest subscription status
-        await updateDoc(userRef, { 
+        // Prepare update object
+        const updateData: any = { 
           isSubscriptionActive,
           updatedAt: new Date()
-        });
+        };
         
-        console.log('🔄 Status de assinatura atualizado:', isSubscriptionActive);
+        // If user doesn't have timezone yet OR timezone changed, update it
+        if (!existingUserData.timezone || timezoneHasChanged) {
+          updateData.timezone = currentTimezoneInfo.timezone;
+          updateData.timezoneOffset = currentTimezoneInfo.timezoneOffset;
+          updateData.timezoneAutoDetected = currentTimezoneInfo.timezoneAutoDetected;
+          
+          userData.timezone = currentTimezoneInfo.timezone;
+          userData.timezoneOffset = currentTimezoneInfo.timezoneOffset;
+          userData.timezoneAutoDetected = currentTimezoneInfo.timezoneAutoDetected;
+          
+          console.log('🌍 Timezone atualizado:', {
+            previous: existingUserData.timezone,
+            current: currentTimezoneInfo.timezone
+          });
+        }
+        
+        // If user doesn't have notification preferences, initialize them
+        if (!existingUserData.notificationPreferences) {
+          updateData.notificationPreferences = {
+            enabled: false,
+            morningQuiz: true,
+            eveningQuiz: true,
+            medicationReminders: true,
+            healthInsights: true,
+            emergencyAlerts: true
+          };
+          userData.notificationPreferences = updateData.notificationPreferences;
+        }
+        
+        // If user doesn't have fcmTokens array, initialize it
+        if (!existingUserData.fcmTokens) {
+          updateData.fcmTokens = [];
+          userData.fcmTokens = [];
+        }
+        
+        // Update the document
+        await updateDoc(userRef, updateData);
+        
+        console.log('🔄 Dados do usuário atualizados:', {
+          isSubscriptionActive,
+          timezoneUpdated: !!updateData.timezone,
+          preferencesInitialized: !!updateData.notificationPreferences
+        });
         
         return userData;
       }
