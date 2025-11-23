@@ -14,6 +14,7 @@ import {
   removeStaleTokens,
   findCurrentDeviceToken
 } from '@/lib/fcmUtils';
+import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
 
 /**
  * Registers FCM token for current user
@@ -171,6 +172,15 @@ export async function requestFCMToken(): Promise<string | null> {
       return null;
     }
     
+    // Register service worker first
+    console.log('📝 Registrando service worker para FCM...');
+    const swRegistration = await registerServiceWorker();
+    
+    if (!swRegistration) {
+      console.error('❌ Falha ao registrar service worker');
+      return null;
+    }
+    
     // Request permission
     const permission = await requestNotificationPermission();
     
@@ -201,7 +211,10 @@ export async function requestFCMToken(): Promise<string | null> {
     
     // Import getToken dynamically to avoid issues in non-supporting environments
     const { getToken } = await import('firebase/messaging');
-    const token = await getToken(messaging, { vapidKey });
+    const token = await getToken(messaging, { 
+      vapidKey,
+      serviceWorkerRegistration: swRegistration 
+    });
     
     console.log('✅ FCM token gerado:', token.substring(0, 20) + '...');
     return token;
