@@ -161,9 +161,7 @@ export async function cleanupStaleTokens(userId: string): Promise<void> {
 
 /**
  * Requests notification permission and returns FCM token if granted
- * Note: Actual FCM token generation requires Firebase Messaging SDK setup
- * This is a placeholder that handles permission flow
- * @returns FCM token string or null if permission denied
+ * @returns FCM token string or null if permission denied/error
  */
 export async function requestFCMToken(): Promise<string | null> {
   try {
@@ -183,13 +181,31 @@ export async function requestFCMToken(): Promise<string | null> {
     
     console.log('✅ Permissão de notificação concedida');
     
-    // TODO: Implementar geração de token FCM com Firebase Messaging SDK
-    // const messaging = getMessaging();
-    // const token = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY' });
-    // return token;
+    // Initialize Firebase Messaging
+    const { initializeMessaging } = await import('@/lib/firebase');
+    const messaging = await initializeMessaging();
     
-    console.log('ℹ️ Firebase Messaging SDK ainda não configurado');
-    return null;
+    if (!messaging) {
+      console.log('❌ Firebase Messaging não disponível');
+      return null;
+    }
+    
+    // Get FCM token using VAPID key
+    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    
+    if (!vapidKey) {
+      console.error('❌ VITE_FIREBASE_VAPID_KEY não configurada');
+      console.log('ℹ️ Configure a chave VAPID nas variáveis de ambiente');
+      return null;
+    }
+    
+    // Import getToken dynamically to avoid issues in non-supporting environments
+    const { getToken } = await import('firebase/messaging');
+    const token = await getToken(messaging, { vapidKey });
+    
+    console.log('✅ FCM token gerado:', token.substring(0, 20) + '...');
+    return token;
+    
   } catch (error) {
     console.error('❌ Erro ao solicitar FCM token:', error);
     return null;
