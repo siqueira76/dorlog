@@ -571,7 +571,7 @@ function generateClinicalDataSection(reportData: EnhancedReportData): string {
                 ${doctors.length > 0 ? `
                     <ul>
                         ${doctors.slice(0, 5).map((doctor: any) => 
-                          `<li>Dr(a). ${doctor.name} - ${doctor.specialty} (CRM ${doctor.crm})</li>`
+                          `<li>Dr(a). ${doctor.nome || doctor.name} - ${doctor.especialidade || doctor.specialty} (CRM ${doctor.crm})</li>`
                         ).join('')}
                     </ul>
                 ` : `
