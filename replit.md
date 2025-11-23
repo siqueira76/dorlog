@@ -20,6 +20,13 @@ The backend utilizes an Express.js server, written in TypeScript. It integrates 
 ## Data Layer
 Primary application data is stored in PostgreSQL, while Firestore is used for user profiles, authentication, and specific collections like `usuarios`, `assinaturas`, `quizzes`, `medicos`, `medicamentos`, and `report_diario`. Firebase Authentication handles user logins (email/password, Google OAuth).
 
+### User Collection Schema
+The `usuarios` Firestore collection stores comprehensive user profiles with:
+- **Core Fields**: id, name, email, provider, createdAt, updatedAt, isSubscriptionActive
+- **Timezone**: timezone (IANA format), timezoneOffset (minutes), timezoneAutoDetected (boolean)
+- **FCM Tokens**: Array of device-specific tokens with metadata (platform, timestamp, lastActive, deviceInfo)
+- **Notification Preferences**: Granular settings for quiz reminders, medication alerts, health insights, and emergency notifications
+
 ## UI/UX Decisions
 The application features a light-mode-only interface with a high-contrast color scheme, bottom navigation tabs, drawer-based side navigation, and card-based layouts. It includes a dynamic quiz system for health tracking and an enhanced EVA Scale component for pain assessment.
 
@@ -47,6 +54,18 @@ Two types of reports are generated:
 **Enhanced Report Sections**: Include an automated executive summary, temporal sentiment analysis, contextualized NLP insights, behavioral pattern detection, predictive alerts, and personalized clinical recommendations. Advanced visualizations like Sentiment Timeline, Pain-Mood Correlation, Medical Entities Map, and Urgency Heatmap are provided. Text processing for these insights includes sentiment, summarization, and entity classification. Reports are optimized for client-side generation (2-5 seconds), are standalone HTML, responsive, and ensure full privacy with local NLP processing.
 
 # Recent Changes
+- **November 23, 2025**: ✅ Timezone Auto-Detection & FCM Infrastructure IMPLEMENTED
+  - **Timezone Detection**: Automatic IANA timezone detection (e.g., "America/Sao_Paulo") on user registration
+  - **Timezone Updates**: Detects timezone changes for existing users (e.g., traveling) and updates automatically
+  - **User Collection Schema**: Added `timezone`, `timezoneOffset`, `timezoneAutoDetected`, `fcmTokens[]`, `notificationPreferences`
+  - **FCM Token Management**: Infrastructure for push notifications with device-specific tokens (Android/iOS/Web)
+  - **Notification Preferences**: Granular control (morningQuiz, eveningQuiz, medicationReminders, healthInsights, emergencyAlerts)
+  - **Service Worker**: Created `firebase-messaging-sw.js` for background push notifications in PWA
+  - **Utilities**: timezoneUtils.ts for date formatting, fcmUtils.ts for device detection and token management
+  - **Components**: NotificationPermissionDialog for user-friendly permission requests
+  - **Privacy-First**: All notification preferences default to disabled, requiring explicit user opt-in
+  - **Token Cleanup**: Automatic removal of stale tokens (>60 days) to maintain data hygiene
+  - **Cross-Platform**: Supports Android, iOS, and Web platforms with device-specific metadata
 - **November 22, 2025**: ✅ Firebase Functions para NLP Server-Side Híbrido IMPLEMENTADO E DEPLOYED
   - **Sistema Híbrido NLP**: Análise inteligente que alterna automaticamente entre server-side (Firebase Functions) e client-side (browser) baseado em capacidade do dispositivo
   - **Performance**: Melhoria de 30-50% em dispositivos low-end através de processamento server-side
