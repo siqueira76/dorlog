@@ -28,6 +28,10 @@ export interface User {
   updatedAt?: Date;
   isSubscriptionActive?: boolean;
   
+  // Terms acceptance
+  termsAccepted?: boolean;
+  termsAcceptedAt?: Date;
+  
   // Timezone information
   timezone?: string;
   timezoneOffset?: number;

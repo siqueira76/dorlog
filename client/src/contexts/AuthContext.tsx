@@ -24,12 +24,15 @@ interface AuthContextType {
   currentUser: User | null;
   firebaseUser: FirebaseUser | null;
   loading: boolean;
+  showGoogleTermsDialog: boolean;
+  pendingGoogleUser: FirebaseUser | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (name: string) => Promise<void>;
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  acceptTermsAndNotifications: (termsAccepted: boolean, notificationsEnabled: boolean) => Promise<void>;
   testFirestoreConnection: () => Promise<boolean>;
   checkSubscriptionStatus: (email: string) => Promise<boolean>;
 }
@@ -44,6 +47,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showGoogleTermsDialog, setShowGoogleTermsDialog] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState<FirebaseUser | null>(null);
   const { toast } = useToast();
 
   // Create or update user document in Firestore with controlled error handling and subscription check
@@ -107,6 +112,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           createdAt: new Date(),
           updatedAt: new Date(),
           isSubscriptionActive,
+          
+          // Terms acceptance (false by default for new users)
+          termsAccepted: false,
           
           // Timezone information (automatically detected)
           timezone: timezoneInfo.timezone,
@@ -533,6 +541,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userDoc = await createUserDocument(result.user, undefined, false);
       
       if (userDoc) {
+        // Check if user needs to accept terms (new user or hasn't accepted yet)
+        if (!userDoc.termsAccepted) {
+          console.log('📋 Usuário precisa aceitar termos, mostrando dialog...');
+          setPendingGoogleUser(result.user);
+          setCurrentUser(userDoc);
+          setShowGoogleTermsDialog(true);
+          return; // Don't show success toast yet
+        }
+        
         setCurrentUser(userDoc);
         
         // Try to register FCM token if permission is granted (non-blocking)
@@ -542,7 +559,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         toast({
           title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao DorLog.",
+          description: "Bem-vindo ao FibroDiário.",
         });
       } else {
         // Use fallback for Google login
@@ -555,7 +572,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setCurrentUser(fallbackUser);
         toast({
           title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao DorLog.",
+          description: "Bem-vindo ao FibroDiário.",
         });
       }
     } catch (error: any) {
@@ -576,6 +593,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
         description: errorMessage,
         variant: "destructive",
       });
+      throw error;
+    }
+  };
+
+  // Accept terms and configure notifications for Google login users
+  const acceptTermsAndNotifications = async (termsAccepted: boolean, notificationsEnabled: boolean) => {
+    if (!currentUser?.id) {
+      throw new Error('Nenhum usuário logado');
+    }
+
+    try {
+      console.log('📋 Salvando aceite de termos:', { termsAccepted, notificationsEnabled });
+      
+      const userRef = doc(db, 'usuarios', currentUser.id);
+      await updateDoc(userRef, {
+        termsAccepted,
+        termsAcceptedAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      // Update local state
+      setCurrentUser(prev => prev ? {
+        ...prev,
+        termsAccepted,
+        termsAcceptedAt: new Date()
+      } : null);
+
+      // Close the dialog
+      setShowGoogleTermsDialog(false);
+      setPendingGoogleUser(null);
+
+      console.log('✅ Termos aceitos e salvos no Firestore');
+    } catch (error) {
+      console.error('❌ Erro ao salvar aceite de termos:', error);
       throw error;
     }
   };
@@ -732,12 +783,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     currentUser,
     firebaseUser,
     loading,
+    showGoogleTermsDialog,
+    pendingGoogleUser,
     login,
     register,
     loginWithGoogle,
     logout,
     updateUserProfile,
     updateUserPassword,
+    acceptTermsAndNotifications,
     testFirestoreConnection,
     checkSubscriptionStatus,
   };

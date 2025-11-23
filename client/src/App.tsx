@@ -7,6 +7,25 @@ import Layout from '@/components/Layout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PremiumProtectedRoute from '@/components/PremiumProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { GoogleLoginTermsDialog } from '@/components/GoogleLoginTermsDialog';
+
+// Component to handle Google Login Terms Dialog
+function GoogleTermsDialogContainer() {
+  const { showGoogleTermsDialog, currentUser, acceptTermsAndNotifications } = useAuth();
+
+  if (!showGoogleTermsDialog || !currentUser) {
+    return null;
+  }
+
+  return (
+    <GoogleLoginTermsDialog
+      open={showGoogleTermsDialog}
+      onOpenChange={() => {}} // Prevent manual close
+      userId={currentUser.id}
+      onComplete={acceptTermsAndNotifications}
+    />
+  );
+}
 
 // Simplified component for initial redirect
 function InitialRedirect() {
@@ -180,6 +199,7 @@ function App() {
             <Route component={NotFound} />
           </Switch>
         </Router>
+        <GoogleTermsDialogContainer />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
