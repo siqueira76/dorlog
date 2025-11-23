@@ -3,11 +3,19 @@
  * 
  * Gera relatórios standalone com análises inteligentes, gráficos avançados
  * e insights preditivos. Compatível com todos os ambientes.
+ * 
+ * ⏰ TIMEZONE SUPPORT:
+ * Todas as funções de geração de seção aceitam parâmetro userTimezone para
+ * formatação de datas no timezone correto do usuário.
+ * 
+ * TODO: Normalizar visualizationData e datasets de charts com timezone antes
+ * de JSON.stringify para garantir consistência entre texto e gráficos.
  */
 
 import { EnhancedReportData } from './enhancedReportAnalysisService';
 import { MedicalCorrelationService, Doctor, Medication, MedicalInsight, MedicationEffectiveness, DoctorSpecialtyAnalysis } from './medicalCorrelationService';
 import { SleepPainAnalysisService } from './sleepPainAnalysisService';
+import { formatDateInTimezone } from '@/lib/timezoneUtils';
 
 // 🛠️ Constantes para Análises Estatísticas Válidas
 const MIN_CRISIS_SAMPLE = 3;
@@ -35,6 +43,7 @@ export interface EnhancedReportTemplateData {
   reportId: string;
   withPassword?: boolean;
   passwordHash?: string;
+  userTimezone?: string; // IANA timezone (ex: "America/Sao_Paulo")
 }
 
 // 🚀 OTIMIZAÇÃO FASE 3: Sistema de streaming HTML por seções
@@ -58,14 +67,14 @@ export async function* generateEnhancedReportHTMLStream(
   options: HTMLStreamOptions = {}
 ): AsyncGenerator<HTMLSection, void, unknown> {
   console.time('⚡ HTML Streaming Generation');
-  const { userEmail, periodsText, reportData, reportId, withPassword, passwordHash } = data;
+  const { userEmail, periodsText, reportData, reportId, withPassword, passwordHash, userTimezone = 'America/Sao_Paulo' } = data;
   const { enableStreaming = true, chunkSize = 50 * 1024 } = options; // 50KB por chunk
 
   try {
     // 1. Seção Header (rápida, gera primeiro)
     console.time('📝 Header Section');
     const headerHtml = generateHTMLDocumentStart(periodsText) + 
-                       generateEnhancedHeader(userEmail, periodsText, reportData);
+                       generateEnhancedHeader(userEmail, periodsText, reportData, userTimezone);
     console.timeEnd('📝 Header Section');
     
     yield {
@@ -79,7 +88,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.1. 🌅 Seção Manhãs e Noites (RESTAURADA)
     console.time('🌅 Morning Evening Section');
-    const morningEveningHtml = generateMorningEveningSection(reportData);
+    const morningEveningHtml = generateMorningEveningSection(reportData, userTimezone);
     console.timeEnd('🌅 Morning Evening Section');
     
     yield {
@@ -91,7 +100,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.1.5. 🌙 Seção Reflexões Noturnas (NOVA)
     console.time('🌙 Nightly Reflections Section');
-    const nightlyReflectionsHtml = generateNightlyReflectionsSection(reportData);
+    const nightlyReflectionsHtml = generateNightlyReflectionsSection(reportData, userTimezone);
     console.timeEnd('🌙 Nightly Reflections Section');
     
     yield {
@@ -103,7 +112,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.1.6. 💩 Seção Saúde Digestiva
     console.time('💩 Digestive Health Section');
-    const digestiveHtml = generateDigestiveHealthSection((reportData as any).digestiveAnalysis);
+    const digestiveHtml = generateDigestiveHealthSection((reportData as any).digestiveAnalysis, userTimezone);
     console.timeEnd('💩 Digestive Health Section');
     
     yield {
@@ -115,7 +124,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.2. 🚨 Seção Episódios de Crise Detalhados (RESTAURADA)
     console.time('🚨 Crisis Episodes Section');
-    const crisisEpisodesHtml = generateDetailedCrisisEpisodesSection(reportData);
+    const crisisEpisodesHtml = generateDetailedCrisisEpisodesSection(reportData, userTimezone);
     console.timeEnd('🚨 Crisis Episodes Section');
     
     yield {
@@ -127,7 +136,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.3. ⏰ Seção Padrões Temporais (RESTAURADA)
     console.time('⏰ Temporal Patterns Section');
-    const temporalPatternsHtml = generateTemporalPatternsSection(reportData);
+    const temporalPatternsHtml = generateTemporalPatternsSection(reportData, userTimezone);
     console.timeEnd('⏰ Temporal Patterns Section');
     
     yield {
@@ -139,7 +148,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 4.4. 🏃 Seção Atividades Físicas (RESTAURADA)
     console.time('🏃 Physical Activity Section');
-    const physicalActivityHtml = generatePhysicalActivitySection(reportData);
+    const physicalActivityHtml = generatePhysicalActivitySection(reportData, userTimezone);
     console.timeEnd('🏃 Physical Activity Section');
     
     yield {
@@ -151,7 +160,7 @@ export async function* generateEnhancedReportHTMLStream(
     
     // 5. Seção Clinical Data
     console.time('📋 Clinical Data Section');
-    const clinicalHtml = generateClinicalDataSection(reportData);
+    const clinicalHtml = generateClinicalDataSection(reportData, userTimezone);
     console.timeEnd('📋 Clinical Data Section');
     
     // Dividir seções grandes em chunks se necessário
@@ -176,7 +185,7 @@ export async function* generateEnhancedReportHTMLStream(
 
     // 5. Seção Footer + Scripts (final)
     console.time('🔚 Footer Section');
-    const footerHtml = generateEnhancedFooter(reportId, reportData) +
+    const footerHtml = generateEnhancedFooter(reportId, reportData, userTimezone) +
                        generateHTMLDocumentEnd(reportData, withPassword, passwordHash, reportId);
     console.timeEnd('🔚 Footer Section');
     
@@ -291,17 +300,17 @@ ${getEnhancedReportJavaScript(withPassword, passwordHash, reportId)}
  * Gera versão fallback completa do relatório HTML
  */
 function generateEnhancedReportHTMLFallback(data: EnhancedReportTemplateData): string {
-  const { userEmail, periodsText, reportData, reportId, withPassword, passwordHash } = data;
+  const { userEmail, periodsText, reportData, reportId, withPassword, passwordHash, userTimezone = 'America/Sao_Paulo' } = data;
   
   return generateHTMLDocumentStart(periodsText) +
-         generateEnhancedHeader(userEmail, periodsText, reportData) +
-         `${generateMorningEveningSection(reportData)}
-         ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis)}
-         ${generateDetailedCrisisEpisodesSection(reportData)}
-         ${generateTemporalPatternsSection(reportData)}
-         ${generatePhysicalActivitySection(reportData)}
-         ${generateClinicalDataSection(reportData)}
-         ${generateEnhancedFooter(reportId, reportData)}
+         generateEnhancedHeader(userEmail, periodsText, reportData, userTimezone) +
+         `${generateMorningEveningSection(reportData, userTimezone)}
+         ${generateDigestiveHealthSection((reportData as any).digestiveAnalysis, userTimezone)}
+         ${generateDetailedCrisisEpisodesSection(reportData, userTimezone)}
+         ${generateTemporalPatternsSection(reportData, userTimezone)}
+         ${generatePhysicalActivitySection(reportData, userTimezone)}
+         ${generateClinicalDataSection(reportData, userTimezone)}
+         ${generateEnhancedFooter(reportId, reportData, userTimezone)}
          
          <!-- Navegação inferior -->
          <nav class="bottom-nav">
@@ -347,7 +356,7 @@ function generateSummaryContent(reportData: EnhancedReportData): string {
 /**
  * Gera seção de insights com IA
  */
-function generateInsightsSection(reportData: EnhancedReportData): string {
+function generateInsightsSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const medicalNLPAnalysis = (reportData as any).medicalNLPAnalysis;
   const insights = medicalNLPAnalysis?.insights || [];
   const correlations: any[] = [];
@@ -381,7 +390,7 @@ function generateInsightsSection(reportData: EnhancedReportData): string {
 /**
  * Gera header enhanced do relatório
  */
-function generateEnhancedHeader(userEmail: string, periodsText: string, reportData: EnhancedReportData): string {
+function generateEnhancedHeader(userEmail: string, periodsText: string, reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   return `
         <header>
             <h1>FibroDiário Enhanced</h1>
@@ -396,7 +405,7 @@ function generateEnhancedHeader(userEmail: string, periodsText: string, reportDa
 /**
  * 🏆 NÍVEL 1: Executive Dashboard - Destaque máximo
  */
-function generateExecutiveDashboard(reportData: EnhancedReportData): string {
+function generateExecutiveDashboard(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const avgPain = reportData.painEvolution && reportData.painEvolution.length > 0
     ? (reportData.painEvolution.reduce((sum, p) => sum + p.level, 0) / reportData.painEvolution.length).toFixed(1)
     : 'N/A';
@@ -540,7 +549,7 @@ function generateAIInsightsZone(reportData: EnhancedReportData): string {
 /**
  * 📋 NÍVEL 4: Clinical Data - Aplicando padrão visual premium (dados específicos apenas)
  */
-function generateClinicalDataSection(reportData: EnhancedReportData): string {
+function generateClinicalDataSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const doctors = (reportData as any).doctors || [];
   const medications = (reportData as any).medications || [];
   
@@ -663,7 +672,7 @@ function generatePredictiveInsights(reportData: EnhancedReportData): string {
 /**
  * Gera seção de resumo inteligente baseada em quiz - FORMATO APRIMORADO
  */
-function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): string {
+function generateQuizIntelligentSummarySection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const digestiveAnalysis = reportData.digestiveAnalysis;
   const physicalActivity = reportData.physicalActivityAnalysis;
   const crisisAnalysis = reportData.crisisTemporalAnalysis;
@@ -702,18 +711,18 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
                     </div>
                 </div>
                 
-                ${generateDigestiveHealthSection(digestiveAnalysis)}
+                ${generateDigestiveHealthSection(digestiveAnalysis, userTimezone)}
                 
                 ${generatePhysicalActivitySectionLegacy(physicalActivity)}
                 
-                ${generateCrisisAnalysisSection(reportData)}
+                ${generateCrisisAnalysisSection(reportData, userTimezone)}
                 
                 ${crisisAnalysis?.insights && crisisAnalysis.insights.length > 0 
-                  ? generateCrisisTemporalSection(crisisAnalysis) 
+                  ? generateCrisisTemporalSection(crisisAnalysis, userTimezone) 
                   : ''
                 }
                 
-                ${generateQuantifiedCorrelationsSection(reportData)}
+                ${generateQuantifiedCorrelationsSection(reportData, userTimezone)}
                 
                 ${generateDoctorsSectionStandalone(reportData)}
                 
@@ -725,7 +734,7 @@ function generateQuizIntelligentSummarySection(reportData: EnhancedReportData): 
 /**
  * 💬 Gera seção dedicada aos insights de texto livre dos quizzes
  */
-function generateTextInsightsSection(reportData: EnhancedReportData): string {
+function generateTextInsightsSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const textSummaries = reportData.textSummaries;
   
   // Se não há textSummaries, não exibir a seção
@@ -935,7 +944,7 @@ function generateTextInsightsSection(reportData: EnhancedReportData): string {
 /**
  * 🆕 Gera seção de correlações quantificadas
  */
-function generateQuantifiedCorrelationsSection(reportData: EnhancedReportData): string {
+function generateQuantifiedCorrelationsSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   // Verificar se temos dados de insights para correlações
   const sleepPainInsights = reportData.sleepPainInsights;
   const patternInsights = reportData.patternInsights;
@@ -1192,7 +1201,7 @@ function generateMedicationsSectionStandalone(reportData: EnhancedReportData): s
 /**
  * 🌙 Gera seção específica para reflexões noturnas da pergunta 9
  */
-function generateNightlyReflectionsSection(reportData: EnhancedReportData): string {
+function generateNightlyReflectionsSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const nightlyReflections = reportData.textSummaries?.noturno?.nightlyReflections;
   
   if (!nightlyReflections || nightlyReflections.textCount === 0) {
@@ -1282,7 +1291,7 @@ function generateNightlyReflectionsSection(reportData: EnhancedReportData): stri
 /**
  * 🆕 Gera seção de saúde digestiva no formato do relatório analisado
  */
-function generateDigestiveHealthSection(digestiveAnalysis: any): string {
+function generateDigestiveHealthSection(digestiveAnalysis: any, userTimezone: string = 'America/Sao_Paulo'): string {
   if (!digestiveAnalysis || !digestiveAnalysis.status) {
     return `
         <div class="section">
@@ -1380,7 +1389,7 @@ function generatePhysicalActivitySectionLegacy(physicalActivity: any): string {
 /**
  * 🆕 Gera seção de análise de crises no formato do relatório analisado
  */
-function generateCrisisAnalysisSection(reportData: EnhancedReportData): string {
+function generateCrisisAnalysisSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const crises = reportData.painEvolution?.filter(p => p.level >= 7) || [];
   const totalDays = reportData.painEvolution?.length || 0;
   const rescueMedications = (reportData as any).rescueMedications || [];
@@ -1573,7 +1582,7 @@ function generateRescueMedicationsInCrisis(rescueMedications: any[]): string {
 /**
  * 🆕 Gera seção de análise temporal de crises
  */
-function generateCrisisTemporalSection(crisisAnalysis: any): string {
+function generateCrisisTemporalSection(crisisAnalysis: any, userTimezone: string = 'America/Sao_Paulo'): string {
   // Verificar se há dados reais suficientes para análise
   const hasRealData = crisisAnalysis && (
     crisisAnalysis.riskPeriods?.length > 0 || 
@@ -1655,7 +1664,7 @@ function generateCrisisTemporalSection(crisisAnalysis: any): string {
 /**
  * 🆕 Gera seção de análise médica completa
  */
-function generateMedicalAnalysisSection(reportData: EnhancedReportData): string {
+function generateMedicalAnalysisSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const doctors = (reportData as any).doctors || [];
   const medications = (reportData as any).medications || [];
   
@@ -1750,7 +1759,7 @@ function generateDoctorsOverview(doctors: Doctor[], specialtyAnalysis: DoctorSpe
 /**
  * Gera seção de eficácia de medicamentos
  */
-function generateMedicationsEffectivenessSection(medications: any[], effectiveness: MedicationEffectiveness[]): string {
+function generateMedicationsEffectivenessSection(medications: any[], effectiveness: MedicationEffectiveness[], userTimezone: string = 'America/Sao_Paulo'): string {
   if (medications.length === 0) {
     return '';
   }
@@ -1787,7 +1796,7 @@ function generateMedicationsEffectivenessSection(medications: any[], effectivene
 /**
  * Gera seção de insights médicos
  */
-function generateMedicalInsightsSection(insights: MedicalInsight[]): string {
+function generateMedicalInsightsSection(insights: MedicalInsight[], userTimezone: string = 'America/Sao_Paulo'): string {
   if (insights.length === 0) {
     return '';
   }
@@ -1818,7 +1827,7 @@ function generateMedicalInsightsSection(insights: MedicalInsight[]): string {
 /**
  * 🧠 Gera seção de análise NLP médica avançada
  */
-function generateAdvancedNLPSection(reportData: EnhancedReportData): string {
+function generateAdvancedNLPSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const nlpAnalysis = reportData.medicalNLPAnalysis;
   
   if (!nlpAnalysis || !nlpAnalysis.medicalMentions.length) {
@@ -1904,7 +1913,7 @@ function generateAdvancedNLPSection(reportData: EnhancedReportData): string {
 /**
  * 📊 Gera seção de gráficos de adesão aos medicamentos
  */
-function generateMedicationAdherenceSection(reportData: EnhancedReportData): string {
+function generateMedicationAdherenceSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const adherenceData = reportData.medicationAdherenceCharts;
   
   if (!adherenceData || !adherenceData.adherenceData.length) {
@@ -2036,13 +2045,19 @@ function generateTraditionalSections(reportData: EnhancedReportData): string {
 /**
  * Gera footer enhanced
  */
-function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData): string {
+function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
+  const generatedDate = formatDateInTimezone(
+    new Date(),
+    userTimezone,
+    { dateStyle: 'short', timeStyle: 'short' }
+  );
+  
   return `
         <!-- Rodapé -->
         <div class="section">
             <div class="card">
                 <h2>ℹ️ Informações</h2>
-                <p>Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} - ID: ${reportId}</p>
+                <p>Relatório gerado em ${generatedDate} - ID: ${reportId}</p>
                 <p>Versão: Enhanced 3.0 com IA</p>
                 <p><em>Este relatório não substitui acompanhamento médico.</em></p>
             </div>
@@ -2052,7 +2067,7 @@ function generateEnhancedFooter(reportId: string, reportData: EnhancedReportData
 /**
  * 🌅 SEÇÃO REFATORADA: Análise Detalhada de Manhãs e Noites - Dados 100% Reais
  */
-function generateMorningEveningSection(reportData: EnhancedReportData): string {
+function generateMorningEveningSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const morningData = extractRealMorningData(reportData);
   const eveningData = extractRealEveningData(reportData);
   
@@ -2364,7 +2379,7 @@ function generateMorningEveningSectionOld(reportData: EnhancedReportData): strin
 /**
  * 🚨 SEÇÃO RESTAURADA: Episódios de Crise Detalhados 
  */
-function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData): string {
+function generateDetailedCrisisEpisodesSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const crisisCount = reportData.crisisEpisodes || 0;
   const crisisIntensity = calculateCrisisIntensity(reportData);
   const crisisLocations = reportData.painPoints || [];
@@ -2473,7 +2488,7 @@ function generateDetailedCrisisEpisodesSectionOld(reportData: EnhancedReportData
 /**
  * ⏰ SEÇÃO RESTAURADA: Padrões Temporais Quantificados
  */
-function generateTemporalPatternsSection(reportData: EnhancedReportData): string {
+function generateTemporalPatternsSection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string {
   const temporalAnalysis = reportData.crisisTemporalAnalysis;
   const peakHours = temporalAnalysis?.peakHours || 'Noite (18h-22h)';
   
@@ -2639,7 +2654,7 @@ function generateTemporalPatternsSectionOld(reportData: EnhancedReportData): str
 /**
  * 🏃 SEÇÃO RESTAURADA: Atividades Físicas Detalhadas
  */
-function generatePhysicalActivitySection(reportData: EnhancedReportData): string {
+function generatePhysicalActivitySection(reportData: EnhancedReportData, userTimezone: string = 'America/Sao_Paulo'): string{
   const physicalActivity = reportData.physicalActivityAnalysis;
   
   if (!physicalActivity || !physicalActivity.activityBreakdown) {
@@ -2926,7 +2941,7 @@ function extractTriggerData(reportData: EnhancedReportData): {
     };
   })
   // Filtrar gatilhos sem dados de dor
-  .filter(t => t.hasPainData);
+  .filter((t: { trigger: string; count: number; avgPain: number | null; isCritical: boolean; hasPainData: boolean }) => t.hasPainData);
   
   // Ordenar por frequência
   const sortedByFrequency = [...triggersWithPain].sort((a, b) => b.count - a.count);
@@ -3237,9 +3252,20 @@ function getDigestiveStatusLabel(status: string): string {
   return labels[status as keyof typeof labels] || 'Avaliando';
 }
 
-function formatDate(dateString: string): string {
+// 📅 Helpers de formatação de data com timezone
+function formatDate(dateString: string, userTimezone: string = 'America/Sao_Paulo'): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  return formatDateInTimezone(date, userTimezone, { day: '2-digit', month: '2-digit' });
+}
+
+function formatDateTime(dateString: string | Date, userTimezone: string = 'America/Sao_Paulo'): string {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  return formatDateInTimezone(date, userTimezone, { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function formatFullDate(dateString: string | Date, userTimezone: string = 'America/Sao_Paulo'): string {
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  return formatDateInTimezone(date, userTimezone, { dateStyle: 'long' });
 }
 
 /**
