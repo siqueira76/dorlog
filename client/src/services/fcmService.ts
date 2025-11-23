@@ -230,7 +230,7 @@ export async function requestFCMToken(): Promise<string | null> {
     if (!vapidKey) {
       console.error('❌ VITE_FIREBASE_VAPID_KEY não configurada');
       console.log('ℹ️ Configure a chave VAPID nas variáveis de ambiente');
-      return null;
+      throw new Error('VAPID key não configurada. Configure VITE_FIREBASE_VAPID_KEY nas variáveis de ambiente.');
     }
     
     // Import getToken dynamically to avoid issues in non-supporting environments
@@ -245,7 +245,8 @@ export async function requestFCMToken(): Promise<string | null> {
     
   } catch (error) {
     console.error('❌ Erro ao solicitar FCM token:', error);
-    return null;
+    // Re-throw to let caller handle the error
+    throw error;
   }
 }
 

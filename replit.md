@@ -5,6 +5,20 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 **Business Vision & Market Potential**: FibroDiário addresses a critical need for chronic pain management tools, offering a user-friendly platform that integrates data tracking with professional reporting. Its PWA nature ensures broad accessibility.
 **Project Ambitions**: To become a leading digital health companion for fibromyalgia patients, improving self-management and facilitating better patient-provider communication through data-driven insights, including advanced NLP analysis.
 
+## Recent Changes (November 23, 2025)
+
+### Google Login Onboarding Flow
+- **GoogleLoginTermsDialog**: Combined terms acceptance and notification activation in single flow. Pre-checks notification opt-in for streamlined UX. Fail-safe design ensures terms are ALWAYS saved even if FCM fails, preventing onboarding blocks.
+- **Robust FCM Error Handling**: `requestFCMToken` throws on VAPID key misconfiguration. Dialog catches errors, shows destructive toast, continues to save terms. Uses `notificationsSuccessfullyActivated` local variable to track REAL activation status (not async React state).
+- **User Type Extensions**: Added `termsAccepted` and `termsAcceptedAt` fields with timestamp tracking.
+- **GitHub Actions Workflow**: Updated `.github/workflows/deploy-frontend.yml` to include `VITE_FIREBASE_VAPID_KEY` in build environment (line 42).
+- **Comprehensive Debug Logging**: Added `[FCM Service]` and `[Dialog]` prefixes throughout FCM flow for troubleshooting.
+
+### Critical Configuration Requirements
+- **VITE_FIREBASE_VAPID_KEY**: MUST be environment variable (not secret) for Vite to include in client bundle during build. Secrets are server-side only and cause "VAPID key not configured" errors.
+- **Development Environment**: Set as shared environment variable in Replit (value: `BNaaU2CxdC4L8wIW7hbWTC68jRzm-P_D3SwEAuyiW3fxf6_zcYrkwuAf4HmtRdx0lka1wxwzxJbejMi4sod91XM`)
+- **GitHub Secrets**: Add `VITE_FIREBASE_VAPID_KEY` to repository secrets for CI/CD builds.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

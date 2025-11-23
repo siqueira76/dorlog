@@ -54,6 +54,9 @@ export function GoogleLoginTermsDialog({
 
     setIsProcessing(true);
 
+    // Track if notifications were successfully activated
+    let notificationsSuccessfullyActivated = false;
+
     try {
       console.log('📋 Processando aceite de termos e notificações...', {
         termsAccepted,
@@ -71,7 +74,6 @@ export function GoogleLoginTermsDialog({
             title: 'Notificações não suportadas',
             description: 'Seu navegador não suporta notificações. Continuando sem ativar notificações.',
           });
-          setNotificationsEnabled(false);
         } else {
           try {
             // Request notification permission
@@ -81,20 +83,21 @@ export function GoogleLoginTermsDialog({
             if (permission === 'granted') {
               console.log('✅ [Dialog] Permissão concedida, obtendo token FCM...');
               
-              // Get and register FCM token
+              // Get and register FCM token (will throw if VAPID key missing)
               const fcmToken = await requestFCMToken();
               console.log('🔑 [Dialog] Token FCM obtido:', fcmToken ? 'SIM' : 'NÃO');
               
-              if (fcmToken) {
-                console.log('📱 [Dialog] Registrando token no Firestore...');
-                console.log('📱 [Dialog] UserId:', userId);
-                console.log('📱 [Dialog] Token (primeiros 20 chars):', fcmToken.substring(0, 20) + '...');
-                
-                await registerFCMToken(userId, fcmToken);
-                console.log('✅ [Dialog] Token FCM registrado com sucesso no Firestore');
-              } else {
-                console.warn('⚠️ [Dialog] Não foi possível obter token FCM');
+              if (!fcmToken) {
+                console.error('❌ [Dialog] Falha ao obter token FCM');
+                throw new Error('Não foi possível obter token FCM. Verifique a configuração do VAPID key.');
               }
+              
+              console.log('📱 [Dialog] Registrando token no Firestore...');
+              console.log('📱 [Dialog] UserId:', userId);
+              console.log('📱 [Dialog] Token (primeiros 20 chars):', fcmToken.substring(0, 20) + '...');
+              
+              await registerFCMToken(userId, fcmToken);
+              console.log('✅ [Dialog] Token FCM registrado com sucesso no Firestore');
               
               // Set all notification preferences to true
               const allPreferences = {
@@ -109,26 +112,38 @@ export function GoogleLoginTermsDialog({
               console.log('⚙️ [Dialog] Atualizando preferências de notificação...', allPreferences);
               await updateNotificationPreferences(userId, allPreferences);
               console.log('✅ [Dialog] Todas as preferências de notificação ativadas');
+              
+              // Mark as successfully activated
+              notificationsSuccessfullyActivated = true;
             } else {
               console.log('⚠️ [Dialog] Permissão de notificação negada pelo usuário');
-              setNotificationsEnabled(false);
+              toast({
+                title: 'Permissão negada',
+                description: 'Você poderá ativar notificações mais tarde nas configurações.',
+              });
             }
           } catch (error) {
             console.error('❌ [Dialog] Erro ao configurar notificações:', error);
-            setNotificationsEnabled(false);
-            // Don't block the flow if notifications fail
+            
+            // Show error toast but DON'T abort - continue to save terms
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             toast({
-              title: 'Aviso',
-              description: 'Não foi possível ativar notificações, mas você pode ativá-las depois no perfil.',
+              title: 'Erro ao ativar notificações',
+              description: errorMessage + ' Você poderá ativar notificações mais tarde nas configurações.',
+              variant: 'destructive'
             });
           }
         }
       }
-
-      console.log('📋 [Dialog] Chamando onComplete com:', { termsAccepted, notificationsEnabled });
       
-      // Call parent completion handler (this will save terms and show success toast)
-      await onComplete(termsAccepted, notificationsEnabled);
+      console.log('📋 [Dialog] Chamando onComplete com:', { 
+        termsAccepted, 
+        notificationsEnabled: notificationsSuccessfullyActivated 
+      });
+      
+      // ALWAYS save terms, even if notifications failed
+      // Only pass true for notifications if they were ACTUALLY activated
+      await onComplete(termsAccepted, notificationsSuccessfullyActivated);
     } catch (error) {
       console.error('❌ Erro ao processar configuração inicial:', error);
       toast({
