@@ -2090,6 +2090,7 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                 <ul>
                     <li>${eveningData.recordCount} registros coletados</li>
                     <li>Humor: ${eveningData.moodQuality} (${eveningData.moodAverage}/4)</li>
+                    ${eveningData.hasFatigueData ? `<li>Fadiga: ${eveningData.fatigueLevel} (${eveningData.fatigueAverage}/5)</li>` : ''}
                     <li>Correlação: ${eveningData.moodPainCorrelation}</li>
                 </ul>
             ` : `
@@ -2781,6 +2782,40 @@ function extractRealMorningData(reportData: EnhancedReportData): {
 }
 
 /**
+ * Extrai dados de fadiga dos quizzes noturnos
+ */
+function extractFatigueData(reportData: EnhancedReportData): {
+  hasData: boolean;
+  averageFatigue: number;
+  fatigueLevel: string;
+} {
+  const fatigueData = (reportData as any).fatigueData || [];
+  const eveningFatigue = fatigueData.filter((f: any) => f.period === 'noturno');
+  
+  if (eveningFatigue.length === 0) {
+    return {
+      hasData: false,
+      averageFatigue: 0,
+      fatigueLevel: 'Sem dados'
+    };
+  }
+  
+  const avg = eveningFatigue.reduce((sum: number, f: any) => sum + f.level, 0) / eveningFatigue.length;
+  const avgRounded = Math.round(avg * 10) / 10;
+  
+  // Classificar nível de fadiga (escala 0-5)
+  let level = 'Baixa';
+  if (avg >= 3.5) level = 'Alta';
+  else if (avg >= 2) level = 'Moderada';
+  
+  return {
+    hasData: true,
+    averageFatigue: avgRounded,
+    fatigueLevel: level
+  };
+}
+
+/**
  * Extrai dados reais dos quizzes noturnos
  */
 function extractRealEveningData(reportData: EnhancedReportData): {
@@ -2791,6 +2826,9 @@ function extractRealEveningData(reportData: EnhancedReportData): {
   moodAverage: number;
   hasMoodData: boolean;
   moodPainCorrelation: string;
+  fatigueLevel: string;
+  fatigueAverage: number;
+  hasFatigueData: boolean;
 } {
   const painData = reportData.painEvolution || [];
   const eveningPain = painData.filter(p => p.period === 'noturno');
@@ -2801,6 +2839,9 @@ function extractRealEveningData(reportData: EnhancedReportData): {
   // Calcular correlação humor-dor
   const correlation = SleepPainAnalysisService.analyzeMoodPainCorrelation(reportData as any);
   
+  // Extrair dados de fadiga
+  const fatigueData = extractFatigueData(reportData);
+  
   if (eveningPain.length === 0) {
     return {
       hasPainData: false,
@@ -2809,7 +2850,10 @@ function extractRealEveningData(reportData: EnhancedReportData): {
       moodQuality: moodData.moodQualityLabel,
       moodAverage: moodData.averageMoodQuality,
       hasMoodData: moodData.hasData,
-      moodPainCorrelation: correlation.description
+      moodPainCorrelation: correlation.description,
+      fatigueLevel: fatigueData.fatigueLevel,
+      fatigueAverage: fatigueData.averageFatigue,
+      hasFatigueData: fatigueData.hasData
     };
   }
   
@@ -2822,7 +2866,10 @@ function extractRealEveningData(reportData: EnhancedReportData): {
     moodQuality: moodData.moodQualityLabel,
     moodAverage: moodData.averageMoodQuality,
     hasMoodData: moodData.hasData,
-    moodPainCorrelation: correlation.description
+    moodPainCorrelation: correlation.description,
+    fatigueLevel: fatigueData.fatigueLevel,
+    fatigueAverage: fatigueData.averageFatigue,
+    hasFatigueData: fatigueData.hasData
   };
 }
 

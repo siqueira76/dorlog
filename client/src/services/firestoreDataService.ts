@@ -29,6 +29,12 @@ export interface ReportData {
     level: number;
     period: string;
   }>;
+  // NOVO: Dados de fadiga
+  fatigueData?: Array<{
+    date: string;
+    level: number;
+    period: string;
+  }>;
   // Nova seção: Medicamentos de Resgate
   rescueMedications: Array<{
     medication: string;
@@ -434,6 +440,19 @@ function processQuizzesWithSemanticMapping(
             }
             break;
             
+          case 'fatigue_level':
+            // Processar dados de fadiga (P3 noturno - escala 0-5)
+            if (!reportData.fatigueData) {
+              reportData.fatigueData = [];
+            }
+            reportData.fatigueData.push({
+              date: dayKey,
+              level: answer as number,
+              period: quiz.tipo || 'noturno'
+            });
+            console.log(`😴 Fadiga processada: ${answer}/5 (${quiz.tipo})`);
+            break;
+            
           case 'sleep_quality':
             if (!reportData.observations) reportData.observations = '';
             reportData.observations += `[${dayKey}] Qualidade do sono: ${answer}; `;
@@ -485,17 +504,6 @@ function processQuizzesWithSemanticMapping(
             });
             
             console.log(`🏃 Atividades processadas: ${(answer as string[]).join(', ')}`);
-            break;
-            
-          case 'fatigue_level':
-            // Processar nível de fadiga
-            reportData.fatigueData = reportData.fatigueData || [];
-            reportData.fatigueData.push({
-              date: dayKey,
-              level: answer as number,
-              context: quiz.tipo
-            });
-            console.log(`😴 Nível de fadiga processado: ${answer}/5 (${quiz.tipo})`);
             break;
             
           case 'treatment_activities':
