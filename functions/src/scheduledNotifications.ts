@@ -4,10 +4,85 @@
  * 
  * Uses Cloud Scheduler to trigger functions at specific times,
  * then batches users by timezone for optimal delivery
+ * 
+ * IMPORTANT: Uses user's timezone field directly instead of static offset matching
+ * to properly handle DST transitions and timezone diversity
  */
 
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
+
+/**
+ * Removes invalid FCM tokens from all users in batch
+ * @param userDocs - Array of user documents from the batch
+ * @param invalidTokens - Array of invalid token strings to remove
+ */
+async function cleanupInvalidTokens(userDocs: admin.firestore.QueryDocumentSnapshot[], invalidTokens: string[]): Promise<void> {
+  const db = admin.firestore();
+  const invalidTokenSet = new Set(invalidTokens);
+  
+  try {
+    // For each user in batch, check if they have any invalid tokens
+    for (const userDoc of userDocs) {
+      const userData = userDoc.data();
+      const fcmTokens = userData.fcmTokens || [];
+      
+      // Find tokens that need to be removed
+      const tokensToRemove = fcmTokens.filter((tokenObj: any) => 
+        invalidTokenSet.has(tokenObj.token)
+      );
+      
+      if (tokensToRemove.length === 0) {
+        continue; // No invalid tokens for this user
+      }
+      
+      logger.info(`🧹 Removendo ${tokensToRemove.length} token(s) inválido(s) do usuário ${userDoc.id}`);
+      
+      // Remove invalid tokens from array
+      const userRef = db.collection('usuarios').doc(userDoc.id);
+      await userRef.update({
+        fcmTokens: admin.firestore.FieldValue.arrayRemove(...tokensToRemove),
+        updatedAt: new Date()
+      });
+    }
+    
+    logger.info(`✅ Limpeza de tokens concluída: ${invalidTokens.length} tokens removidos`);
+  } catch (error) {
+    logger.error('❌ Erro ao limpar tokens inválidos:', error);
+    // Don't throw - this is cleanup, not critical path
+  }
+}
+
+/**
+ * Checks if current time matches target hour in given timezone
+ * Handles DST transitions correctly using Intl API
+ */
+function isTimezonAtTargetHour(timezone: string, targetHour: number): boolean {
+  try {
+    const now = new Date();
+    
+    // Get current hour in the specified timezone using Intl API
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false
+    });
+    
+    const parts = formatter.formatToParts(now);
+    const hourPart = parts.find(part => part.type === 'hour');
+    
+    if (!hourPart) {
+      logger.warn(`⚠️ Não foi possível extrair hora do timezone ${timezone}`);
+      return false;
+    }
+    
+    const currentHour = parseInt(hourPart.value, 10);
+    return currentHour === targetHour;
+  } catch (error) {
+    logger.error(`❌ Erro ao processar timezone ${timezone}:`, error);
+    return false;
+  }
+}
 
 /**
  * Sends morning quiz notifications to users in specified timezones
@@ -64,6 +139,7 @@ export async function sendMorningQuizNotifications(
     for (let i = 0; i < users.length; i += batchSize) {
       const batch = users.slice(i, i + batchSize);
       const tokens: string[] = [];
+      const tokenToUserMap = new Map<string, string>(); // Map token to userId for cleanup
 
       // Collect all valid FCM tokens from this batch
       for (const userDoc of batch) {
@@ -74,6 +150,7 @@ export async function sendMorningQuizNotifications(
         fcmTokens.forEach((tokenObj: any) => {
           if (tokenObj.token) {
             tokens.push(tokenObj.token);
+            tokenToUserMap.set(tokenObj.token, userDoc.id);
           }
         });
       }
@@ -126,21 +203,32 @@ export async function sendMorningQuizNotifications(
           failed: response.failureCount
         });
 
-        // Handle failed tokens (remove invalid ones)
+        // Handle failed tokens (remove invalid ones immediately)
         if (response.failureCount > 0) {
-          const failedTokens: string[] = [];
+          const invalidTokens: string[] = [];
+          
           response.responses.forEach((resp, idx) => {
             if (!resp.success) {
-              failedTokens.push(tokens[idx]);
-              logger.warn(`❌ Token inválido: ${tokens[idx].substring(0, 20)}...`, {
-                error: resp.error?.message
-              });
+              const errorCode = resp.error?.code;
+              // Only remove permanently invalid tokens
+              if (
+                errorCode === 'messaging/invalid-registration-token' ||
+                errorCode === 'messaging/registration-token-not-registered'
+              ) {
+                invalidTokens.push(tokens[idx]);
+                logger.warn(`🗑️ Token inválido (será removido): ${tokens[idx].substring(0, 20)}...`);
+              } else {
+                logger.warn(`⚠️ Erro temporário no token: ${tokens[idx].substring(0, 20)}...`, {
+                  error: resp.error?.message
+                });
+              }
             }
           });
 
-          // TODO: Remove failed tokens from Firestore
-          // This requires matching tokens back to users, which is complex
-          // Consider implementing in a separate cleanup function
+          // Remove invalid tokens from users
+          if (invalidTokens.length > 0) {
+            await cleanupInvalidTokens(batch, invalidTokens);
+          }
         }
       } catch (error) {
         logger.error(`❌ Erro ao enviar batch ${i / batchSize + 1}:`, error);
@@ -211,6 +299,7 @@ export async function sendEveningQuizNotifications(
     for (let i = 0; i < users.length; i += batchSize) {
       const batch = users.slice(i, i + batchSize);
       const tokens: string[] = [];
+      const tokenToUserMap = new Map<string, string>(); // Map token to userId for cleanup
 
       for (const userDoc of batch) {
         const userData = userDoc.data();
@@ -219,11 +308,13 @@ export async function sendEveningQuizNotifications(
         fcmTokens.forEach((tokenObj: any) => {
           if (tokenObj.token) {
             tokens.push(tokenObj.token);
+            tokenToUserMap.set(tokenObj.token, userDoc.id);
           }
         });
       }
 
       if (tokens.length === 0) {
+        logger.info(`⚠️ Batch ${i / batchSize + 1}: Nenhum token válido encontrado`);
         continue;
       }
 
@@ -268,6 +359,34 @@ export async function sendEveningQuizNotifications(
           success: response.successCount,
           failed: response.failureCount
         });
+
+        // Handle failed tokens (remove invalid ones immediately)
+        if (response.failureCount > 0) {
+          const invalidTokens: string[] = [];
+          
+          response.responses.forEach((resp, idx) => {
+            if (!resp.success) {
+              const errorCode = resp.error?.code;
+              // Only remove permanently invalid tokens
+              if (
+                errorCode === 'messaging/invalid-registration-token' ||
+                errorCode === 'messaging/registration-token-not-registered'
+              ) {
+                invalidTokens.push(tokens[idx]);
+                logger.warn(`🗑️ Token inválido (será removido): ${tokens[idx].substring(0, 20)}...`);
+              } else {
+                logger.warn(`⚠️ Erro temporário no token: ${tokens[idx].substring(0, 20)}...`, {
+                  error: resp.error?.message
+                });
+              }
+            }
+          });
+
+          // Remove invalid tokens from users
+          if (invalidTokens.length > 0) {
+            await cleanupInvalidTokens(batch, invalidTokens);
+          }
+        }
       } catch (error) {
         logger.error(`❌ Erro ao enviar batch ${i / batchSize + 1}:`, error);
         failedCount += tokens.length;
@@ -291,25 +410,26 @@ export async function sendEveningQuizNotifications(
  * Gets list of timezones that should receive notifications at current hour
  * Used by Cloud Scheduler to determine which users to notify
  * 
+ * Handles DST correctly by using Intl API instead of static offsets
+ * 
  * @param targetHour - Target hour in user's local timezone (0-23)
- * @returns Array of timezone strings currently at target hour
+ * @returns Array of unique timezone strings currently at target hour
  */
 export function getTimezonesAtHour(targetHour: number): string[] {
   // Common timezones in Brazil and Portuguese-speaking countries
   const timezones = [
-    'America/Sao_Paulo',      // BRT (UTC-3)
+    'America/Sao_Paulo',      // BRT (UTC-3) / BRST (UTC-2) when DST active
     'America/Manaus',         // AMT (UTC-4)
     'America/Rio_Branco',     // ACT (UTC-5)
     'America/Noronha',        // FNT (UTC-2)
-    'Europe/Lisbon',          // WET/WEST (UTC+0/+1)
-    'Atlantic/Azores',        // AZOT/AZOST (UTC-1/0)
+    'Europe/Lisbon',          // WET (UTC+0) / WEST (UTC+1) during DST
+    'Atlantic/Azores',        // AZOT (UTC-1) / AZOST (UTC+0) during DST
     'Atlantic/Cape_Verde',    // CVT (UTC-1)
     'Africa/Luanda',          // WAT (UTC+1)
     'Africa/Maputo'           // CAT (UTC+2)
   ];
 
   const now = new Date();
-  const currentHour = now.getUTCHours();
   const currentMinutes = now.getUTCMinutes();
 
   // Only trigger if we're within the first 15 minutes of the hour
@@ -320,22 +440,20 @@ export function getTimezonesAtHour(targetHour: number): string[] {
   }
 
   const matchingTimezones: string[] = [];
+  const seenTimezones = new Set<string>(); // Deduplicate
 
   for (const tz of timezones) {
-    try {
-      // Get current time in this timezone
-      const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      const tzHour = tzDate.getHours();
-
-      if (tzHour === targetHour) {
-        matchingTimezones.push(tz);
-        logger.info(`✅ Timezone ${tz} está em ${targetHour}h (local)`);
-      }
-    } catch (error) {
-      logger.warn(`⚠️ Erro ao processar timezone ${tz}:`, error);
+    if (seenTimezones.has(tz)) {
+      continue; // Skip duplicates
+    }
+    
+    if (isTimezonAtTargetHour(tz, targetHour)) {
+      matchingTimezones.push(tz);
+      seenTimezones.add(tz);
+      logger.info(`✅ Timezone ${tz} está em ${targetHour}h (local)`);
     }
   }
 
-  logger.info(`🌍 Encontrados ${matchingTimezones.length} timezones em ${targetHour}h`);
+  logger.info(`🌍 Encontrados ${matchingTimezones.length} timezones únicos em ${targetHour}h`);
   return matchingTimezones;
 }

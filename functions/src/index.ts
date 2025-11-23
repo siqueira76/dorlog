@@ -141,18 +141,13 @@ export const sendMorningQuizReminders = onSchedule({
     
     if (timezones.length === 0) {
       console.log('ℹ️ Nenhum timezone em 8h neste momento');
-      return { success: true, message: 'No timezones at target hour' };
+      return;
     }
     
     // Send notifications
     const result = await sendMorningQuizNotifications(timezones, 8);
     
     console.log('✅ Morning quiz reminders enviados', result);
-    return {
-      success: true,
-      timezones,
-      ...result
-    };
   } catch (error) {
     console.error('❌ Erro em sendMorningQuizReminders:', error);
     throw error;
@@ -182,18 +177,13 @@ export const sendEveningQuizReminders = onSchedule({
     
     if (timezones.length === 0) {
       console.log('ℹ️ Nenhum timezone em 20h neste momento');
-      return { success: true, message: 'No timezones at target hour' };
+      return;
     }
     
     // Send notifications
     const result = await sendEveningQuizNotifications(timezones, 20);
     
     console.log('✅ Evening quiz reminders enviados', result);
-    return {
-      success: true,
-      timezones,
-      ...result
-    };
   } catch (error) {
     console.error('❌ Erro em sendEveningQuizReminders:', error);
     throw error;

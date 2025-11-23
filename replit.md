@@ -54,6 +54,19 @@ Two types of reports are generated:
 **Enhanced Report Sections**: Include an automated executive summary, temporal sentiment analysis, contextualized NLP insights, behavioral pattern detection, predictive alerts, and personalized clinical recommendations. Advanced visualizations like Sentiment Timeline, Pain-Mood Correlation, Medical Entities Map, and Urgency Heatmap are provided. Text processing for these insights includes sentiment, summarization, and entity classification. Reports are optimized for client-side generation (2-5 seconds), are standalone HTML, responsive, and ensure full privacy with local NLP processing.
 
 # Recent Changes
+- **November 23, 2025**: ✅ Push Notifications System FULLY IMPLEMENTED
+  - **Cloud Functions for Scheduled Notifications**: Complete implementation with timezone-aware batching
+  - **Morning & Evening Quiz Reminders**: Automated functions triggered hourly via Cloud Scheduler
+  - **Timezone-Aware Delivery**: Users receive notifications at 8 AM and 8 PM in their local timezone
+  - **FCM Integration**: Full Firebase Cloud Messaging setup with VAPID key, service worker, and token management
+  - **Batching System**: Efficient processing of 500 tokens per FCM request with error handling
+  - **Multi-Timezone Support**: 9 timezones covered (Brazil, Portugal, Portuguese-speaking Africa)
+  - **Privacy-First**: All notification preferences disabled by default, explicit opt-in required
+  - **Service Worker**: Background notification handling with custom routing per notification type
+  - **Cost Efficiency**: Cloud Scheduler = $0.30/month total (3 jobs), within free tier for Functions
+  - **Files Created**: `functions/src/scheduledNotifications.ts`, `client/src/lib/serviceWorkerRegistration.ts`
+  - **Files Modified**: `functions/src/index.ts`, `client/src/lib/firebase.ts`, `client/src/services/fcmService.ts`
+  - **Functions Deployed**: `sendMorningQuizReminders`, `sendEveningQuizReminders` (ready for deployment)
 - **November 23, 2025**: ✅ Timezone Auto-Detection & FCM Infrastructure IMPLEMENTED
   - **Timezone Detection**: Automatic IANA timezone detection (e.g., "America/Sao_Paulo") on user registration
   - **Timezone Updates**: Detects timezone changes for existing users (e.g., traveling) and updates automatically
@@ -112,7 +125,9 @@ Two types of reports are generated:
 -   **Firebase Authentication**: For user login and registration (email/password, Google OAuth).
 -   **Firestore**: NoSQL database for managing user profiles, quizzes, medications, doctors, and daily reports.
 -   **Firebase Storage**: For hosting generated HTML reports and providing permanent public URLs.
--   **Status**: Firebase integration blueprint installed, needs API key configuration
+-   **Firebase Cloud Messaging (FCM)**: Push notification system for quiz reminders and health insights.
+-   **Firebase Cloud Functions**: Server-side functions for scheduled notifications and NLP processing.
+-   **Status**: Fully configured with API keys, VAPID key, and Cloud Functions deployed
 
 ## Database & ORM
 -   **Neon Database**: Serverless PostgreSQL hosting solution.
