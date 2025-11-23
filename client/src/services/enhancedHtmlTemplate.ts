@@ -2093,6 +2093,27 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                     ${eveningData.hasFatigueData ? `<li>Fadiga: ${eveningData.fatigueLevel} (${eveningData.fatigueAverage}/5)</li>` : ''}
                     <li>Correlação: ${eveningData.moodPainCorrelation}</li>
                 </ul>
+                
+                ${eveningData.triggersData.hasData ? `
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.05); border-left: 4px solid #FF9800; border-radius: 4px;">
+                        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #FF9800;">⚠️ Gatilhos Identificados</h3>
+                        <div style="margin-bottom: 0.75rem;">
+                            ${eveningData.triggersData.triggers.map(t => `
+                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-weight: 500;">${escapeHtml(t.trigger)}</span>
+                                    <span style="color: #666;">(${t.count}x)</span>
+                                    →
+                                    <span style="font-weight: bold; color: ${t.isCritical ? '#d32f2f' : t.avgPain >= 5 ? '#ff9800' : '#4caf50'};">
+                                        Dor média: ${t.avgPain}/10 ${t.isCritical ? '⚠️' : ''}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; font-style: italic; margin-top: 0.75rem;">
+                            ${escapeHtml(eveningData.triggersData.insight)}
+                        </div>
+                    </div>
+                ` : ''}
             ` : `
                 <div class="pain-emoji">🌚</div>
                 <div class="pain-value">Sem dados</div>
@@ -2816,6 +2837,94 @@ function extractFatigueData(reportData: EnhancedReportData): {
 }
 
 /**
+ * Extrai e analisa dados de gatilhos (P7 quiz noturno) com correlação de dor
+ */
+function extractTriggerData(reportData: EnhancedReportData): {
+  hasData: boolean;
+  triggers: Array<{
+    trigger: string;
+    count: number;
+    avgPain: number;
+    isCritical: boolean;
+  }>;
+  criticalTriggers: string[];
+  mostFrequent: string;
+  highestImpact: string;
+  insight: string;
+} {
+  const triggersData = (reportData as any).triggersData || [];
+  
+  if (triggersData.length === 0) {
+    return {
+      hasData: false,
+      triggers: [],
+      criticalTriggers: [],
+      mostFrequent: 'Nenhum',
+      highestImpact: 'Nenhum',
+      insight: 'Nenhum gatilho identificado no período'
+    };
+  }
+  
+  // Calcular dor média para cada gatilho
+  const painData = reportData.painEvolution || [];
+  const triggersWithPain = triggersData.map((t: any) => {
+    const painOnTriggerDays: number[] = [];
+    
+    t.dates.forEach((date: string) => {
+      const painEntry = painData.find((p: any) => {
+        const pDate = typeof p.date === 'string' ? p.date.split('T')[0] : p.date;
+        return pDate === date;
+      });
+      if (painEntry) {
+        painOnTriggerDays.push(painEntry.level);
+      }
+    });
+    
+    const avgPain = painOnTriggerDays.length > 0
+      ? painOnTriggerDays.reduce((sum, pain) => sum + pain, 0) / painOnTriggerDays.length
+      : 0;
+    
+    return {
+      trigger: t.trigger,
+      count: t.frequency,
+      avgPain: Math.round(avgPain * 10) / 10,
+      isCritical: avgPain >= 7.0
+    };
+  });
+  
+  // Ordenar por frequência
+  const sortedByFrequency = [...triggersWithPain].sort((a, b) => b.count - a.count);
+  const mostFrequent = sortedByFrequency[0]?.trigger || 'Nenhum';
+  
+  // Ordenar por impacto na dor
+  const sortedByPain = [...triggersWithPain].sort((a, b) => b.avgPain - a.avgPain);
+  const highestImpact = sortedByPain[0]?.trigger || 'Nenhum';
+  
+  // Identificar gatilhos críticos
+  const criticalTriggers = triggersWithPain
+    .filter(t => t.isCritical)
+    .map(t => t.trigger);
+  
+  // Gerar insight
+  let insight = `Gatilho mais frequente: ${mostFrequent}`;
+  if (highestImpact !== mostFrequent && highestImpact !== 'Nenhum') {
+    insight += `. Maior impacto: ${highestImpact}`;
+  }
+  if (criticalTriggers.length > 0) {
+    insight += `. Críticos: ${criticalTriggers.join(', ')}`;
+  }
+  
+  return {
+    hasData: true,
+    triggers: triggersWithPain,
+    criticalTriggers,
+    mostFrequent,
+    highestImpact,
+    insight
+  };
+}
+
+/**
  * Extrai dados reais dos quizzes noturnos
  */
 function extractRealEveningData(reportData: EnhancedReportData): {
@@ -2829,6 +2938,17 @@ function extractRealEveningData(reportData: EnhancedReportData): {
   fatigueLevel: string;
   fatigueAverage: number;
   hasFatigueData: boolean;
+  triggersData: {
+    hasData: boolean;
+    triggers: Array<{
+      trigger: string;
+      count: number;
+      avgPain: number;
+      isCritical: boolean;
+    }>;
+    criticalTriggers: string[];
+    insight: string;
+  };
 } {
   const painData = reportData.painEvolution || [];
   const eveningPain = painData.filter(p => p.period === 'noturno');
@@ -2842,6 +2962,9 @@ function extractRealEveningData(reportData: EnhancedReportData): {
   // Extrair dados de fadiga
   const fatigueData = extractFatigueData(reportData);
   
+  // Extrair dados de gatilhos
+  const triggersData = extractTriggerData(reportData);
+  
   if (eveningPain.length === 0) {
     return {
       hasPainData: false,
@@ -2853,7 +2976,8 @@ function extractRealEveningData(reportData: EnhancedReportData): {
       moodPainCorrelation: correlation.description,
       fatigueLevel: fatigueData.fatigueLevel,
       fatigueAverage: fatigueData.averageFatigue,
-      hasFatigueData: fatigueData.hasData
+      hasFatigueData: fatigueData.hasData,
+      triggersData
     };
   }
   
@@ -2869,7 +2993,8 @@ function extractRealEveningData(reportData: EnhancedReportData): {
     moodPainCorrelation: correlation.description,
     fatigueLevel: fatigueData.fatigueLevel,
     fatigueAverage: fatigueData.averageFatigue,
-    hasFatigueData: fatigueData.hasData
+    hasFatigueData: fatigueData.hasData,
+    triggersData
   };
 }
 
