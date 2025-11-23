@@ -19,7 +19,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { isFCMSupported, requestNotificationPermission, getNotificationPermission } from '@/lib/fcmUtils';
-import { updateNotificationPreferences } from '@/services/fcmService';
+import { 
+  updateNotificationPreferences, 
+  requestFCMToken, 
+  registerFCMToken 
+} from '@/services/fcmService';
 
 interface NotificationPermissionDialogProps {
   open: boolean;
@@ -67,9 +71,25 @@ export function NotificationPermissionDialog({
     setIsRequesting(true);
 
     try {
+      console.log('🔔 Solicitando permissão de notificação...');
       const permission = await requestNotificationPermission();
 
       if (permission === 'granted') {
+        console.log('✅ Permissão concedida, obtendo token FCM...');
+        
+        // Get FCM token
+        const fcmToken = await requestFCMToken();
+        
+        if (fcmToken) {
+          console.log('📱 Token FCM obtido, registrando no Firestore...');
+          
+          // Register token in Firestore
+          await registerFCMToken(userId, fcmToken);
+          console.log('✅ Token FCM registrado com sucesso');
+        } else {
+          console.warn('⚠️ Não foi possível obter token FCM');
+        }
+        
         // Update preferences with notifications enabled
         const updatedPreferences = { ...preferences, enabled: true };
         await updateNotificationPreferences(userId, updatedPreferences);
@@ -89,7 +109,7 @@ export function NotificationPermissionDialog({
         });
       }
     } catch (error) {
-      console.error('Erro ao solicitar permissão:', error);
+      console.error('❌ Erro ao solicitar permissão:', error);
       toast({
         title: 'Erro',
         description: 'Não foi possível ativar as notificações. Tente novamente.',
