@@ -35,6 +35,12 @@ export interface ReportData {
     level: number;
     period: string;
   }>;
+  // NOVO: Dados de gatilhos (P7 quiz noturno)
+  triggersData?: Array<{
+    trigger: string;
+    frequency: number;
+    dates: string[];
+  }>;
   // Nova seção: Medicamentos de Resgate
   rescueMedications: Array<{
     medication: string;
@@ -658,7 +664,8 @@ export async function fetchUserReportData(userId: string, periods: string[]): Pr
     observations: '',
     dataSource: 'firestore',
     generatedAt: new Date().toISOString(),
-    rawQuizData: [] // NOVO: Inicializar array para dados de quizzes matinais
+    rawQuizData: [], // NOVO: Inicializar array para dados de quizzes matinais
+    triggersData: [] // NOVO: Inicializar array para gatilhos identificados
   };
 
   try {

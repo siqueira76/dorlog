@@ -2056,6 +2056,16 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
   const morningData = extractRealMorningData(reportData);
   const eveningData = extractRealEveningData(reportData);
   
+  // Função para escapar HTML
+  const escapeHtml = (text: string) => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+  
   return `
     <!-- Seção Manhãs -->
     <div class="section">
@@ -2095,21 +2105,21 @@ function generateMorningEveningSection(reportData: EnhancedReportData): string {
                 </ul>
                 
                 ${eveningData.triggersData.hasData ? `
-                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.05); border-left: 4px solid #FF9800; border-radius: 4px;">
-                        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #FF9800;">⚠️ Gatilhos Identificados</h3>
+                    <div data-testid="section-triggers" style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.05); border-left: 4px solid #FF9800; border-radius: 4px;">
+                        <h3 data-testid="heading-triggers" style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #FF9800;">⚠️ Gatilhos Identificados</h3>
                         <div style="margin-bottom: 0.75rem;">
-                            ${eveningData.triggersData.triggers.map(t => `
-                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-weight: 500;">${escapeHtml(t.trigger)}</span>
-                                    <span style="color: #666;">(${t.count}x)</span>
+                            ${eveningData.triggersData.triggers.map((t, index) => `
+                                <div data-testid="trigger-item-${index}" style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span data-testid="trigger-name-${index}" style="font-weight: 500;">${escapeHtml(t.trigger)}</span>
+                                    <span data-testid="trigger-count-${index}" style="color: #666;">(${t.count}x)</span>
                                     →
-                                    <span style="font-weight: bold; color: ${t.isCritical ? '#d32f2f' : t.avgPain >= 5 ? '#ff9800' : '#4caf50'};">
-                                        Dor média: ${t.avgPain}/10 ${t.isCritical ? '⚠️' : ''}
+                                    <span data-testid="trigger-pain-${index}" style="font-weight: bold; color: ${t.isCritical ? '#d32f2f' : t.avgPain >= 5 ? '#ff9800' : '#4caf50'};">
+                                        Dor média: ${t.avgPain}/10 ${t.isCritical ? `<span data-testid="trigger-critical-badge-${index}">⚠️</span>` : ''}
                                     </span>
                                 </div>
                             `).join('')}
                         </div>
-                        <div style="font-size: 0.9rem; color: #666; font-style: italic; margin-top: 0.75rem;">
+                        <div data-testid="trigger-insight" style="font-size: 0.9rem; color: #666; font-style: italic; margin-top: 0.75rem;">
                             ${escapeHtml(eveningData.triggersData.insight)}
                         </div>
                     </div>
@@ -2867,30 +2877,56 @@ function extractTriggerData(reportData: EnhancedReportData): {
   
   // Calcular dor média para cada gatilho
   const painData = reportData.painEvolution || [];
-  const triggersWithPain = triggersData.map((t: any) => {
+  const triggersWithPain = triggersData.map((t: { trigger: string; frequency: number; dates: string[] }) => {
     const painOnTriggerDays: number[] = [];
     
     t.dates.forEach((date: string) => {
-      const painEntry = painData.find((p: any) => {
-        const pDate = typeof p.date === 'string' ? p.date.split('T')[0] : p.date;
-        return pDate === date;
+      // Normalizar data do gatilho para YYYY-MM-DD
+      const normalizedTriggerDate = typeof date === 'string' 
+        ? (date.includes('T') ? date.split('T')[0] : date)
+        : new Date(date).toISOString().slice(0, 10);
+      
+      // Buscar dor no mesmo dia ou dias adjacentes (±1 dia)
+      const targetDate = new Date(normalizedTriggerDate);
+      const dayBefore = new Date(targetDate);
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      const dayAfter = new Date(targetDate);
+      dayAfter.setDate(dayAfter.getDate() + 1);
+      
+      const datesToCheck = [
+        normalizedTriggerDate,
+        dayBefore.toISOString().slice(0, 10),
+        dayAfter.toISOString().slice(0, 10)
+      ];
+      
+      datesToCheck.forEach(dateToCheck => {
+        const painEntry = painData.find((p: { date: string | Date; level: number; period?: string }) => {
+          // Normalizar data da dor para YYYY-MM-DD
+          const pDate = typeof p.date === 'string' 
+            ? (p.date.includes('T') ? p.date.split('T')[0] : p.date)
+            : new Date(p.date).toISOString().slice(0, 10);
+          return pDate === dateToCheck;
+        });
+        if (painEntry && !painOnTriggerDays.includes(painEntry.level)) {
+          painOnTriggerDays.push(painEntry.level);
+        }
       });
-      if (painEntry) {
-        painOnTriggerDays.push(painEntry.level);
-      }
     });
     
     const avgPain = painOnTriggerDays.length > 0
       ? painOnTriggerDays.reduce((sum, pain) => sum + pain, 0) / painOnTriggerDays.length
-      : 0;
+      : null;
     
     return {
       trigger: t.trigger,
       count: t.frequency,
-      avgPain: Math.round(avgPain * 10) / 10,
-      isCritical: avgPain >= 7.0
+      avgPain: avgPain !== null ? Math.round(avgPain * 10) / 10 : null,
+      isCritical: avgPain !== null && avgPain >= 7.0,
+      hasPainData: avgPain !== null
     };
-  });
+  })
+  // Filtrar gatilhos sem dados de dor
+  .filter(t => t.hasPainData);
   
   // Ordenar por frequência
   const sortedByFrequency = [...triggersWithPain].sort((a, b) => b.count - a.count);
@@ -2902,8 +2938,8 @@ function extractTriggerData(reportData: EnhancedReportData): {
   
   // Identificar gatilhos críticos
   const criticalTriggers = triggersWithPain
-    .filter(t => t.isCritical)
-    .map(t => t.trigger);
+    .filter((t: { trigger: string; count: number; avgPain: number; isCritical: boolean }) => t.isCritical)
+    .map((t: { trigger: string; count: number; avgPain: number; isCritical: boolean }) => t.trigger);
   
   // Gerar insight
   let insight = `Gatilho mais frequente: ${mostFrequent}`;
