@@ -56,35 +56,52 @@
     <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
-        // Only register service worker in production (check if we're not on localhost/replit)
+        // Detect environment
         const isProduction = !window.location.hostname.includes('localhost') && 
                             !window.location.hostname.includes('replit') &&
                             !window.location.hostname.includes('127.0.0.1');
         
-        if (isProduction) {
-          window.addEventListener('load', () => {
+        window.addEventListener('load', () => {
+          if (isProduction) {
+            // Production: Register main PWA service worker
             navigator.serviceWorker.register('/sw.js')
               .then((registration) => {
-                console.log('✅ SW registrado:', registration.scope);
+                console.log('✅ PWA SW registrado:', registration.scope);
               })
               .catch((error) => {
-                console.log('❌ SW falhou:', error);
+                console.log('❌ PWA SW falhou:', error);
               });
-          });
-        } else {
-          // In development, unregister any existing service workers and clear caches
-          window.addEventListener('load', () => {
+          } else {
+            // Development: Unregister PWA service worker but keep FCM service worker
             navigator.serviceWorker.getRegistrations().then(registrations => {
-              registrations.forEach(registration => registration.unregister());
+              registrations.forEach(registration => {
+                // Only unregister if it's NOT the Firebase Messaging service worker
+                if (!registration.active?.scriptURL?.includes('firebase-messaging-sw')) {
+                  registration.unregister();
+                  console.log('🧹 PWA SW removido:', registration.scope);
+                }
+              });
             });
+            
+            // Clear caches (but keep service worker for FCM)
             if ('caches' in window) {
               caches.keys().then(names => {
                 names.forEach(name => caches.delete(name));
               });
             }
-            console.log('🧹 SW desabilitado em desenvolvimento');
-          });
-        }
+            
+            console.log('🧹 PWA SW desabilitado em desenvolvimento');
+          }
+          
+          // ALWAYS register Firebase Messaging service worker (development + production)
+          navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+            .then((registration) => {
+              console.log('✅ Firebase Messaging SW registrado:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('❌ Firebase Messaging SW falhou:', error);
+            });
+        });
       }
     </script>
     

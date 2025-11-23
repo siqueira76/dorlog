@@ -17,6 +17,8 @@ import { User, Subscription } from '@/types/user';
 import { useToast } from '@/hooks/use-toast';
 import ReminderService from '@/services/reminderService';
 import { detectUserTimezone, hasTimezoneChanged } from '@/lib/timezoneUtils';
+import { requestFCMToken, registerFCMToken as saveFCMToken } from '@/services/fcmService';
+import { getNotificationPermission } from '@/lib/fcmUtils';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -252,6 +254,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Automatically register FCM token if permission is already granted
+  const tryRegisterFCMToken = async (userId: string) => {
+    try {
+      // Only attempt if notification permission is already granted
+      const permission = getNotificationPermission();
+      
+      if (permission !== 'granted') {
+        console.log('ℹ️ Permissão de notificação não concedida - FCM token não registrado');
+        return;
+      }
+      
+      console.log('🔔 Permissão concedida - tentando obter FCM token...');
+      
+      // Request FCM token
+      const token = await requestFCMToken();
+      
+      if (!token) {
+        console.log('⚠️ FCM token não obtido');
+        return;
+      }
+      
+      // Register token in Firestore
+      await saveFCMToken(userId, token);
+      console.log('✅ FCM token registrado automaticamente');
+      
+    } catch (error) {
+      console.error('❌ Erro ao registrar FCM token automaticamente:', error);
+      // Don't throw - this is a non-critical background operation
+    }
+  };
+
   // Check subscription status in Firestore
   const checkSubscriptionStatus = async (email: string): Promise<boolean> => {
     try {
@@ -368,6 +401,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userDoc = await createUserDocument(result.user);
       if (userDoc) {
         setCurrentUser(userDoc);
+        
+        // Try to register FCM token if permission is granted (non-blocking)
+        tryRegisterFCMToken(result.user.uid).catch(err => 
+          console.error('⚠️ Erro ao registrar FCM token (não crítico):', err)
+        );
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta ao DorLog.",
@@ -430,6 +469,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (userDoc) {
         setCurrentUser(userDoc);
+        
+        // Try to register FCM token if permission is granted (non-blocking)
+        tryRegisterFCMToken(result.user.uid).catch(err => 
+          console.error('⚠️ Erro ao registrar FCM token (não crítico):', err)
+        );
+        
         toast({
           title: "Conta criada com sucesso!",
           description: "Usuário registrado no sistema.",
@@ -489,6 +534,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (userDoc) {
         setCurrentUser(userDoc);
+        
+        // Try to register FCM token if permission is granted (non-blocking)
+        tryRegisterFCMToken(result.user.uid).catch(err => 
+          console.error('⚠️ Erro ao registrar FCM token (não crítico):', err)
+        );
+        
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao DorLog.",
