@@ -3,7 +3,7 @@
  * Handles registration, updates, and cleanup of FCM tokens for push notifications
  */
 
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { FCMToken } from '@/types/user';
 import {
@@ -47,20 +47,32 @@ export async function registerFCMToken(userId: string, fcmToken: string): Promis
 /**
  * Removes FCM token from user's tokens array
  * @param userId - Firebase user ID
- * @param fcmToken - FCM token to remove
+ * @param tokenString - FCM token string to remove
  */
-export async function removeFCMToken(userId: string, fcmToken: string): Promise<void> {
+export async function removeFCMToken(userId: string, tokenString: string): Promise<void> {
   try {
     console.log('🗑️ Removendo FCM token:', {
       userId,
-      tokenPreview: fcmToken.substring(0, 20) + '...'
+      tokenPreview: tokenString.substring(0, 20) + '...'
     });
     
     const userRef = doc(db, 'usuarios', userId);
     
-    // Remove token from array
+    // Get current user document to find the exact token object
+    const userDoc = await getDoc(userRef);
+    const currentTokens: FCMToken[] = userDoc.data()?.fcmTokens || [];
+    
+    // Find the token object that matches the string
+    const tokenToRemove = currentTokens.find(t => t.token === tokenString);
+    
+    if (!tokenToRemove) {
+      console.log('⚠️ Token não encontrado no array');
+      return;
+    }
+    
+    // Remove token from array (requires full object for Firestore)
     await updateDoc(userRef, {
-      fcmTokens: arrayRemove({ token: fcmToken }),
+      fcmTokens: arrayRemove(tokenToRemove),
       updatedAt: new Date()
     });
     
@@ -74,11 +86,17 @@ export async function removeFCMToken(userId: string, fcmToken: string): Promise<
 /**
  * Updates lastActive timestamp for current device's token
  * @param userId - Firebase user ID
- * @param tokens - Current array of FCM tokens
  */
-export async function updateTokenLastActive(userId: string, tokens: FCMToken[]): Promise<void> {
+export async function updateTokenLastActive(userId: string): Promise<void> {
   try {
-    const currentToken = findCurrentDeviceToken(tokens);
+    const userRef = doc(db, 'usuarios', userId);
+    
+    // Get current user document to find the token
+    const userDoc = await getDoc(userRef);
+    const currentTokens: FCMToken[] = userDoc.data()?.fcmTokens || [];
+    
+    // Find token for current device
+    const currentToken = findCurrentDeviceToken(currentTokens);
     
     if (!currentToken) {
       console.log('ℹ️ Nenhum token encontrado para este dispositivo');
@@ -86,20 +104,19 @@ export async function updateTokenLastActive(userId: string, tokens: FCMToken[]):
     }
     
     // Update lastActive timestamp
-    const updatedToken = {
+    const updatedToken: FCMToken = {
       ...currentToken,
       lastActive: new Date()
     };
     
-    const userRef = doc(db, 'usuarios', userId);
-    
-    // Remove old token and add updated one
+    // Remove old token and add updated one (in single operation for atomicity)
     await updateDoc(userRef, {
       fcmTokens: arrayRemove(currentToken)
     });
     
     await updateDoc(userRef, {
-      fcmTokens: arrayUnion(updatedToken)
+      fcmTokens: arrayUnion(updatedToken),
+      updatedAt: new Date()
     });
     
     console.log('✅ Token lastActive atualizado');
@@ -111,12 +128,17 @@ export async function updateTokenLastActive(userId: string, tokens: FCMToken[]):
 /**
  * Cleans up stale tokens (older than 60 days) from user's tokens array
  * @param userId - Firebase user ID
- * @param tokens - Current array of FCM tokens
  */
-export async function cleanupStaleTokens(userId: string, tokens: FCMToken[]): Promise<void> {
+export async function cleanupStaleTokens(userId: string): Promise<void> {
   try {
-    const freshTokens = removeStaleTokens(tokens);
-    const staleCount = tokens.length - freshTokens.length;
+    const userRef = doc(db, 'usuarios', userId);
+    
+    // Get current user document
+    const userDoc = await getDoc(userRef);
+    const currentTokens: FCMToken[] = userDoc.data()?.fcmTokens || [];
+    
+    const freshTokens = removeStaleTokens(currentTokens);
+    const staleCount = currentTokens.length - freshTokens.length;
     
     if (staleCount === 0) {
       console.log('✅ Nenhum token obsoleto encontrado');
@@ -124,8 +146,6 @@ export async function cleanupStaleTokens(userId: string, tokens: FCMToken[]): Pr
     }
     
     console.log(`🧹 Limpando ${staleCount} token(s) obsoleto(s)`);
-    
-    const userRef = doc(db, 'usuarios', userId);
     
     // Replace entire array with fresh tokens
     await updateDoc(userRef, {
@@ -191,22 +211,32 @@ export function checkNotificationPermission(): NotificationPermission {
  */
 export async function updateNotificationPreferences(
   userId: string,
-  preferences: {
-    enabled?: boolean;
-    morningQuiz?: boolean;
-    eveningQuiz?: boolean;
-    medicationReminders?: boolean;
-    healthInsights?: boolean;
-    emergencyAlerts?: boolean;
-  }
+  preferences: Partial<{
+    enabled: boolean;
+    morningQuiz: boolean;
+    eveningQuiz: boolean;
+    medicationReminders: boolean;
+    healthInsights: boolean;
+    emergencyAlerts: boolean;
+  }>
 ): Promise<void> {
   try {
     console.log('⚙️ Atualizando preferências de notificação:', preferences);
     
     const userRef = doc(db, 'usuarios', userId);
     
+    // Get current preferences first
+    const userDoc = await getDoc(userRef);
+    const currentPreferences = userDoc.data()?.notificationPreferences || {};
+    
+    // Merge with new preferences
+    const updatedPreferences = {
+      ...currentPreferences,
+      ...preferences
+    };
+    
     await updateDoc(userRef, {
-      notificationPreferences: preferences,
+      notificationPreferences: updatedPreferences,
       updatedAt: new Date()
     });
     
