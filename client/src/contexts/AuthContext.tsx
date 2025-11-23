@@ -598,13 +598,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Accept terms and configure notifications for Google login users
+  // Note: FCM token registration and notification preferences are handled by GoogleLoginTermsDialog
   const acceptTermsAndNotifications = async (termsAccepted: boolean, notificationsEnabled: boolean) => {
     if (!currentUser?.id) {
       throw new Error('Nenhum usuário logado');
     }
 
     try {
-      console.log('📋 Salvando aceite de termos:', { termsAccepted, notificationsEnabled });
+      console.log('📋 [AuthContext] Salvando aceite de termos no Firestore:', { 
+        termsAccepted, 
+        notificationsEnabled,
+        userId: currentUser.id
+      });
       
       const userRef = doc(db, 'usuarios', currentUser.id);
       await updateDoc(userRef, {
@@ -612,6 +617,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         termsAcceptedAt: new Date(),
         updatedAt: new Date()
       });
+
+      console.log('✅ [AuthContext] Termos salvos com sucesso');
 
       // Update local state
       setCurrentUser(prev => prev ? {
@@ -624,9 +631,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setShowGoogleTermsDialog(false);
       setPendingGoogleUser(null);
 
-      console.log('✅ Termos aceitos e salvos no Firestore');
+      // Show success toast and redirect
+      toast({
+        title: "Bem-vindo ao FibroDiário!",
+        description: notificationsEnabled 
+          ? "Configuração concluída. Notificações ativadas com sucesso."
+          : "Configuração concluída. Você pode ativar notificações depois no perfil.",
+      });
+
+      console.log('✅ [AuthContext] Processo completo, redirecionando...');
     } catch (error) {
-      console.error('❌ Erro ao salvar aceite de termos:', error);
+      console.error('❌ [AuthContext] Erro ao salvar aceite de termos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as configurações. Tente novamente.",
+        variant: "destructive"
+      });
       throw error;
     }
   };

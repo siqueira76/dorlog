@@ -63,31 +63,37 @@ export function GoogleLoginTermsDialog({
 
       // Handle notifications if enabled
       if (notificationsEnabled) {
-        console.log('🔔 Ativando notificações...');
+        console.log('🔔 [Dialog] Ativando notificações...');
         
         if (!isFCMSupported()) {
-          console.warn('⚠️ FCM não suportado neste navegador');
+          console.warn('⚠️ [Dialog] FCM não suportado neste navegador');
           toast({
             title: 'Notificações não suportadas',
             description: 'Seu navegador não suporta notificações. Continuando sem ativar notificações.',
           });
+          setNotificationsEnabled(false);
         } else {
           try {
             // Request notification permission
+            console.log('📢 [Dialog] Solicitando permissão de notificação...');
             const permission = await Notification.requestPermission();
             
             if (permission === 'granted') {
-              console.log('✅ Permissão concedida, obtendo token FCM...');
+              console.log('✅ [Dialog] Permissão concedida, obtendo token FCM...');
               
               // Get and register FCM token
               const fcmToken = await requestFCMToken();
+              console.log('🔑 [Dialog] Token FCM obtido:', fcmToken ? 'SIM' : 'NÃO');
               
               if (fcmToken) {
-                console.log('📱 Token FCM obtido, registrando no Firestore...');
+                console.log('📱 [Dialog] Registrando token no Firestore...');
+                console.log('📱 [Dialog] UserId:', userId);
+                console.log('📱 [Dialog] Token (primeiros 20 chars):', fcmToken.substring(0, 20) + '...');
+                
                 await registerFCMToken(userId, fcmToken);
-                console.log('✅ Token FCM registrado com sucesso');
+                console.log('✅ [Dialog] Token FCM registrado com sucesso no Firestore');
               } else {
-                console.warn('⚠️ Não foi possível obter token FCM');
+                console.warn('⚠️ [Dialog] Não foi possível obter token FCM');
               }
               
               // Set all notification preferences to true
@@ -100,19 +106,16 @@ export function GoogleLoginTermsDialog({
                 emergencyAlerts: true
               };
               
+              console.log('⚙️ [Dialog] Atualizando preferências de notificação...', allPreferences);
               await updateNotificationPreferences(userId, allPreferences);
-              console.log('✅ Todas as preferências de notificação ativadas');
-              
-              toast({
-                title: 'Notificações ativadas!',
-                description: 'Você receberá lembretes e alertas sobre sua saúde.',
-              });
+              console.log('✅ [Dialog] Todas as preferências de notificação ativadas');
             } else {
-              console.log('⚠️ Permissão de notificação negada pelo usuário');
+              console.log('⚠️ [Dialog] Permissão de notificação negada pelo usuário');
               setNotificationsEnabled(false);
             }
           } catch (error) {
-            console.error('❌ Erro ao configurar notificações:', error);
+            console.error('❌ [Dialog] Erro ao configurar notificações:', error);
+            setNotificationsEnabled(false);
             // Don't block the flow if notifications fail
             toast({
               title: 'Aviso',
@@ -122,15 +125,10 @@ export function GoogleLoginTermsDialog({
         }
       }
 
-      // Call parent completion handler
+      console.log('📋 [Dialog] Chamando onComplete com:', { termsAccepted, notificationsEnabled });
+      
+      // Call parent completion handler (this will save terms and show success toast)
       await onComplete(termsAccepted, notificationsEnabled);
-
-      toast({
-        title: 'Configuração concluída!',
-        description: 'Bem-vindo ao FibroDiário.',
-      });
-
-      onOpenChange(false);
     } catch (error) {
       console.error('❌ Erro ao processar configuração inicial:', error);
       toast({

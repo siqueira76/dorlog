@@ -24,13 +24,23 @@ import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
  */
 export async function registerFCMToken(userId: string, fcmToken: string): Promise<void> {
   try {
-    console.log('📱 Registrando FCM token:', {
-      userId,
-      tokenPreview: fcmToken.substring(0, 20) + '...'
-    });
+    console.log('📱 [FCM Service] Iniciando registro de FCM token');
+    console.log('📱 [FCM Service] userId:', userId);
+    console.log('📱 [FCM Service] tokenPreview:', fcmToken.substring(0, 20) + '...');
     
     const userRef = doc(db, 'usuarios', userId);
+    console.log('📱 [FCM Service] userRef criado para usuarios/' + userId);
+    
     const tokenObject = createFCMTokenObject(fcmToken);
+    console.log('📱 [FCM Service] tokenObject criado:', {
+      token: tokenObject.token.substring(0, 20) + '...',
+      platform: tokenObject.platform,
+      timestamp: tokenObject.timestamp,
+      lastActive: tokenObject.lastActive,
+      deviceInfo: tokenObject.deviceInfo
+    });
+    
+    console.log('📱 [FCM Service] Executando updateDoc com arrayUnion...');
     
     // Add token to array (Firestore will prevent duplicates)
     await updateDoc(userRef, {
@@ -38,9 +48,23 @@ export async function registerFCMToken(userId: string, fcmToken: string): Promis
       updatedAt: new Date()
     });
     
-    console.log('✅ FCM token registrado com sucesso');
-  } catch (error) {
-    console.error('❌ Erro ao registrar FCM token:', error);
+    console.log('✅ [FCM Service] updateDoc executado com sucesso!');
+    console.log('✅ [FCM Service] FCM token registrado no Firestore');
+    
+    // Verify the token was saved
+    const verifyDoc = await getDoc(userRef);
+    const savedTokens: FCMToken[] = verifyDoc.data()?.fcmTokens || [];
+    console.log('🔍 [FCM Service] Verificação: tokens salvos no Firestore:', savedTokens.length);
+    console.log('🔍 [FCM Service] Token atual está no array?', savedTokens.some((t: FCMToken) => t.token === fcmToken));
+    
+  } catch (error: any) {
+    console.error('❌ [FCM Service] Erro ao registrar FCM token:', error);
+    console.error('❌ [FCM Service] Error details:', {
+      name: error?.name,
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack
+    });
     throw error;
   }
 }
