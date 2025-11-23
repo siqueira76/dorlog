@@ -4,8 +4,18 @@
  * Entry point para todas as Cloud Functions
  */
 
+import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { nlpService } from './nlpService';
+import {
+  sendMorningQuizNotifications,
+  sendEveningQuizNotifications,
+  getTimezonesAtHour
+} from './scheduledNotifications';
+
+// Initialize Firebase Admin SDK
+admin.initializeApp();
 
 /**
  * Function: nlpAnalyze
@@ -106,4 +116,86 @@ export const nlpHealth = onCall({
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   };
+});
+
+/**
+ * Scheduled Function: sendMorningQuizReminders
+ * 
+ * Runs every hour to send morning quiz notifications to users
+ * in timezones where it's currently 8 AM
+ * 
+ * Cloud Scheduler: "0 * * * *" (every hour at minute 0)
+ */
+export const sendMorningQuizReminders = onSchedule({
+  schedule: '0 * * * *', // Every hour
+  timeZone: 'UTC',
+  memory: '512MiB',
+  timeoutSeconds: 300,
+  region: 'us-central1'
+}, async (event) => {
+  console.log('⏰ Trigger: sendMorningQuizReminders');
+  
+  try {
+    // Get timezones currently at 8 AM
+    const timezones = getTimezonesAtHour(8);
+    
+    if (timezones.length === 0) {
+      console.log('ℹ️ Nenhum timezone em 8h neste momento');
+      return { success: true, message: 'No timezones at target hour' };
+    }
+    
+    // Send notifications
+    const result = await sendMorningQuizNotifications(timezones, 8);
+    
+    console.log('✅ Morning quiz reminders enviados', result);
+    return {
+      success: true,
+      timezones,
+      ...result
+    };
+  } catch (error) {
+    console.error('❌ Erro em sendMorningQuizReminders:', error);
+    throw error;
+  }
+});
+
+/**
+ * Scheduled Function: sendEveningQuizReminders
+ * 
+ * Runs every hour to send evening quiz notifications to users
+ * in timezones where it's currently 8 PM
+ * 
+ * Cloud Scheduler: "0 * * * *" (every hour at minute 0)
+ */
+export const sendEveningQuizReminders = onSchedule({
+  schedule: '0 * * * *', // Every hour
+  timeZone: 'UTC',
+  memory: '512MiB',
+  timeoutSeconds: 300,
+  region: 'us-central1'
+}, async (event) => {
+  console.log('⏰ Trigger: sendEveningQuizReminders');
+  
+  try {
+    // Get timezones currently at 8 PM (20h)
+    const timezones = getTimezonesAtHour(20);
+    
+    if (timezones.length === 0) {
+      console.log('ℹ️ Nenhum timezone em 20h neste momento');
+      return { success: true, message: 'No timezones at target hour' };
+    }
+    
+    // Send notifications
+    const result = await sendEveningQuizNotifications(timezones, 20);
+    
+    console.log('✅ Evening quiz reminders enviados', result);
+    return {
+      success: true,
+      timezones,
+      ...result
+    };
+  } catch (error) {
+    console.error('❌ Erro em sendEveningQuizReminders:', error);
+    throw error;
+  }
 });
