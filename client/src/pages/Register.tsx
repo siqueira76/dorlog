@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationPermissionDialog } from '@/components/NotificationPermissionDialog';
+import { getNotificationPermission } from '@/lib/fcmUtils';
 
 export default function Register() {
   const [, setLocation] = useLocation();
-  const { register, loading } = useAuth();
+  const { register, loading, currentUser } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -22,6 +24,8 @@ export default function Register() {
     acceptTerms: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  const [justRegistered, setJustRegistered] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,13 +99,31 @@ export default function Register() {
     setIsSubmitting(true);
     try {
       await register(formData.email, formData.password, formData.name);
-      setLocation('/home');
+      setJustRegistered(true);
+      
+      // Small delay to allow user context to update
+      setTimeout(() => {
+        setLocation('/home');
+      }, 500);
     } catch (error) {
       // Error handling is done in the auth context
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  // Auto-show notification dialog after successful registration
+  useEffect(() => {
+    if (justRegistered && currentUser) {
+      const permission = getNotificationPermission();
+      // Show dialog if permission not granted yet
+      if (permission !== 'granted') {
+        setTimeout(() => {
+          setShowNotificationDialog(true);
+        }, 1000); // 1 second delay for smooth UX
+      }
+    }
+  }, [justRegistered, currentUser]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -243,6 +265,20 @@ export default function Register() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Notification Permission Dialog - Auto-shown after registration */}
+      <NotificationPermissionDialog
+        open={showNotificationDialog}
+        onOpenChange={setShowNotificationDialog}
+        userId={currentUser?.id || ''}
+        currentPreferences={currentUser?.notificationPreferences}
+        onPreferencesUpdated={() => {
+          toast({
+            title: 'Bem-vindo ao FibroDiário!',
+            description: 'Notificações configuradas com sucesso.',
+          });
+        }}
+      />
     </div>
   );
 }

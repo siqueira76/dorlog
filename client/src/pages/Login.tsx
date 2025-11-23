@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { NotificationPermissionDialog } from '@/components/NotificationPermissionDialog';
+import { getNotificationPermission } from '@/lib/fcmUtils';
 import fibroLogo from '@assets/logo-removebg-preview_1757388974002.png';
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login, loginWithGoogle, loading } = useAuth();
+  const { login, loginWithGoogle, loading, currentUser } = useAuth();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -21,6 +23,8 @@ export default function Login() {
     rememberMe: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +61,12 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(formData.email, formData.password);
-      setLocation('/home');
+      setJustLoggedIn(true);
+      
+      // Small delay to allow user context to update
+      setTimeout(() => {
+        setLocation('/home');
+      }, 500);
     } catch (error) {
       // Error handling is done in the auth context
     } finally {
@@ -68,11 +77,29 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       await loginWithGoogle();
-      setLocation('/home');
+      setJustLoggedIn(true);
+      
+      // Small delay to allow user context to update
+      setTimeout(() => {
+        setLocation('/home');
+      }, 500);
     } catch (error) {
       // Error handling is done in the auth context
     }
   };
+  
+  // Auto-show notification dialog after successful login
+  useEffect(() => {
+    if (justLoggedIn && currentUser) {
+      const permission = getNotificationPermission();
+      // Show dialog if permission not granted yet
+      if (permission !== 'granted') {
+        setTimeout(() => {
+          setShowNotificationDialog(true);
+        }, 1000); // 1 second delay for smooth UX
+      }
+    }
+  }, [justLoggedIn, currentUser]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -225,6 +252,20 @@ export default function Login() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Notification Permission Dialog - Auto-shown after login */}
+      <NotificationPermissionDialog
+        open={showNotificationDialog}
+        onOpenChange={setShowNotificationDialog}
+        userId={currentUser?.id || ''}
+        currentPreferences={currentUser?.notificationPreferences}
+        onPreferencesUpdated={() => {
+          toast({
+            title: 'Bem-vindo!',
+            description: 'Notificações configuradas com sucesso.',
+          });
+        }}
+      />
     </div>
   );
 }
