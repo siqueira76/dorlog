@@ -113,7 +113,48 @@ export class EnhancedUnifiedReportService {
         throw new Error(uploadResult.error || 'Falha no upload');
       }
       
-      // 8. Calcular métricas de execução
+      // 8. Save to user's recentReports array (max 3 items)
+      console.log(`📝 Salvando nos relatórios recentes do usuário...`);
+      try {
+        const { updateDoc, Timestamp } = await import('firebase/firestore');
+        const userDocRef = doc(db, 'usuarios', options.userId);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+          
+          // Create new report entry (use Date objects for type compatibility)
+          const newReport = {
+            reportUrl: uploadResult.downloadUrl || '',
+            fileName: uploadResult.fileName || `report_${reportId}.html`,
+            periodsText: options.periodsText,
+            generatedAt: new Date(),
+            expiresAt: expiresAt
+          };
+          
+          // Get existing reports or initialize empty array
+          const userData = userDoc.data();
+          const existingReports = userData.recentReports || [];
+          
+          // Add new report to beginning and keep only last 3
+          const updatedReports = [newReport, ...existingReports].slice(0, 3);
+          
+          // Update user document
+          await updateDoc(userDocRef, {
+            recentReports: updatedReports,
+            updatedAt: Timestamp.now()
+          });
+          
+          console.log(`✅ Relatório salvo no array recentReports do usuário (${updatedReports.length}/3)`);
+        } else {
+          console.warn('⚠️ Documento do usuário não encontrado, não foi possível salvar histórico');
+        }
+      } catch (historyError) {
+        console.error('⚠️ Erro ao salvar histórico (não afeta geração):', historyError);
+        // Don't fail the entire operation if history save fails
+      }
+      
+      // 9. Calcular métricas de execução
       const executionTime = `${((Date.now() - startTime) / 1000).toFixed(2)}s`;
       const alertsCount = enhancedData.smartSummary?.predictiveAlerts?.length || 0;
       
