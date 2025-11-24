@@ -37,6 +37,7 @@ interface AuthContextType {
   acceptTermsAndNotifications: (termsAccepted: boolean, notificationsEnabled: boolean) => Promise<void>;
   testFirestoreConnection: () => Promise<boolean>;
   checkSubscriptionStatus: (email: string) => Promise<boolean>;
+  refreshCurrentUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -825,6 +826,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return unsubscribe;
   }, []);
 
+  /**
+   * Refresh current user data from Firestore
+   * Used after generating reports or making changes that update user document
+   */
+  const refreshCurrentUser = async () => {
+    if (!firebaseUser?.uid) {
+      console.log('⚠️ [refreshCurrentUser] No user logged in');
+      return;
+    }
+
+    try {
+      console.log('🔄 [refreshCurrentUser] Fetching latest user data...');
+      const userRef = doc(db, 'usuarios', firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data() as User;
+        setCurrentUser(userData);
+        console.log('✅ [refreshCurrentUser] User data refreshed successfully');
+      } else {
+        console.warn('⚠️ [refreshCurrentUser] User document not found');
+      }
+    } catch (error) {
+      console.error('❌ [refreshCurrentUser] Error:', error);
+      // Don't throw - just log the error silently
+    }
+  };
+
+  // Listen for REFRESH_USER_DATA events from report generation
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'REFRESH_USER_DATA') {
+        console.log('📨 [AuthContext] Received REFRESH_USER_DATA event');
+        refreshCurrentUser();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [firebaseUser]);
+
   const value = {
     currentUser,
     firebaseUser,
@@ -840,6 +882,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     acceptTermsAndNotifications,
     testFirestoreConnection,
     checkSubscriptionStatus,
+    refreshCurrentUser,
   };
 
   return (

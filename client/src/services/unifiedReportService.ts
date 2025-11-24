@@ -185,6 +185,11 @@ export class UnifiedReportService {
           });
           
           console.log(`✅ Relatório salvo no array recentReports do usuário (${updatedReports.length}/3)`);
+          
+          // Trigger UI refresh by posting message to window
+          // This will be caught by AuthContext or components listening for this event
+          window.postMessage({ type: 'REFRESH_USER_DATA' }, '*');
+          console.log('📤 Evento de refresh enviado para atualizar UI');
         } else {
           console.warn('⚠️ Documento do usuário não encontrado, não foi possível salvar histórico');
         }
