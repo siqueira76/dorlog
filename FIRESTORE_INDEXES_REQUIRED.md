@@ -16,28 +16,46 @@ Este documento lista todos os índices compostos (composite indexes) que precisa
 
 ### 1. **Histórico de Relatórios (Recent Reports)**
 
-**Collection ID:** `relatorios_historico`
+**⚠️ CRÍTICO - Necessário para "Últimos Relatórios" funcionar**
 
-**Campos indexados:**
-- `userId` - **Ascending** (crescente)
-- `generatedAt` - **Descending** (decrescente)
+#### 📝 **Configuração Passo a Passo (Interface em Português)**
 
-**Query Scope:** Collection
+**Campos para indexar:**
+
+| # | Campo | Valor a Preencher | Dropdown de Ordenação |
+|---|-------|-------------------|-----------------------|
+| **1** | Collection ID | `relatorios_historico` | **Crescente** ▼ |
+| **2** | Caminho do campo | `userId` | **Crescente** ▼ |
+| **3** | Caminho do campo | `generatedAt` | **Decrescente** ▼ |
+
+#### 🎯 **Instruções Exatas**
+
+1. **Campo 1 (Collection ID):**
+   - Deixe como `relatorios_historico`
+   - Dropdown: **Crescente**
+
+2. **Campo 2 (clique em "Adicionar campo"):**
+   - **Caminho do campo:** Digite `userId`
+   - **Dropdown:** Selecione **Crescente**
+
+3. **Campo 3 (clique em "Adicionar campo" novamente):**
+   - **Caminho do campo:** Digite `generatedAt`
+   - **Dropdown:** Selecione **Decrescente**
+
+4. **Query Scope:** Deixe como padrão (Collection)
+
+5. Clique em **"Criar"** ou **"Create"**
+
+#### 📌 **Informações Técnicas**
 
 **Usado em:**
 - Hook `useRecentReports` (Home page)
 - Query: `where('userId', '==', uid).orderBy('generatedAt', 'desc').limit(3)`
 
-**Como criar:**
-```javascript
-// Collection: relatorios_historico
-// Fields indexed:
-//   - userId (Ascending)
-//   - generatedAt (Descending)
-// Query scope: Collection
-```
-
-**Status:** ⚠️ **CRÍTICO - Necessário para "Últimos Relatórios" funcionar**
+**Tradução dos termos:**
+- **Crescente** = Ascending (ordem A→Z, 0→9)
+- **Decrescente** = Descending (ordem Z→A, 9→0)
+- **Matrizes** = Array contains (para arrays)
 
 ---
 
