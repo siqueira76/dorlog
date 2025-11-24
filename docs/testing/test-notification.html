@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Notificação FCM</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #3367d6;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success { color: #0f9d58; }
+        .error { color: #d93025; }
+        .info { color: #4285f4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Teste de Notificação FCM</h1>
+        <p>Este é um teste manual para enviar notificação para seu próprio dispositivo.</p>
+        
+        <button onclick="testNotification()">Enviar Notificação de Teste</button>
+        
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+        // Configure seu Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5ZxxxxxYOUR_API_KEY",
+            authDomain: "dorlog-fibro-diario.firebaseapp.com",
+            projectId: "dorlog-fibro-diario",
+            storageBucket: "dorlog-fibro-diario.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        window.testNotification = async function() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<span class="info">⏳ Solicitando permissão...</span>';
+
+            try {
+                // Solicitar permissão
+                const permission = await Notification.requestPermission();
+                
+                if (permission !== 'granted') {
+                    output.innerHTML = '<span class="error">❌ Permissão negada</span>';
+                    return;
+                }
+
+                output.innerHTML += '\n<span class="success">✅ Permissão concedida</span>';
+                output.innerHTML += '\n<span class="info">⏳ Obtendo token FCM...</span>';
+
+                // Obter token
+                const token = await getToken(messaging, {
+                    vapidKey: 'BNaaU2CxdC4L8wIW7hbWTC68jRzm-P_D3SwEAuyiW3fxf6_zcYrkwuAf4HmtRdx0lka1wxwzxJbejMi4sod91XM'
+                });
+
+                output.innerHTML += '\n<span class="success">✅ Token obtido!</span>';
+                output.innerHTML += '\n\n<strong>Seu FCM Token:</strong>\n' + token;
+                output.innerHTML += '\n\n<span class="info">📋 Agora você pode usar este token para enviar uma notificação de teste via Firebase Console:</span>';
+                output.innerHTML += '\n\n1. Vá em: https://console.firebase.google.com/project/dorlog-fibro-diario/messaging';
+                output.innerHTML += '\n2. Click em "Send your first message"';
+                output.innerHTML += '\n3. Preencha:';
+                output.innerHTML += '\n   - Title: Teste de Notificação';
+                output.innerHTML += '\n   - Text: Olá! Esta é uma notificação de teste';
+                output.innerHTML += '\n4. Click em "Send test message"';
+                output.innerHTML += '\n5. Cole o token acima';
+                output.innerHTML += '\n6. Click em "Test" (ícone de +)';
+                output.innerHTML += '\n7. A notificação deve aparecer!';
+
+                // Copiar para área de transferência
+                await navigator.clipboard.writeText(token);
+                output.innerHTML += '\n\n<span class="success">✅ Token copiado para área de transferência!</span>';
+
+            } catch (error) {
+                output.innerHTML += '\n<span class="error">❌ Erro: ' + error.message + '</span>';
+                console.error('Erro completo:', error);
+            }
+        };
+    </script>
+</body>
+</html>

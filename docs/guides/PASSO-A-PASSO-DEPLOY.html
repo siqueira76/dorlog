@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passo-a-Passo: Deploy Cloud Functions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid #667eea;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .step h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            margin-top: 10px;
+            font-size: 24px;
+        }
+        
+        .step p {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .link-box {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .link-box:hover {
+            background: #f7fafc;
+            transform: translateX(5px);
+        }
+        
+        .link-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            flex: 1;
+            word-break: break-all;
+        }
+        
+        .link-icon {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .code-box {
+            background: #2d3748;
+            color: #48bb78;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #38a169;
+        }
+        
+        .warning {
+            background: #fff5f5;
+            border-left: 5px solid #f56565;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning h3 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        
+        .success {
+            background: #f0fff4;
+            border-left: 5px solid #48bb78;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success h3 {
+            color: #22543d;
+            margin-bottom: 10px;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .checklist li::before {
+            content: '✓';
+            background: #48bb78;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+        
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Deploy das Cloud Functions</h1>
+            <p>Siga este guia para ativar as notificações push</p>
+        </div>
+        
+        <div class="content">
+            <!-- PASSO 1 -->
+            <div class="step">
+                <div class="step-number">1</div>
+                <h2>Acessar Service Account no Firebase</h2>
+                <p>Primeiro, vamos gerar uma chave de autenticação para permitir que o GitHub Actions faça o deploy automaticamente.</p>
+                
+                <div class="link-box" onclick="window.open(this.querySelector('a').href)">
+                    <div class="link-icon">🔗</div>
+                    <a href="https://console.firebase.google.com/project/dorlog-fibro-diario/settings/serviceaccounts/adminsdk" target="_blank">
+                        Firebase Console → Service Accounts
+                    </a>
+                </div>
+                
+                <p><strong>O que fazer:</strong></p>
+                <ul class="checklist">
+                    <li>Faça login com sua conta Google</li>
+                    <li>Click na aba "Service accounts"</li>
+                    <li>Procure o botão "Generate new private key"</li>
+                </ul>
+            </div>
+            
+            <!-- PASSO 2 -->
+            <div class="step">
+                <div class="step-number">2</div>
+                <h2>Gerar e Baixar a Chave</h2>
+                <p>Click em <strong>"Generate new private key"</strong> e depois em <strong>"Generate key"</strong>.</p>
+                
+                <div class="warning">
+                    <h3>⚠️ Atenção</h3>
+                    <p>Um arquivo JSON será baixado (algo como <code>dorlog-fibro-diario-xxxxx.json</code>). <strong>Guarde-o em local seguro!</strong> Essa chave dá acesso total ao projeto Firebase.</p>
+                </div>
+                
+                <p>Abra o arquivo JSON no seu editor de texto favorito (Bloco de Notas, VSCode, etc.) e copie <strong>TODO</strong> o conteúdo.</p>
+            </div>
+            
+            <!-- PASSO 3 -->
+            <div class="step">
+                <div class="step-number">3</div>
+                <h2>Adicionar Secret no GitHub</h2>
+                <p>Agora vamos adicionar a chave como um secret no GitHub para que o GitHub Actions possa usá-la.</p>
+                
+                <div class="link-box" onclick="window.open(this.querySelector('a').href)">
+                    <div class="link-icon">🔗</div>
+                    <a href="https://github.com/siqueira76/dorlog/settings/secrets/actions" target="_blank">
+                        GitHub → Settings → Secrets and variables → Actions
+                    </a>
+                </div>
+                
+                <p><strong>Passos:</strong></p>
+                <ul class="checklist">
+                    <li>Click em "New repository secret"</li>
+                    <li>Name: <code>FIREBASE_SERVICE_ACCOUNT</code></li>
+                    <li>Value: Cole TODO o conteúdo do JSON</li>
+                    <li>Click em "Add secret"</li>
+                </ul>
+            </div>
+            
+            <!-- PASSO 4 -->
+            <div class="step">
+                <div class="step-number">4</div>
+                <h2>Fazer Commit e Push</h2>
+                <p>Agora vamos acionar o deploy fazendo um commit:</p>
+                
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copyToClipboard('git add .\ngit commit -m &quot;Deploy Cloud Functions&quot;\ngit push origin main')">Copiar</button>
+git add .
+git commit -m "Deploy Cloud Functions"
+git push origin main
+                </div>
+                
+                <p>Isso vai <strong>automaticamente</strong> acionar o GitHub Actions que fará o deploy!</p>
+            </div>
+            
+            <!-- PASSO 5 -->
+            <div class="step">
+                <div class="step-number">5</div>
+                <h2>Acompanhar o Deploy</h2>
+                <p>Veja o deploy acontecendo em tempo real:</p>
+                
+                <div class="link-box" onclick="window.open(this.querySelector('a').href)">
+                    <div class="link-icon">👁️</div>
+                    <a href="https://github.com/siqueira76/dorlog/actions" target="_blank">
+                        GitHub Actions → Workflows
+                    </a>
+                </div>
+                
+                <p>Você verá o workflow <strong>"Deploy Firebase Functions"</strong> rodando. Aguarde ~2-3 minutos.</p>
+                <p>Quando ficar <strong style="color: #48bb78;">verde ✅</strong>, o deploy foi concluído com sucesso!</p>
+            </div>
+            
+            <!-- PASSO 6 -->
+            <div class="step">
+                <div class="step-number">6</div>
+                <h2>Verificar no Firebase Console</h2>
+                <p>Confira se tudo foi deployado corretamente:</p>
+                
+                <div class="link-box" onclick="window.open(this.querySelector('a').href)">
+                    <div class="link-icon">🔥</div>
+                    <a href="https://console.firebase.google.com/project/dorlog-fibro-diario/functions" target="_blank">
+                        Firebase Console → Functions
+                    </a>
+                </div>
+                
+                <p>Você deve ver <strong>4 Cloud Functions</strong> deployadas:</p>
+                <ul class="checklist">
+                    <li><code>sendMorningQuizReminders</code> - Notificações da manhã (8h)</li>
+                    <li><code>sendEveningQuizReminders</code> - Notificações da noite (20h)</li>
+                    <li><code>nlpAnalyze</code> - Análise NLP de textos</li>
+                    <li><code>nlpHealth</code> - Health check do NLP</li>
+                </ul>
+            </div>
+            
+            <!-- SUCCESS -->
+            <div class="success">
+                <h3>🎉 Parabéns!</h3>
+                <p>As Cloud Functions foram deployadas com sucesso! As notificações push agora funcionarão automaticamente nos horários programados (8h e 20h no fuso horário do usuário).</p>
+            </div>
+            
+            <!-- TESTE -->
+            <div class="step">
+                <div class="step-number">7</div>
+                <h2>Testar Notificação Manual (Opcional)</h2>
+                <p>Quer testar se está tudo funcionando antes de esperar o horário agendado?</p>
+                
+                <p><strong>Opção 1: Usar o arquivo de teste</strong></p>
+                <p>Abra o arquivo <code>test-notification.html</code> no navegador para obter seu token FCM e fazer um teste manual.</p>
+                
+                <p><strong>Opção 2: Enviar via Firebase Console</strong></p>
+                <div class="link-box" onclick="window.open(this.querySelector('a').href)">
+                    <div class="link-icon">📨</div>
+                    <a href="https://console.firebase.google.com/project/dorlog-fibro-diario/messaging" target="_blank">
+                        Firebase Console → Messaging
+                    </a>
+                </div>
+                
+                <ul class="checklist">
+                    <li>Click em "Send your first message"</li>
+                    <li>Preencha título e texto</li>
+                    <li>Click em "Send test message"</li>
+                    <li>Cole seu FCM token (obtenha via test-notification.html)</li>
+                    <li>Envie!</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Dúvidas? Precisa de ajuda? Entre em contato! 💬</p>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copiado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
