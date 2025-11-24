@@ -7,18 +7,20 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
-### Recent Reports Feature on Home Page (Simplified Architecture)
-- **Storage**: Reports stored as array in user document (`usuarios/[uid].recentReports`) - **NO separate collection needed**
-- **Maximum 3 Reports**: Array maintains only last 3 generated reports (FIFO queue)
-- **Home Page Section**: "Últimos Relatórios" displays up to 3 reports with direct access links
-- **Cards Compactos Layout**: Mobile-first design with period text, relative timestamps, and external link icons
-- **Smart Filtering**: Automatically filters expired reports client-side (7-day expiration)
-- **UnifiedReportService Enhancement**: Saves to `recentReports` array via `updateDoc` on user document
-- **useRecentReports Hook**: Ultra-simple hook with `useMemo` reading from `currentUser.recentReports` - **NO Firestore query needed**
-- **No Index Required**: ✅ Eliminated Firestore composite index requirement entirely
-- **Type Safety**: `RecentReport` interface with Date objects, robust Timestamp→Date conversion
+### Recent Reports Feature on Home Page (Zero-Index Architecture) ✅ PRODUCTION-READY
+- **Storage**: Reports stored as array in user document (`usuarios/[uid].recentReports`) - **NO separate Firestore collection needed**
+- **Maximum 3 Reports**: Array maintains only last 3 generated reports using FIFO queue logic
+- **Zero Firestore Queries**: `useRecentReports` hook reads directly from `AuthContext.currentUser.recentReports` using `useMemo`
+- **No Index Required**: ✅ Eliminated Firestore composite index requirement entirely (critical blocker removed)
+- **Type Safety**: `RecentReport` interface with `Date` objects, robust `Timestamp→Date` conversion in `unifiedReportService`
+- **Smart Filtering**: Automatically filters expired reports client-side (7-day TTL on Storage URLs)
+- **Loading States**: Hook respects `AuthContext.loading` state, shows skeleton during authentication
 - **Empty States**: Clear UX when user has no reports or all reports expired
-- **Removed "Atividade Recente"**: Cleaned up Home page by removing redundant recent activity section, keeping only Quick Actions and Recent Reports
+- **Home Page Section**: "Últimos Relatórios" displays up to 3 reports with period text, relative timestamps (`date-fns`), external link icons
+- **Mobile-First Design**: Compact cards layout with truncation, touch-friendly targets
+- **Code Cleanup**: Removed unused `AlertCircle` import, simplified component after removing error states
+- **Documentation**: Removed `FIRESTORE_INDEXES_REQUIRED.md`, updated architecture docs
+- **Removed "Atividade Recente"**: Cleaned up Home page by removing redundant recent activity section (~200 lines)
 
 ### Google Play Store Compliance - Affiliate Carousel Removal
 - **Complete Removal**: Eliminated affiliate product carousel from Home page to ensure Google Play Store compliance
