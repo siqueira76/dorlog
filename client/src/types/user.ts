@@ -34,7 +34,7 @@ export interface SubscriptionPlan {
   name: string;
   price: number;
   interval: 'month' | 'year';
-  stripePriceId?: string;
+  googlePlayProductId?: string; // ID do produto no Play Console (e.g., "fibrodiario_premium_monthly")
   features: {
     historyDays: number | 'unlimited';
     maxDoctors: number | 'unlimited';
@@ -82,9 +82,10 @@ export interface User {
   trialStartDate?: Date;
   trialEndDate?: Date;
   
-  // Stripe integration
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
+  // Google Play Billing integration
+  googlePlayPurchaseToken?: string; // Token de compra do Play Store
+  googlePlaySubscriptionId?: string; // ID da assinatura (e.g., "fibrodiario.premium.monthly")
+  googlePlayOrderId?: string; // Order ID único da Google
   
   // Usage tracking
   monthlyReportsGenerated?: number;

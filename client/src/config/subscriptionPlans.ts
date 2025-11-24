@@ -27,7 +27,7 @@ export const SUBSCRIPTION_PLANS: Record<'free' | 'premium', SubscriptionPlan> = 
     name: 'Premium',
     price: 19.90,
     interval: 'month',
-    stripePriceId: import.meta.env.VITE_STRIPE_PRICE_ID_PREMIUM || '',
+    googlePlayProductId: 'fibrodiario_premium_monthly', // ID do produto no Google Play Console
     features: {
       historyDays: 'unlimited',
       maxDoctors: 'unlimited',
