@@ -16,6 +16,7 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 - **useRecentReports Hook**: Optimized TanStack Query hook with 5-minute cache and error handling
 - **Firestore Index Required**: Composite index on `relatorios_historico` (userId asc, generatedAt desc) documented in `FIRESTORE_INDEXES_REQUIRED.md`
 - **Empty States**: Clear UX when user has no reports or all reports expired
+- **Removed "Atividade Recente"**: Cleaned up Home page by removing redundant recent activity section, keeping only Quick Actions and Recent Reports
 
 ### Google Play Store Compliance - Affiliate Carousel Removal
 - **Complete Removal**: Eliminated affiliate product carousel from Home page to ensure Google Play Store compliance
