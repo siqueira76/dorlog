@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { doc, updateDoc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Pill, Clock } from 'lucide-react';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 /**
  * Componente global que monitora e exibe notificações de lembretes de medicamentos
@@ -123,6 +124,12 @@ export function ReminderNotifications() {
         
         // Adicionar ao set de lembretes já exibidos
         previousRemindersRef.current.add(reminderId);
+
+        // Tocar som de notificação (se habilitado)
+        const soundEnabled = localStorage.getItem('medicationSoundEnabled');
+        if (soundEnabled !== 'false') { // Default é true
+          playNotificationSound();
+        }
 
         // Exibir toast persistente
         toast({

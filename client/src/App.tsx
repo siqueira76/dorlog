@@ -78,6 +78,7 @@ import Quiz from '@/pages/Quiz';
 import Register from '@/pages/Register';
 import NLPDemo from '@/pages/NLPDemo';
 import RescueMedicationDemo from '@/pages/RescueMedicationDemo';
+import NotificationSettings from '@/pages/NotificationSettings';
 import NotFound from '@/pages/not-found';
 
 const queryClient = new QueryClient({
@@ -193,6 +194,14 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <RescueMedicationDemo />
+                </Layout>
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/notification-settings">
+              <ProtectedRoute>
+                <Layout>
+                  <NotificationSettings />
                 </Layout>
               </ProtectedRoute>
             </Route>

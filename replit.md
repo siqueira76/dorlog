@@ -5,6 +5,15 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 **Business Vision & Market Potential**: FibroDiário addresses a critical need for chronic pain management tools, offering a user-friendly platform that integrates data tracking with professional reporting. Its PWA nature ensures broad accessibility.
 **Project Ambitions**: To become a leading digital health companion for fibromyalgia patients, improving self-management and facilitating better patient-provider communication through data-driven insights, including advanced NLP analysis.
 
+## Recent Changes (November 24, 2025)
+
+### In-App Medication Reminder System with Audio Alerts
+- **Alert Sound System**: Implemented Web Audio API-based notification sounds (two-tone beep) that play when medication reminders trigger
+- **Sound Utilities**: Created `notificationSound.ts` with `playNotificationSound()` and `playQuietBeep()` functions for audio alerts
+- **User Preferences**: Added `NotificationSettings` page allowing users to enable/disable sounds (saved in localStorage)
+- **Smart Audio**: Sound only plays if enabled in settings (default: enabled) and browser supports Web Audio API
+- **ReminderNotifications Enhancement**: Integrated sound playback when new reminders appear, respecting user preferences
+
 ## Recent Changes (November 23, 2025)
 
 ### Google Login Onboarding Flow
