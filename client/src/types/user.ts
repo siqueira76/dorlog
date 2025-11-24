@@ -29,6 +29,14 @@ export interface UserFeatures {
   pushNotifications: boolean;
 }
 
+export interface RecentReport {
+  reportUrl: string;
+  fileName: string;
+  periodsText: string;
+  generatedAt: Date;
+  expiresAt: Date;
+}
+
 export interface SubscriptionPlan {
   id: 'free' | 'premium';
   name: string;
@@ -94,6 +102,9 @@ export interface User {
   
   // Feature flags
   features?: UserFeatures;
+  
+  // Recent reports (last 3 generated)
+  recentReports?: RecentReport[];
 }
 
 export interface UserProfile {
