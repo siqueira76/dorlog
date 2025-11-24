@@ -32,3 +32,4 @@ docker-compose*.yml
 # Build artifacts
 build
 out
+.attached_assets
