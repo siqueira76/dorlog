@@ -258,7 +258,7 @@ export default function Home() {
     <div className="max-w-lg mx-auto px-4 py-6">
       
       {/* Carrossel de Produtos Afiliados */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 rounded-2xl p-6 mb-6 relative">
+      <div className="bg-gradient-to-r from-primary to-primary/90 rounded-2xl p-6 mb-6 relative overflow-hidden">
         <Carousel
           setApi={setCarouselApi}
           opts={{
@@ -279,25 +279,39 @@ export default function Home() {
                   className="block group cursor-pointer"
                   data-testid={`link-product-${product.id}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-28 h-28 rounded-xl overflow-hidden bg-white/10 flex-shrink-0">
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-primary-foreground mb-1 truncate group-hover:text-primary-foreground/90 transition-colors">
-                        {product.title}
-                      </h3>
-                      <p className="text-sm text-primary-foreground/70 line-clamp-2 mb-3">
-                        {product.description}
-                      </p>
-                      <div className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full text-xs font-medium text-primary-foreground transition-colors">
-                        <span>Ver produto</span>
-                        <ExternalLink className="h-3 w-3" />
+                  <div className="relative">
+                    {/* Background blur sutil da imagem */}
+                    <div 
+                      className="absolute inset-0 opacity-10 blur-3xl scale-110"
+                      style={{ 
+                        backgroundImage: `url(${product.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                      aria-hidden="true"
+                    />
+                    
+                    {/* Conteúdo principal */}
+                    <div className="relative flex items-center gap-6">
+                      <div className="w-32 h-32 rounded-2xl overflow-hidden bg-white/10 flex-shrink-0 shadow-2xl ring-2 ring-white/20">
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-primary-foreground mb-1.5 truncate group-hover:text-primary-foreground/90 transition-colors drop-shadow-sm">
+                          {product.title}
+                        </h3>
+                        <p className="text-sm text-primary-foreground/80 line-clamp-2 mb-4 drop-shadow-sm">
+                          {product.description}
+                        </p>
+                        <div className="inline-flex items-center gap-2 bg-white/25 hover:bg-white/35 px-4 py-2 rounded-full text-xs font-semibold text-primary-foreground transition-all duration-300 shadow-lg group-hover:shadow-xl group-hover:scale-105">
+                          <span>Ver produto</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </div>
                       </div>
                     </div>
                   </div>

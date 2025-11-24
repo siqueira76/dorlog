@@ -7,6 +7,14 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
+### Home Carousel Visual Enhancement
+- **Balanced Background Implementation**: Enhanced affiliate product carousel with subtle background blur effect
+- **Larger Product Images**: Increased from 28×28 to 32×32 (8rem) for better visibility
+- **Premium Styling**: Added shadow-2xl, ring effect, and improved hover animations (scale-110, duration-500)
+- **Background Blur**: Subtle 10% opacity blur-3xl background hint of product image
+- **Accessibility Maintained**: Text remains fully legible with drop-shadow and proper contrast
+- **Enhanced CTA Button**: Improved "Ver produto" button with better shadow and scale animation
+
 ### In-App Medication Reminder System with Audio Alerts
 - **Alert Sound System**: Implemented Web Audio API-based notification sounds (two-tone beep) that play when medication reminders trigger
 - **Sound Utilities**: Created `notificationSound.ts` with `playNotificationSound()` and `playQuietBeep()` functions for audio alerts
