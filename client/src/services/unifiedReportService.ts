@@ -3,7 +3,7 @@ import { generateEnhancedReportHTML, EnhancedReportTemplateData } from './enhanc
 import { uploadReportToStorage, generateReportId, generatePasswordHash } from './firebaseStorageService';
 import { EnhancedReportAnalysisService } from './enhancedReportAnalysisService';
 import { auth, db, storage } from '@/lib/firebase';
-import { doc, getDoc, collection, addDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, addDoc, Timestamp } from 'firebase/firestore';
 
 export interface UnifiedReportOptions {
   userId: string;
@@ -153,30 +153,41 @@ export class UnifiedReportService {
         throw new Error(uploadResult.error || 'Falha no upload');
       }
       
-      // 7. Save to history collection (relatorios_historico)
-      console.log(`📝 Salvando histórico do relatório...`);
+      // 7. Save to user's recentReports array (max 3 items)
+      console.log(`📝 Salvando nos relatórios recentes do usuário...`);
       try {
-        const userEmail = await this.resolveUIDToEmail(options.userId);
-        const historyRef = collection(db, 'relatorios_historico');
-        const expiresAt = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days
+        const userDocRef = doc(db, 'usuarios', options.userId);
+        const userDoc = await getDoc(userDocRef);
         
-        const historyData: Omit<RelatorioHistorico, 'id'> = {
-          userId: options.userId,
-          userEmail: userEmail,
-          reportId: reportId,
-          reportUrl: uploadResult.downloadUrl || '',
-          fileName: uploadResult.fileName || `report_${reportId}.html`,
-          periodsText: options.periodsText,
-          periods: options.periods,
-          templateType: options.templateType || 'enhanced',
-          withPassword: options.withPassword || false,
-          generatedAt: Timestamp.now(),
-          expiresAt: expiresAt,
-          fileSize: htmlContent.length
-        };
-        
-        await addDoc(historyRef, historyData);
-        console.log(`✅ Histórico salvo com sucesso na collection relatorios_historico`);
+        if (userDoc.exists()) {
+          const expiresAt = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days
+          
+          // Create new report entry
+          const newReport = {
+            reportUrl: uploadResult.downloadUrl || '',
+            fileName: uploadResult.fileName || `report_${reportId}.html`,
+            periodsText: options.periodsText,
+            generatedAt: Timestamp.now(),
+            expiresAt: expiresAt
+          };
+          
+          // Get existing reports or initialize empty array
+          const userData = userDoc.data();
+          const existingReports = userData.recentReports || [];
+          
+          // Add new report to beginning and keep only last 3
+          const updatedReports = [newReport, ...existingReports].slice(0, 3);
+          
+          // Update user document
+          await updateDoc(userDocRef, {
+            recentReports: updatedReports,
+            updatedAt: Timestamp.now()
+          });
+          
+          console.log(`✅ Relatório salvo no array recentReports do usuário (${updatedReports.length}/3)`);
+        } else {
+          console.warn('⚠️ Documento do usuário não encontrado, não foi possível salvar histórico');
+        }
       } catch (historyError) {
         console.error('⚠️ Erro ao salvar histórico (não afeta geração):', historyError);
         // Don't fail the entire operation if history save fails
