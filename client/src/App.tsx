@@ -8,6 +8,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import PremiumProtectedRoute from '@/components/PremiumProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { GoogleLoginTermsDialog } from '@/components/GoogleLoginTermsDialog';
+import { ReminderNotifications } from '@/components/ReminderNotifications';
 
 // Component to handle Google Login Terms Dialog
 function GoogleTermsDialogContainer() {
@@ -200,6 +201,7 @@ function App() {
           </Switch>
         </Router>
         <GoogleTermsDialogContainer />
+        <ReminderNotifications />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
