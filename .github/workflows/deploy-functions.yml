@@ -32,25 +32,12 @@ jobs:
           cd functions
           npm run build
 
-      - name: Setup Service Account (if provided)
-        if: secrets.FIREBASE_SERVICE_ACCOUNT != ''
-        run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud-service-key.json
-
-      - name: Deploy to Firebase (with token)
-        if: secrets.FIREBASE_TOKEN != '' && secrets.FIREBASE_SERVICE_ACCOUNT == ''
+      - name: Deploy to Firebase
         run: |
           cd functions
           npx firebase-tools deploy --only functions --force --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-
-      - name: Deploy to Firebase (with service account)
-        if: secrets.FIREBASE_SERVICE_ACCOUNT != ''
-        run: |
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json
-          cd functions
-          npx firebase-tools deploy --only functions --force --non-interactive
 
       - name: Deployment success
         if: success()

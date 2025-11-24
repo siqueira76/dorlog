@@ -1,0 +1,70 @@
+~/workspace$ git reset --soft HEAD~3
+~/workspace$ git restore --source=origin/main .github/workflows/deploy-functions.yml
+~/workspace$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+    modified:   .github/workflows/deploy-functions.yml
+    modified:   .replit
+    new file:   RESUMO-DEPLOY-CLOUD-FUNCTIONS.md
+    new file:   attached_assets/image_1763990404458.png
+    new file:   attached_assets/image_1763992436979.png
+    deleted:    deploy.sh
+    renamed:    CONFIGURACAO_FIREBASE_REGRAS.md -> docs/firebase-setup/CONFIGURACAO_FIREBASE_REGRAS.md
+    renamed:    FIREBASE_FUNCTIONS_SETUP.md -> docs/firebase-setup/FIREBASE_FUNCTIONS_SETUP.md
+    renamed:    FIREBASE_HOSTING_SETUP.md -> docs/firebase-setup/FIREBASE_HOSTING_SETUP.md
+    renamed:    FIRESTORE_SECURITY_RULES.md -> docs/firebase-setup/FIRESTORE_SECURITY_RULES.md
+    renamed:    FIRESTORE_SETUP.md -> docs/firebase-setup/FIRESTORE_SETUP.md
+    new file:   docs/guides/DEPLOY_INSTRUCTIONS.md
+    new file:   docs/guides/PASSO-A-PASSO-DEPLOY.html
+    new file:   docs/guides/README.md
+    renamed:    MIGRATION.md -> docs/migration/MIGRATION.md
+    renamed:    "SOLU\303\207\303\203O_FIRESTORE.md" -> "docs/migration/SOLU\303\207\303\203O_FIRESTORE.md"
+    renamed:    test-github-pages.html -> docs/testing/test-github-pages.html
+    renamed:    test-live-site.html -> docs/testing/test-live-site.html
+    new file:   docs/testing/test-notification.html
+    new file:   functions/package-lock.json
+    deleted:    temp_header.txt
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+    modified:   .github/workflows/deploy-functions.yml
+
+~/workspace$ git commit -m "Organizar documentação e adicionar guias de deploy"
+[main d89f448] Organizar documentação e adicionar guias de deploy
+ 21 files changed, 7421 insertions(+), 123 deletions(-)
+ create mode 100644 RESUMO-DEPLOY-CLOUD-FUNCTIONS.md
+ create mode 100644 attached_assets/image_1763990404458.png
+ create mode 100644 attached_assets/image_1763992436979.png
+ delete mode 100755 deploy.sh
+ rename CONFIGURACAO_FIREBASE_REGRAS.md => docs/firebase-setup/CONFIGURACAO_FIREBASE_REGRAS.md (100%)
+ rename FIREBASE_FUNCTIONS_SETUP.md => docs/firebase-setup/FIREBASE_FUNCTIONS_SETUP.md (100%)
+ rename FIREBASE_HOSTING_SETUP.md => docs/firebase-setup/FIREBASE_HOSTING_SETUP.md (100%)
+ rename FIRESTORE_SECURITY_RULES.md => docs/firebase-setup/FIRESTORE_SECURITY_RULES.md (100%)
+ rename FIRESTORE_SETUP.md => docs/firebase-setup/FIRESTORE_SETUP.md (100%)
+ create mode 100644 docs/guides/DEPLOY_INSTRUCTIONS.md
+ create mode 100644 docs/guides/PASSO-A-PASSO-DEPLOY.html
+ create mode 100644 docs/guides/README.md
+ rename MIGRATION.md => docs/migration/MIGRATION.md (100%)
+ rename "SOLU\303\207\303\203O_FIRESTORE.md" => "docs/migration/SOLU\303\207\303\203O_FIRESTORE.md" (100%)
+ rename test-github-pages.html => docs/testing/test-github-pages.html (100%)
+ rename test-live-site.html => docs/testing/test-live-site.html (100%)
+ create mode 100644 docs/testing/test-notification.html
+ create mode 100644 functions/package-lock.json
+ delete mode 100644 temp_header.txt
+~/workspace$ git push origin main
+Enumerating objects: 33, done.
+Counting objects: 100% (33/33), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (20/20), done.
+Writing objects: 100% (21/21), 103.22 KiB | 10.32 MiB/s, done.
+Total 21 (delta 6), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (6/6), completed with 6 local objects.
+To https://github.com/siqueira76/dorlog
+ ! [remote rejected] main -> main (refusing to allow an OAuth App to create or update workflow `.github/workflows/deploy-functions.yml` without `workflow` scope)
+error: failed to push some refs to 'https://github.com/siqueira76/dorlog'
+~/workspace$ ^C
+~/workspace$ 
