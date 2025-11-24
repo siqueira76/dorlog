@@ -1165,33 +1165,16 @@ export default function Reports() {
             <p className="text-sm text-muted-foreground mb-4">
               Relatório completo das suas atividades de saúde
             </p>
-            {currentUser?.isSubscriptionActive ? (
-              <Button
-                variant="outline"
-                className="w-full rounded-xl"
-                data-testid="button-generate-monthly-report"
-                onClick={() => setLocation('/reports/monthly')}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Gerar Relatório Mensal
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full rounded-xl border-dashed border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-800 hover:text-amber-900"
-                data-testid="button-upgrade-for-reports"
-                onClick={handleUpgradeRedirect}
-              >
-                <Crown className="h-4 w-4 mr-2 text-amber-600" />
-                <div className="flex flex-col items-start">
-                  <span className="font-medium">Gerar Relatório Mensal</span>
-                  <span className="text-xs text-amber-600 flex items-center gap-1">
-                    <Lock className="h-3 w-3" />
-                    Funcionalidade Premium
-                  </span>
-                </div>
-              </Button>
-            )}
+            {/* Freemium: Free users CAN generate reports (1/month, current period only) */}
+            <Button
+              variant="outline"
+              className="w-full rounded-xl"
+              data-testid="button-generate-monthly-report"
+              onClick={() => setLocation('/reports/monthly')}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Gerar Relatório Mensal
+            </Button>
           </CardContent>
         </Card>
       </div>
