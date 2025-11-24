@@ -11,7 +11,10 @@ import { ArrowLeft, UserPlus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { SubscriptionService } from '@/services/subscriptionService';
+import { FREE_TIER_LIMITS } from '@/config/subscriptionPlans';
+import { UpgradeModal } from '@/components/UpgradeModal';
 
 // Validation schema based on Firebase structure
 const doctorSchema = z.object({
@@ -27,8 +30,9 @@ type DoctorFormData = z.infer<typeof doctorSchema>;
 export default function AddDoctor() {
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { toast } = useToast();
-  const { firebaseUser } = useAuth();
+  const { firebaseUser, currentUser } = useAuth();
 
   const form = useForm<DoctorFormData>({
     resolver: zodResolver(doctorSchema),
@@ -54,6 +58,27 @@ export default function AddDoctor() {
     setIsSubmitting(true);
 
     try {
+      // Check Free tier doctor limit
+      const doctorsQuery = query(
+        collection(db, 'medicos'),
+        where('usuarioId', '==', firebaseUser.uid)
+      );
+      const currentDoctors = await getDocs(doctorsQuery);
+      
+      // Verify subscription limit
+      const canAdd = await SubscriptionService.canAddDoctor(firebaseUser.uid, currentDoctors.size);
+      
+      if (!canAdd) {
+        toast({
+          variant: "destructive",
+          title: "Limite atingido",
+          description: `Plano gratuito permite apenas ${FREE_TIER_LIMITS.MAX_DOCTORS} médicos.`,
+        });
+        setShowUpgradeModal(true);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Prepare doctor data according to Firebase structure
       const doctorData = {
         nome: data.nome,
@@ -96,13 +121,20 @@ export default function AddDoctor() {
   };
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
+    <>
+      <UpgradeModal 
+        open={showUpgradeModal} 
+        onOpenChange={setShowUpgradeModal}
+        highlightFeature="Médicos cadastrados"
+      />
+      
+      <div className="max-w-lg mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
             onClick={() => setLocation('/doctors')}
             className="mr-2 p-2"
           >
@@ -248,6 +280,7 @@ export default function AddDoctor() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

@@ -19,6 +19,8 @@ import ReminderService from '@/services/reminderService';
 import { detectUserTimezone, hasTimezoneChanged } from '@/lib/timezoneUtils';
 import { requestFCMToken, registerFCMToken as saveFCMToken } from '@/services/fcmService';
 import { getNotificationPermission } from '@/lib/fcmUtils';
+import { SubscriptionService } from '@/services/subscriptionService';
+import { TRIAL_CONFIG } from '@/config/subscriptionPlans';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -104,6 +106,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const timezoneInfo = detectUserTimezone();
         console.log('🌍 Novo usuário - timezone detectado:', timezoneInfo);
         
+        // Initialize trial dates for new user - CORRIGIDO: Usar Timestamp
+        const trialStartDate = new Date();
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + TRIAL_CONFIG.durationDays);
+        
+        // Build Premium features for trial
+        const trialFeatures = {
+          nlpAnalysis: true,
+          unlimitedHistory: true,
+          advancedReports: true,
+          unlimitedDoctors: true,
+          exportData: true,
+          prioritySupport: true,
+          pushNotifications: true,
+        };
+        
         userData = {
           id: firebaseUser.uid,
           name: displayName || additionalData?.name || '',
@@ -123,6 +141,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           
           // Initialize empty FCM tokens array
           fcmTokens: [],
+          
+          // Initialize trial (14 days free Premium) - CORRIGIDO: Timestamp
+          subscriptionTier: 'free',
+          subscriptionStatus: 'trialing',
+          trialStartDate: Timestamp.fromDate(trialStartDate),
+          trialEndDate: Timestamp.fromDate(trialEndDate),
+          trialUsed: false,
+          features: trialFeatures,
           
           // Initialize notification preferences (all enabled by default)
           notificationPreferences: {

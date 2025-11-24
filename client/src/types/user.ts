@@ -19,6 +19,34 @@ export interface NotificationPreferences {
   emergencyAlerts: boolean;
 }
 
+export interface UserFeatures {
+  nlpAnalysis: boolean;
+  unlimitedHistory: boolean;
+  advancedReports: boolean;
+  unlimitedDoctors: boolean;
+  exportData: boolean;
+  prioritySupport: boolean;
+  pushNotifications: boolean;
+}
+
+export interface SubscriptionPlan {
+  id: 'free' | 'premium';
+  name: string;
+  price: number;
+  interval: 'month' | 'year';
+  stripePriceId?: string;
+  features: {
+    historyDays: number | 'unlimited';
+    maxDoctors: number | 'unlimited';
+    nlpAnalysis: boolean;
+    advancedReports: boolean;
+    exportData: 'basic' | 'advanced';
+    monthlyReportsLimit: number | 'unlimited';
+    pushNotifications: boolean;
+    prioritySupport: boolean;
+  };
+}
+
 export interface User {
   id: string;
   name: string;
@@ -42,6 +70,29 @@ export interface User {
   
   // Notification preferences
   notificationPreferences?: NotificationPreferences;
+  
+  // Freemium subscription fields
+  subscriptionTier?: 'free' | 'premium';
+  subscriptionStatus?: 'active' | 'trialing' | 'canceled' | 'expired' | 'incomplete';
+  subscriptionStartDate?: Date;
+  subscriptionEndDate?: Date;
+  
+  // Trial management
+  trialUsed?: boolean;
+  trialStartDate?: Date;
+  trialEndDate?: Date;
+  
+  // Stripe integration
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  
+  // Usage tracking
+  monthlyReportsGenerated?: number;
+  lastReportGeneratedAt?: Date;
+  lastReportResetAt?: Date;
+  
+  // Feature flags
+  features?: UserFeatures;
 }
 
 export interface UserProfile {
