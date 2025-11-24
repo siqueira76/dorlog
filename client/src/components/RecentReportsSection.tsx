@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ExternalLink, Clock, FileText, AlertCircle } from 'lucide-react';
+import { BarChart3, ExternalLink, Clock, FileText } from 'lucide-react';
 import { useRecentReports } from '@/hooks/useRecentReports';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -13,7 +13,7 @@ import { useLocation } from 'wouter';
  * Exibe os últimos 3 relatórios gerados pelo usuário com acesso rápido
  */
 export function RecentReportsSection() {
-  const { data: reports, isLoading, error } = useRecentReports(3);
+  const { data: reports, isLoading } = useRecentReports();
   const [, navigate] = useLocation();
 
   // Função para formatar timestamp do Firestore para data relativa
@@ -57,27 +57,7 @@ export function RecentReportsSection() {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Últimos Relatórios</h3>
-        </div>
-        <Card className="border-destructive/50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              <p className="text-sm">Erro ao carregar relatórios recentes</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Empty state
+  // Empty state (no error state needed - hook reads from currentUser)
   if (!reports || reports.length === 0) {
     return (
       <div className="mb-8">
@@ -103,48 +83,7 @@ export function RecentReportsSection() {
     );
   }
 
-  // Filter out expired reports (URLs expire after 7 days)
-  const activeReports = reports.filter(report => {
-    if (!report.expiresAt) return true; // If no expiration, show it
-    
-    try {
-      const expiryDate = report.expiresAt instanceof Timestamp 
-        ? report.expiresAt.toDate() 
-        : new Date(report.expiresAt);
-      
-      return expiryDate > new Date(); // Only show if not expired
-    } catch {
-      return true; // If can't parse date, show it anyway
-    }
-  });
-
-  // If all reports are expired, show empty state
-  if (activeReports.length === 0) {
-    return (
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-semibold">Últimos Relatórios</h3>
-        </div>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground mb-4">
-              Você ainda não gerou nenhum relatório
-            </p>
-            <Button 
-              onClick={() => navigate('/reports/monthly')}
-              data-testid="button-create-first-report"
-            >
-              Gerar Primeiro Relatório
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Reports list
+  // Reports list (expired reports already filtered by hook)
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -152,7 +91,7 @@ export function RecentReportsSection() {
           <BarChart3 className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Últimos Relatórios</h3>
         </div>
-        {activeReports.length > 0 && (
+        {reports.length > 0 && (
           <Button
             variant="ghost"
             size="sm"
@@ -166,9 +105,9 @@ export function RecentReportsSection() {
       </div>
       
       <div className="space-y-3">
-        {activeReports.map((report, index) => (
+        {reports.map((report, index) => (
           <Card 
-            key={report.id || index}
+            key={index}
             className="hover-elevate cursor-pointer transition-all"
             onClick={() => window.open(report.reportUrl, '_blank')}
             data-testid={`card-recent-report-${index}`}
