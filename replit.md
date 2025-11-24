@@ -7,14 +7,16 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
-### Recent Reports Feature on Home Page
-- **New Collection**: `relatorios_historico` tracks all generated reports with metadata (userId, reportUrl, periods, generatedAt, expiresAt)
-- **Home Page Section**: "Últimos Relatórios" displays last 3 reports with direct access links
+### Recent Reports Feature on Home Page (Simplified Architecture)
+- **Storage**: Reports stored as array in user document (`usuarios/[uid].recentReports`) - **NO separate collection needed**
+- **Maximum 3 Reports**: Array maintains only last 3 generated reports (FIFO queue)
+- **Home Page Section**: "Últimos Relatórios" displays up to 3 reports with direct access links
 - **Cards Compactos Layout**: Mobile-first design with period text, relative timestamps, and external link icons
-- **Smart Filtering**: Automatically hides reports with expired URLs (7-day expiration)
-- **UnifiedReportService Enhancement**: Saves report history to Firestore after successful Firebase Storage upload
-- **useRecentReports Hook**: Optimized TanStack Query hook with 5-minute cache and error handling
-- **Firestore Index Required**: Composite index on `relatorios_historico` (userId asc, generatedAt desc) documented in `FIRESTORE_INDEXES_REQUIRED.md`
+- **Smart Filtering**: Automatically filters expired reports client-side (7-day expiration)
+- **UnifiedReportService Enhancement**: Saves to `recentReports` array via `updateDoc` on user document
+- **useRecentReports Hook**: Ultra-simple hook with `useMemo` reading from `currentUser.recentReports` - **NO Firestore query needed**
+- **No Index Required**: ✅ Eliminated Firestore composite index requirement entirely
+- **Type Safety**: `RecentReport` interface with Date objects, robust Timestamp→Date conversion
 - **Empty States**: Clear UX when user has no reports or all reports expired
 - **Removed "Atividade Recente"**: Cleaned up Home page by removing redundant recent activity section, keeping only Quick Actions and Recent Reports
 
