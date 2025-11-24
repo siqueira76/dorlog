@@ -103,6 +103,47 @@ export function RecentReportsSection() {
     );
   }
 
+  // Filter out expired reports (URLs expire after 7 days)
+  const activeReports = reports.filter(report => {
+    if (!report.expiresAt) return true; // If no expiration, show it
+    
+    try {
+      const expiryDate = report.expiresAt instanceof Timestamp 
+        ? report.expiresAt.toDate() 
+        : new Date(report.expiresAt);
+      
+      return expiryDate > new Date(); // Only show if not expired
+    } catch {
+      return true; // If can't parse date, show it anyway
+    }
+  });
+
+  // If all reports are expired, show empty state
+  if (activeReports.length === 0) {
+    return (
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-semibold">Últimos Relatórios</h3>
+        </div>
+        <Card>
+          <CardContent className="p-6 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground mb-4">
+              Você ainda não gerou nenhum relatório
+            </p>
+            <Button 
+              onClick={() => navigate('/reports/monthly')}
+              data-testid="button-create-first-report"
+            >
+              Gerar Primeiro Relatório
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Reports list
   return (
     <div className="mb-8">
@@ -111,7 +152,7 @@ export function RecentReportsSection() {
           <BarChart3 className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-semibold">Últimos Relatórios</h3>
         </div>
-        {reports.length > 0 && (
+        {activeReports.length > 0 && (
           <Button
             variant="ghost"
             size="sm"
@@ -125,7 +166,7 @@ export function RecentReportsSection() {
       </div>
       
       <div className="space-y-3">
-        {reports.map((report, index) => (
+        {activeReports.map((report, index) => (
           <Card 
             key={report.id || index}
             className="hover-elevate cursor-pointer transition-all"

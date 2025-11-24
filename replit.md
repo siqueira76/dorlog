@@ -7,6 +7,16 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
+### Recent Reports Feature on Home Page
+- **New Collection**: `relatorios_historico` tracks all generated reports with metadata (userId, reportUrl, periods, generatedAt, expiresAt)
+- **Home Page Section**: "Últimos Relatórios" displays last 3 reports with direct access links
+- **Cards Compactos Layout**: Mobile-first design with period text, relative timestamps, and external link icons
+- **Smart Filtering**: Automatically hides reports with expired URLs (7-day expiration)
+- **UnifiedReportService Enhancement**: Saves report history to Firestore after successful Firebase Storage upload
+- **useRecentReports Hook**: Optimized TanStack Query hook with 5-minute cache and error handling
+- **Firestore Index Required**: Composite index on `relatorios_historico` (userId asc, generatedAt desc) documented in `FIRESTORE_INDEXES_REQUIRED.md`
+- **Empty States**: Clear UX when user has no reports or all reports expired
+
 ### Google Play Store Compliance - Affiliate Carousel Removal
 - **Complete Removal**: Eliminated affiliate product carousel from Home page to ensure Google Play Store compliance
 - **Policy Risk Mitigation**: Removed HIGH-CRITICAL risk of rejection due to spam/monetization disclosure violations

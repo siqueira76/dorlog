@@ -7,23 +7,30 @@ import { useAuth } from './useAuth';
 /**
  * Hook para buscar os últimos relatórios gerados pelo usuário
  * Usado na seção "Últimos Relatórios" da Home page
+ * 
+ * ⚠️ IMPORTANTE: Requer índice composto no Firestore
+ * Collection: relatorios_historico
+ * Fields: userId (Ascending), generatedAt (Descending)
+ * Ver: FIRESTORE_INDEXES_REQUIRED.md
  */
 export function useRecentReports(limitCount: number = 3) {
-  const { user } = useAuth();
+  const { firebaseUser } = useAuth();
 
   return useQuery<RelatorioHistorico[]>({
-    queryKey: ['/api/relatorios-historico', user?.uid, limitCount],
+    queryKey: ['/api/relatorios-historico', firebaseUser?.uid, limitCount],
     queryFn: async () => {
-      if (!user?.uid) {
+      if (!firebaseUser?.uid) {
         return [];
       }
 
       try {
         // Query Firestore for recent reports
+        // NOTE: This requires a composite index on relatorios_historico
+        // Fields: userId (asc) + generatedAt (desc)
         const reportsRef = collection(db, 'relatorios_historico');
         const q = query(
           reportsRef,
-          where('userId', '==', user.uid),
+          where('userId', '==', firebaseUser.uid),
           orderBy('generatedAt', 'desc'),
           limit(limitCount)
         );
@@ -42,10 +49,16 @@ export function useRecentReports(limitCount: number = 3) {
         return reports;
       } catch (error) {
         console.error('❌ [useRecentReports] Erro ao buscar relatórios:', error);
+        
+        // Check if it's an index error
+        if (error instanceof Error && error.message.includes('index')) {
+          console.error('⚠️ Índice Firestore necessário! Ver: FIRESTORE_INDEXES_REQUIRED.md');
+        }
+        
         throw error;
       }
     },
-    enabled: !!user?.uid, // Only run query if user is authenticated
+    enabled: !!firebaseUser?.uid, // Only run query if user is authenticated
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: 2
   });
