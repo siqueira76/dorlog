@@ -13,6 +13,14 @@ import {
   sendEveningQuizNotifications,
   getTimezonesAtHour
 } from './scheduledNotifications';
+import { fetchUserReportData } from './firestoreDataService';
+import { generateReportHTML } from './htmlTemplateService';
+import { 
+  generateReportId, 
+  uploadReportToStorage, 
+  saveToRecentReports, 
+  generatePasswordHash 
+} from './storageService';
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -187,5 +195,172 @@ export const sendEveningQuizReminders = onSchedule({
   } catch (error) {
     console.error('❌ Erro em sendEveningQuizReminders:', error);
     throw error;
+  }
+});
+
+/**
+ * Function: generateReportBackground
+ * 
+ * Gera relatórios médicos em background (server-side)
+ * Permite que o usuário saia da tela/feche aba durante processamento
+ * 
+ * Fluxo:
+ * 1. Busca dados do Firestore
+ * 2. Processa NLP (se enhanced)
+ * 3. Gera HTML
+ * 4. Upload para Storage
+ * 5. Salva em recentReports
+ * 6. Retorna URL
+ */
+export const generateReportBackground = onCall({
+  memory: '4GiB', // Mais memória para NLP
+  timeoutSeconds: 540, // 9 minutos max
+  concurrency: 50, // Múltiplos usuários simultâneos
+  region: 'us-central1'
+}, async (request: {
+  auth?: any;
+  data: {
+    periods: string[];
+    periodsText: string;
+    templateType?: 'standard' | 'enhanced';
+    withPassword?: boolean;
+    password?: string;
+  }
+}) => {
+  console.log('📊 generateReportBackground invocada');
+
+  // Validação de autenticação
+  if (!request.auth) {
+    throw new HttpsError(
+      'unauthenticated',
+      'Autenticação necessária para gerar relatórios'
+    );
+  }
+
+  const userId = request.auth.uid;
+  const userEmail = request.auth.token.email || 'unknown';
+  
+  console.log(`👤 Usuário: ${userEmail} (${userId})`);
+
+  // Validação de dados
+  const { periods, periodsText, templateType = 'standard', withPassword, password } = request.data;
+
+  if (!Array.isArray(periods) || periods.length === 0) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Períodos inválidos'
+    );
+  }
+
+  if (!periodsText) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Texto de períodos é obrigatório'
+    );
+  }
+
+  const startTime = Date.now();
+
+  try {
+    console.log(`🚀 Iniciando geração de relatório ${templateType}...`);
+    console.log(`📅 Períodos: ${periodsText} (${periods.length} período(s))`);
+
+    // 1. Gerar ID único
+    const reportId = generateReportId(userId);
+    console.log(`🆔 Report ID: ${reportId}`);
+
+    // 2. Buscar dados do Firestore
+    console.log('🔍 Buscando dados do Firestore...');
+    const reportData = await fetchUserReportData(userId, periods);
+    console.log(`✅ Dados coletados: ${reportData.totalDays} dias, ${reportData.medications.length} medicamentos`);
+
+    // 3. Processar NLP (se enhanced)
+    let nlpResults;
+    if (templateType === 'enhanced') {
+      console.log('🧠 Processando análise NLP...');
+      
+      // Extrair textos dos quizzes
+      const texts: string[] = [];
+      reportData.quizData.forEach((quiz: any) => {
+        if (quiz.observacoes) texts.push(quiz.observacoes);
+        if (quiz.notes) texts.push(quiz.notes);
+      });
+
+      if (texts.length > 0) {
+        console.log(`📝 Analisando ${texts.length} textos...`);
+        nlpResults = await nlpService.analyzeBatch(texts);
+        console.log(`✅ Análise NLP concluída: ${nlpResults.length} resultados`);
+      } else {
+        console.log('ℹ️ Nenhum texto para análise NLP');
+      }
+    }
+
+    // 4. Buscar dados do usuário
+    const db = admin.firestore();
+    const userDoc = await db.collection('usuarios').doc(userId).get();
+    const userData = userDoc.data();
+    const userName = userData?.name || userData?.nome || 'Paciente';
+
+    // 5. Gerar HTML (com hash de senha se necessário)
+    console.log('📝 Gerando HTML do relatório...');
+    
+    let passwordHash: string | undefined;
+    if (withPassword && password) {
+      passwordHash = generatePasswordHash(password);
+      console.log('🔒 Senha hashada com sucesso');
+    }
+    
+    const htmlContent = generateReportHTML({
+      reportId,
+      periodsText,
+      userName,
+      userEmail,
+      generatedAt: new Date(),
+      reportData,
+      nlpResults,
+      withPassword,
+      passwordHash
+    });
+    console.log(`✅ HTML gerado (${htmlContent.length} bytes)`);
+
+    // 6. Upload para Storage
+    console.log('📤 Fazendo upload para Firebase Storage...');
+    const { url, fileName } = await uploadReportToStorage(reportId, htmlContent, userId);
+    console.log(`✅ Upload concluído: ${url}`);
+
+    // 7. Salvar em recentReports
+    console.log('💾 Salvando no histórico do usuário...');
+    await saveToRecentReports(userId, {
+      reportId,
+      reportUrl: url,
+      fileName,
+      periodsText,
+      periods,
+      templateType
+    });
+    console.log('✅ Histórico atualizado');
+
+    // 8. Calcular tempo de execução
+    const executionTime = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`⚡ Relatório gerado em ${executionTime}s`);
+
+    // 9. Retornar resultado
+    return {
+      success: true,
+      reportUrl: url,
+      fileName,
+      reportId,
+      executionTime: `${executionTime}s`,
+      message: 'Relatório gerado com sucesso!'
+    };
+
+  } catch (error: any) {
+    console.error('❌ Erro ao gerar relatório:', error);
+    
+    throw new HttpsError(
+      'internal',
+      'Erro ao gerar relatório',
+      error.message || String(error)
+    );
   }
 });

@@ -7,6 +7,23 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
+### ☁️ Cloud Functions - Background Report Processing
+- **Migration to Server-Side**: Complete migration of report generation to Firebase Cloud Functions
+- **Background Processing**: Users can close tab/browser while report is being generated
+- **New Function**: `generateReportBackground` processes reports server-side with 9-minute timeout
+- **Performance**: Server has more resources, processes faster than client-side
+- **Architecture**: 
+  - `firestoreDataService.ts`: Fetches data from Firestore (server-side)
+  - `storageService.ts`: Uploads HTML to Firebase Storage
+  - `htmlTemplateService.ts`: Generates HTML report (MVP version)
+  - `backgroundReportService.ts`: Frontend wrapper to call Cloud Function
+- **Auto-Update**: Home page refreshes automatically when report is ready
+- **Deploy**: Via GitHub Actions (`.github/workflows/deploy-functions.yml`)
+- **Costs**: FREE for current volume (~3k reports/month, well within 2M free tier)
+- **TODO**: Migrate complete HTML template (~7k lines) from frontend to functions
+
+## Recent Changes (November 24, 2025)
+
 ### Recent Reports Feature on Home Page (Zero-Index Architecture) ✅ PRODUCTION-READY
 - **Storage**: Reports stored as array in user document (`usuarios/[uid].recentReports`) - **NO separate Firestore collection needed**
 - **Maximum 3 Reports**: Array maintains only last 3 generated reports using FIFO queue logic
