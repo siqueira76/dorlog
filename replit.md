@@ -21,6 +21,11 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 - **Code Cleanup**: Removed unused `AlertCircle` import, simplified component after removing error states
 - **Documentation**: Removed `FIRESTORE_INDEXES_REQUIRED.md`, updated architecture docs
 - **Removed "Atividade Recente"**: Cleaned up Home page by removing redundant recent activity section (~200 lines)
+- **Auto-Refresh System**: Real-time UI updates after report generation via `window.postMessage` event system
+  - `refreshCurrentUser()` function in AuthContext re-fetches user data from Firestore
+  - Both report services dispatch `REFRESH_USER_DATA` event after saving to recentReports
+  - AuthContext listens for events and automatically updates React state
+  - No manual page refresh needed - reports appear immediately in Home page
 
 ### Google Play Store Compliance - Affiliate Carousel Removal
 - **Complete Removal**: Eliminated affiliate product carousel from Home page to ensure Google Play Store compliance
