@@ -162,13 +162,13 @@ export class UnifiedReportService {
         if (userDoc.exists()) {
           const expiresAt = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)); // 7 days
           
-          // Create new report entry
+          // Create new report entry (convert Timestamps to Date for type compatibility)
           const newReport = {
             reportUrl: uploadResult.downloadUrl || '',
             fileName: uploadResult.fileName || `report_${reportId}.html`,
             periodsText: options.periodsText,
-            generatedAt: Timestamp.now(),
-            expiresAt: expiresAt
+            generatedAt: Timestamp.now().toDate(),
+            expiresAt: expiresAt.toDate()
           };
           
           // Get existing reports or initialize empty array

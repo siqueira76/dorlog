@@ -1,65 +1,55 @@
-import { useQuery } from '@tanstack/react-query';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { RelatorioHistorico } from '@/services/unifiedReportService';
+import { useMemo } from 'react';
 import { useAuth } from './useAuth';
+import { RecentReport } from '@/types/user';
 
 /**
  * Hook para buscar os últimos relatórios gerados pelo usuário
  * Usado na seção "Últimos Relatórios" da Home page
  * 
- * ⚠️ IMPORTANTE: Requer índice composto no Firestore
- * Collection: relatorios_historico
- * Fields: userId (Ascending), generatedAt (Descending)
- * Ver: FIRESTORE_INDEXES_REQUIRED.md
+ * Lê diretamente do campo recentReports do usuário (max 3 itens)
+ * Filtra automaticamente relatórios com URLs expirados
  */
-export function useRecentReports(limitCount: number = 3) {
-  const { firebaseUser } = useAuth();
+export function useRecentReports() {
+  const { currentUser, loading: isAuthLoading } = useAuth();
 
-  return useQuery<RelatorioHistorico[]>({
-    queryKey: ['/api/relatorios-historico', firebaseUser?.uid, limitCount],
-    queryFn: async () => {
-      if (!firebaseUser?.uid) {
-        return [];
+  const recentReports = useMemo(() => {
+    if (!currentUser?.recentReports) {
+      return [];
+    }
+
+    const now = new Date();
+    
+    // Filter out expired reports (URLs expire after 7 days)
+    const validReports = currentUser.recentReports.filter((report) => {
+      // Handle both Date objects and Firestore Timestamps
+      let expiresAt: Date;
+      if (report.expiresAt instanceof Date) {
+        expiresAt = report.expiresAt;
+      } else if (typeof report.expiresAt === 'object' && 'toDate' in report.expiresAt) {
+        // Firestore Timestamp
+        expiresAt = (report.expiresAt as any).toDate();
+      } else {
+        // Fallback: try to parse as ISO string
+        expiresAt = new Date(report.expiresAt);
       }
-
-      try {
-        // Query Firestore for recent reports
-        // NOTE: This requires a composite index on relatorios_historico
-        // Fields: userId (asc) + generatedAt (desc)
-        const reportsRef = collection(db, 'relatorios_historico');
-        const q = query(
-          reportsRef,
-          where('userId', '==', firebaseUser.uid),
-          orderBy('generatedAt', 'desc'),
-          limit(limitCount)
-        );
-
-        const querySnapshot = await getDocs(q);
-        
-        const reports: RelatorioHistorico[] = [];
-        querySnapshot.forEach((doc) => {
-          reports.push({
-            id: doc.id,
-            ...doc.data()
-          } as RelatorioHistorico);
-        });
-
-        console.log(`📊 [useRecentReports] Encontrados ${reports.length} relatórios recentes`);
-        return reports;
-      } catch (error) {
-        console.error('❌ [useRecentReports] Erro ao buscar relatórios:', error);
-        
-        // Check if it's an index error
-        if (error instanceof Error && error.message.includes('index')) {
-          console.error('⚠️ Índice Firestore necessário! Ver: FIRESTORE_INDEXES_REQUIRED.md');
-        }
-        
-        throw error;
+      
+      // Validate date is valid
+      if (isNaN(expiresAt.getTime())) {
+        console.warn('⚠️ [useRecentReports] Invalid expiresAt date:', report.expiresAt);
+        return false;
       }
-    },
-    enabled: !!firebaseUser?.uid, // Only run query if user is authenticated
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    retry: 2
-  });
+      
+      return expiresAt > now;
+    });
+
+    console.log(`📊 [useRecentReports] ${validReports.length} relatórios válidos de ${currentUser.recentReports.length} total`);
+    
+    return validReports;
+  }, [currentUser?.recentReports]);
+
+  return {
+    data: recentReports,
+    isLoading: isAuthLoading, // Reflect auth loading state
+    error: null
+  };
 }
