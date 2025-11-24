@@ -158,11 +158,9 @@ function App() {
             
             <Route path="/reports/monthly">
               <ProtectedRoute>
-                <PremiumProtectedRoute>
-                  <Layout>
-                    <MonthlyReportGenerator />
-                  </Layout>
-                </PremiumProtectedRoute>
+                <Layout>
+                  <MonthlyReportGenerator />
+                </Layout>
               </ProtectedRoute>
             </Route>
             

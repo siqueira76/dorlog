@@ -748,7 +748,10 @@ export default function Reports() {
             {subscriptionStatus?.isPremium && <PremiumBadge variant={subscriptionStatus.isTrialing ? 'trial' : 'premium'} />}
           </div>
           <Button
-            onClick={() => setLocation('/reports/monthly')}
+            onClick={() => {
+              console.log('📍 Navegando para:', '/reports/monthly');
+              setLocation('/reports/monthly');
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white h-10 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             data-testid="button-generate-pdf-report"
           >
