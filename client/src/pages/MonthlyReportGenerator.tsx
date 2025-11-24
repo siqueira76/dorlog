@@ -12,6 +12,9 @@ import { format, subMonths, startOfMonth, endOfMonth, addMonths } from 'date-fns
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
+import { SubscriptionService } from '@/services/subscriptionService';
+import { UpgradeModal } from '@/components/UpgradeModal';
 
 type SelectionMode = 'single' | 'range';
 type TemplateType = 'standard' | 'enhanced';
@@ -28,6 +31,10 @@ export default function MonthlyReportGenerator(): JSX.Element {
   const [templateType, setTemplateType] = useState<TemplateType>('enhanced');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  
+  // Freemium: subscription status
+  const { status: subscriptionStatus } = useSubscriptionStatus();
 
   // Gerar opções de períodos (últimos 12 meses + mês atual)
   const generatePeriodOptions = () => {
@@ -137,6 +144,21 @@ export default function MonthlyReportGenerator(): JSX.Element {
       return;
     }
 
+    // Freemium: Verificar quota mensal
+    if (!subscriptionStatus?.isPremium) {
+      const canGenerate = await SubscriptionService.canGenerateMonthlyReport(firebaseUser.uid);
+      
+      if (!canGenerate) {
+        toast({
+          title: "Limite Atingido",
+          description: "Você atingiu o limite de 1 relatório por mês do plano Gratuito",
+          variant: "destructive",
+        });
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+
     setIsGenerating(true);
     
     try {
@@ -165,6 +187,11 @@ export default function MonthlyReportGenerator(): JSX.Element {
       
       if (result.success && result.reportUrl) {
         setGeneratedPdfUrl(result.reportUrl);
+        
+        // Freemium: Registrar geração do relatório (apenas Free tier)
+        if (!subscriptionStatus?.isPremium) {
+          await SubscriptionService.recordReportGeneration(firebaseUser.uid);
+        }
         
         // Create WhatsApp message
         const periodsText = getSelectedPeriodsText();
@@ -294,6 +321,21 @@ _Este relatório foi gerado automaticamente pelo aplicativo DorLog._`;
         variant: "destructive",
       });
       return;
+    }
+
+    // Freemium: Verificar quota mensal
+    if (!subscriptionStatus?.isPremium) {
+      const canGenerate = await SubscriptionService.canGenerateMonthlyReport(firebaseUser.uid);
+      
+      if (!canGenerate) {
+        toast({
+          title: "Limite Atingido",
+          description: "Você atingiu o limite de 1 relatório por mês do plano Gratuito",
+          variant: "destructive",
+        });
+        setShowUpgradeModal(true);
+        return;
+      }
     }
 
     setIsGenerating(true);
@@ -627,6 +669,13 @@ Este relatório foi gerado automaticamente pelo aplicativo DorLog.`;
           </Card>
         </div>
       </div>
+      
+      {/* Freemium: Upgrade Modal */}
+      <UpgradeModal 
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        highlightFeature="Relatórios ilimitados"
+      />
     </div>
   );
 }
