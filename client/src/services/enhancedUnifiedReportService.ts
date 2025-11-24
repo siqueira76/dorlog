@@ -47,25 +47,13 @@ export class EnhancedUnifiedReportService {
     console.log(`🧠 Iniciando geração de relatório enhanced para ${options.userId}...`);
     
     try {
-      // 1. Validate premium access
-      console.log(`🔐 Verificando acesso premium para ${options.userId}...`);
-      const hasPremiumAccess = await UnifiedReportService.checkPremiumAccess(options.userId);
+      // NOTE: Premium access validation removed - now handled by:
+      // 1. Frontend UI (MonthlyReportGenerator.tsx)
+      // 2. Client-side enforcement (unifiedReportPatch.ts) - PRIMARY LAYER
+      // 3. Server-side validation (routes.ts) - Defense in depth
+      // Free tier users CAN generate reports (1/month, current period only)
       
-      if (!hasPremiumAccess) {
-        console.log(`❌ Acesso negado: usuário ${options.userId} não possui assinatura ativa`);
-        return {
-          success: false,
-          error: 'Acesso negado: funcionalidade exclusiva para usuários Premium',
-          analysisType: 'standard',
-          nlpProcessed: false,
-          chartsGenerated: false,
-          alertsGenerated: 0
-        };
-      }
-      
-      console.log(`✅ Acesso premium confirmado para ${options.userId}`);
-      
-      // 2. Validar se enhanced features estão habilitadas
+      // 1. Validar se enhanced features estão habilitadas
       const useEnhanced = options.useEnhancedAnalysis !== false; // Default true
       
       if (!useEnhanced) {

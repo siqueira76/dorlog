@@ -82,24 +82,17 @@ export class UnifiedReportService {
     console.log(`📅 Períodos: ${options.periodsText} (${options.periods.length} período(s))`);
     
     try {
-      // 1. Validate premium access
-      console.log(`🔐 Verificando acesso premium para ${options.userId}...`);
-      const hasPremiumAccess = await this.checkPremiumAccess(options.userId);
+      // NOTE: Premium access validation removed - now handled by:
+      // 1. Frontend UI (MonthlyReportGenerator.tsx)
+      // 2. Client-side enforcement (unifiedReportPatch.ts) - PRIMARY LAYER
+      // 3. Server-side validation (routes.ts) - Defense in depth
+      // Free tier users CAN generate reports (1/month, current period only)
       
-      if (!hasPremiumAccess) {
-        console.log(`❌ Acesso negado: usuário ${options.userId} não possui assinatura ativa`);
-        return {
-          success: false,
-          error: 'Acesso negado: funcionalidade exclusiva para usuários Premium'
-        };
-      }
-      
-      console.log(`✅ Acesso premium confirmado para ${options.userId}`);
-      // 2. Generate unique report ID
+      // 1. Generate unique report ID
       const reportId = generateReportId(options.userId);
       console.log(`🆔 Report ID gerado: ${reportId}`);
       
-      // 3. Fetch real data from Firestore
+      // 2. Fetch real data from Firestore
       console.log(`🔍 Buscando dados reais do Firestore...`);
       const reportData = await fetchUserReportData(options.userId, options.periods);
       console.log(`✅ Dados coletados:`, {
@@ -109,7 +102,7 @@ export class UnifiedReportService {
         doctorsCount: reportData.doctors.length
       });
       
-      // 3.1. Add digestive health analysis to basic report
+      // 3. Add digestive health analysis to basic report
       console.log(`💩 Processando análise de saúde digestiva...`);
       (reportData as any).digestiveAnalysis = EnhancedReportAnalysisService.analyzeDigestiveIntervals(reportData);
       console.log(`✅ Análise digestiva concluída:`, (reportData as any).digestiveAnalysis.status);
