@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Download, Share2, FileText, Calendar, Mail, Clock, CheckCircle, Loader2, X, CalendarDays, Brain, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Download, Share2, FileText, Calendar, Mail, Clock, CheckCircle, Loader2, X, CalendarDays, Brain, BarChart3, Lock, Crown } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { createNavigate } from '@/lib/navigation';
 import { format, subMonths, startOfMonth, endOfMonth, addMonths } from 'date-fns';
@@ -36,33 +36,52 @@ export default function MonthlyReportGenerator(): JSX.Element {
   // Freemium: subscription status
   const { status: subscriptionStatus } = useSubscriptionStatus();
 
-  // Gerar opções de períodos (últimos 12 meses + mês atual)
+  // Freemium: Gerar opções de períodos baseado no plano
   const generatePeriodOptions = () => {
     const options = [];
     const currentDate = new Date();
     
-    // Últimos 12 meses (incluindo o atual)
-    for (let i = 12; i >= 0; i--) {
-      const date = subMonths(currentDate, i);
-      const startDate = startOfMonth(date);
-      const endDate = endOfMonth(date);
-      
+    // Free tier: Apenas mês atual
+    if (!subscriptionStatus?.isPremium) {
+      const startDate = startOfMonth(currentDate);
+      const endDate = endOfMonth(currentDate);
       const value = `${format(startDate, 'yyyy-MM-dd')}_${format(endDate, 'yyyy-MM-dd')}`;
-      const label = format(date, 'MMMM yyyy', { locale: ptBR });
+      const label = format(currentDate, 'MMMM yyyy', { locale: ptBR });
       
       options.push({
         value,
         label: label.charAt(0).toUpperCase() + label.slice(1),
-        date: date
+        date: currentDate,
+        isCurrent: true
       });
+    } else {
+      // Premium/Trial: Últimos 12 meses (incluindo o atual)
+      for (let i = 12; i >= 0; i--) {
+        const date = subMonths(currentDate, i);
+        const startDate = startOfMonth(date);
+        const endDate = endOfMonth(date);
+        
+        const value = `${format(startDate, 'yyyy-MM-dd')}_${format(endDate, 'yyyy-MM-dd')}`;
+        const label = format(date, 'MMMM yyyy', { locale: ptBR });
+        
+        options.push({
+          value,
+          label: label.charAt(0).toUpperCase() + label.slice(1),
+          date: date,
+          isCurrent: i === 0
+        });
+      }
     }
     
     return options;
   };
 
-  const periodOptions = generatePeriodOptions();
+  // Freemium: Memoizar opções de períodos para evitar re-renders desnecessários
+  const periodOptions = React.useMemo(() => {
+    return generatePeriodOptions();
+  }, [subscriptionStatus?.isPremium]);
 
-  // Definir o mês atual como padrão
+  // Freemium: Definir/revalidar mês atual como padrão quando status mudar
   useEffect(() => {
     const currentDate = new Date();
     const currentMonthOption = periodOptions.find(option => {
@@ -71,10 +90,16 @@ export default function MonthlyReportGenerator(): JSX.Element {
              optionDate.getFullYear() === currentDate.getFullYear();
     });
     
-    if (currentMonthOption && !selectedPeriod) {
+    // Sempre selecionar mês atual para Free users (proteção contra bypass)
+    if (!subscriptionStatus?.isPremium && currentMonthOption) {
+      setSelectedPeriod(currentMonthOption.value);
+      setFromPeriod('');
+      setToPeriod('');
+      setSelectionMode('single');
+    } else if (currentMonthOption && !selectedPeriod) {
       setSelectedPeriod(currentMonthOption.value);
     }
-  }, [periodOptions, selectedPeriod]);
+  }, [subscriptionStatus?.isPremium, periodOptions]);
 
   // Função para validar se existe seleção válida
   const hasValidSelection = () => {
@@ -115,6 +140,41 @@ export default function MonthlyReportGenerator(): JSX.Element {
     }
   };
 
+  // Freemium: Validação autoritativa de período (proteção contra bypass)
+  const validateSelectedPeriod = (): { valid: boolean; error?: string } => {
+    if (subscriptionStatus?.isPremium) {
+      return { valid: true }; // Premium pode tudo
+    }
+
+    // Free: Apenas mês atual + modo single
+    if (selectionMode === 'range') {
+      return {
+        valid: false,
+        error: 'Relatórios de intervalo disponíveis apenas no plano Premium'
+      };
+    }
+
+    const currentDate = new Date();
+    const selectedOption = periodOptions.find(opt => opt.value === selectedPeriod);
+    
+    if (!selectedOption) {
+      return { valid: false, error: 'Período inválido selecionado' };
+    }
+
+    const isCurrent = 
+      selectedOption.date.getMonth() === currentDate.getMonth() && 
+      selectedOption.date.getFullYear() === currentDate.getFullYear();
+
+    if (!isCurrent) {
+      return {
+        valid: false,
+        error: 'Usuários gratuitos podem gerar relatórios apenas do mês vigente'
+      };
+    }
+
+    return { valid: true };
+  };
+
   // Função para obter o texto dos períodos selecionados
   const getSelectedPeriodsText = () => {
     if (selectionMode === 'single') {
@@ -141,6 +201,18 @@ export default function MonthlyReportGenerator(): JSX.Element {
         description: "Usuário não autenticado ou período não selecionado",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Freemium: Validação autoritativa de período (proteção contra bypass)
+    const periodValidation = validateSelectedPeriod();
+    if (!periodValidation.valid) {
+      toast({
+        title: "Período Inválido",
+        description: periodValidation.error || "Período selecionado não permitido",
+        variant: "destructive",
+      });
+      setShowUpgradeModal(true);
       return;
     }
 
@@ -323,6 +395,18 @@ _Este relatório foi gerado automaticamente pelo aplicativo DorLog._`;
       return;
     }
 
+    // Freemium: Validação autoritativa de período (proteção contra bypass)
+    const periodValidation = validateSelectedPeriod();
+    if (!periodValidation.valid) {
+      toast({
+        title: "Período Inválido",
+        description: periodValidation.error || "Período selecionado não permitido",
+        variant: "destructive",
+      });
+      setShowUpgradeModal(true);
+      return;
+    }
+
     // Freemium: Verificar quota mensal
     if (!subscriptionStatus?.isPremium) {
       const canGenerate = await SubscriptionService.canGenerateMonthlyReport(firebaseUser.uid);
@@ -443,7 +527,32 @@ Este relatório foi gerado automaticamente pelo aplicativo DorLog.`;
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Mode Selection */}
+              {/* Freemium: Aviso plano gratuito */}
+              {!subscriptionStatus?.isPremium && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Lock className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-amber-900 mb-1">Plano Gratuito</h3>
+                      <p className="text-sm text-amber-800 leading-relaxed">
+                        Você pode gerar <strong>1 relatório por mês</strong> do <strong>período atual</strong>. 
+                        Faça upgrade para Premium e tenha relatórios ilimitados dos últimos 12 meses!
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowUpgradeModal(true)}
+                        className="mt-3 border-amber-600 text-amber-700 hover:bg-amber-100"
+                      >
+                        <Crown className="h-3 w-3 mr-1" />
+                        Ver Planos Premium
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mode Selection - Desabilitado para Free */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Modo de Seleção</Label>
                 <div className="flex gap-2">
@@ -458,10 +567,25 @@ Este relatório foi gerado automaticamente pelo aplicativo DorLog.`;
                   <Button
                     variant={selectionMode === 'range' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setSelectionMode('range')}
-                    className="flex-1"
+                    onClick={() => {
+                      if (!subscriptionStatus?.isPremium) {
+                        toast({
+                          title: "Recurso Premium",
+                          description: "Relatórios de intervalo disponíveis apenas no plano Premium",
+                          variant: "destructive",
+                        });
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      setSelectionMode('range');
+                    }}
+                    disabled={!subscriptionStatus?.isPremium}
+                    className="flex-1 relative"
                   >
                     Intervalo
+                    {!subscriptionStatus?.isPremium && (
+                      <Lock className="h-3 w-3 ml-1 inline-block" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -469,9 +593,16 @@ Este relatório foi gerado automaticamente pelo aplicativo DorLog.`;
               {/* Single Period Selection */}
               {selectionMode === 'single' && (
                 <div className="space-y-3">
-                  <Label htmlFor="period" className="text-sm font-medium">
-                    Selecionar Mês
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="period" className="text-sm font-medium">
+                      Selecionar Mês
+                    </Label>
+                    {!subscriptionStatus?.isPremium && (
+                      <Badge variant="secondary" className="text-xs">
+                        Apenas mês atual
+                      </Badge>
+                    )}
+                  </div>
                   <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
                     <SelectTrigger>
                       <SelectValue placeholder="Escolha um mês" />

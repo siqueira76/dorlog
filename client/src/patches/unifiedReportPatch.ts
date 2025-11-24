@@ -1,5 +1,7 @@
 import { UnifiedReportService, UnifiedReportOptions } from '@/services/unifiedReportService';
 import { EnhancedUnifiedReportService } from '@/services/enhancedUnifiedReportService';
+import { SubscriptionService } from '@/services/subscriptionService';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 /**
  * New unified patch that replaces githubPagesFix.ts
@@ -25,6 +27,46 @@ export const patchApiCallsUnified = () => {
         const { userId, periods, periodsText, templateType = 'enhanced' } = body;
         
         console.log(`📊 Gerando relatório ${templateType}:`, { userId, periodsText, periodsCount: periods.length, templateType });
+        
+        // Freemium: Validação OBRIGATÓRIA de período (proteção contra bypass)
+        // CRITICAL: Esta é a camada de segurança principal pois intercepta TODAS as chamadas
+        const subscriptionStatus = await SubscriptionService.getSubscriptionStatus(userId);
+        
+        // Se falhar ao buscar status, negar por padrão (fail-secure)
+        if (!subscriptionStatus) {
+          console.error('🚫 Falha ao verificar status de assinatura - NEGANDO acesso');
+          throw new Error('Erro ao verificar permissões de usuário');
+        }
+        
+        if (!subscriptionStatus.isPremium) {
+          // Free tier: Validação OBRIGATÓRIA de período
+          const currentDate = new Date();
+          const currentMonthStart = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+          const currentMonthEnd = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+          const currentMonthPeriod = `${currentMonthStart}_${currentMonthEnd}`;
+          
+          // Verificar se é modo intervalo (proibido para Free)
+          if (periods.length > 1) {
+            console.warn('🚫 SECURITY: Tentativa de bypass detectada (intervalo):', { userId, periodsCount: periods.length, tier: 'free' });
+            throw new Error('Relatórios de intervalo disponíveis apenas no plano Premium');
+          }
+          
+          // Verificar se o período é o mês atual
+          if (periods[0] !== currentMonthPeriod) {
+            console.warn('🚫 SECURITY: Tentativa de bypass detectada (período histórico):', {
+              userId,
+              requestedPeriod: periods[0],
+              allowedPeriod: currentMonthPeriod,
+              tier: 'free',
+              timestamp: new Date().toISOString()
+            });
+            throw new Error('Usuários gratuitos podem gerar relatórios apenas do mês vigente');
+          }
+          
+          console.log('✅ Validação de período Free tier OK (client-side enforcement):', currentMonthPeriod);
+        } else {
+          console.log('✅ Usuário Premium/Trial - acesso completo permitido');
+        }
         
         // Use appropriate report service based on template choice
         const options: UnifiedReportOptions = {

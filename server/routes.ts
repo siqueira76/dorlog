@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { spawn } from "child_process";
 import path from "path";
+import admin from 'firebase-admin';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 // Function to generate report using child process
 async function generateReportForUser(userId: string, reportMonth: string, reportData: any): Promise<any> {
@@ -204,6 +206,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📊 Geração de relatório mensal para ${userId}`);
       console.log(`📅 Períodos: ${periodsText} (${periods.length} período(s))`);
+      
+      // Freemium: Validação server-side de período (OBRIGATÓRIA - proteção contra bypass)
+      if (!admin.apps.length) {
+        console.error('🚫 Firebase Admin não inicializado - validação de segurança falhou');
+        return res.status(500).json({
+          success: false,
+          error: 'Erro de configuração do servidor (Firebase Admin não inicializado)'
+        });
+      }
+      
+      // Buscar dados do usuário no Firestore
+      const userDoc = await admin.firestore().collection('usuarios').doc(userId).get();
+      
+      if (!userDoc.exists) {
+        console.warn('🚫 Usuário não encontrado:', userId);
+        return res.status(404).json({
+          success: false,
+          error: 'Usuário não encontrado'
+        });
+      }
+      
+      const userData = userDoc.data();
+      const isPremium = userData?.subscriptionTier === 'premium' || userData?.subscriptionStatus === 'trialing';
+      
+      // Free tier: Validação OBRIGATÓRIA de período
+      if (!isPremium) {
+        const currentDate = new Date();
+        const currentMonthStart = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+        const currentMonthEnd = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+        const currentMonthPeriod = `${currentMonthStart}_${currentMonthEnd}`;
+        
+        // Verificar se é modo intervalo (proibido para Free)
+        if (periods.length > 1) {
+          console.warn('🚫 Tentativa de bypass detectada (intervalo):', { userId, periodsCount: periods.length, tier: 'free' });
+          return res.status(403).json({
+            success: false,
+            error: 'Relatórios de intervalo disponíveis apenas no plano Premium',
+            tier: 'free'
+          });
+        }
+        
+        // Verificar se o período é o mês atual
+        if (periods[0] !== currentMonthPeriod) {
+          console.warn('🚫 Tentativa de bypass detectada (período histórico):', {
+            userId,
+            requestedPeriod: periods[0],
+            allowedPeriod: currentMonthPeriod,
+            tier: 'free'
+          });
+          return res.status(403).json({
+            success: false,
+            error: 'Usuários gratuitos podem gerar relatórios apenas do mês vigente',
+            tier: 'free',
+            allowedPeriod: currentMonthPeriod
+          });
+        }
+        
+        console.log('✅ Validação de período Free tier OK (server-side):', currentMonthPeriod);
+      } else {
+        console.log('✅ Usuário Premium/Trial - sem restrições de período');
+      }
       
       // Format report month for filename with timestamp to ensure uniqueness  
       const timestamp = Date.now();

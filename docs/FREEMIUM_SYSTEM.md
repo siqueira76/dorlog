@@ -27,7 +27,8 @@ O FibroDiário implementa um modelo freemium com **dois tiers** (Free e Premium)
 |---------|----------|---------------------------|
 | **Histórico de dados** | 30 dias | Ilimitado ✨ |
 | **Médicos cadastrados** | Até 3 | Ilimitados |
-| **Relatórios mensais** | 1 por mês | Ilimitados |
+| **Relatórios mensais** | 1 por mês (apenas **mês vigente**) | Ilimitados (últimos **12 meses**) |
+| **Relatórios de intervalo** | ❌ | ✅ (ex: Jan-Mar 2025) |
 | **Análise NLP com IA** | ❌ | ✅ |
 | **Relatórios avançados** | ❌ | ✅ (com insights NLP) |
 | **Exportação de dados** | Básica (CSV) | Avançada (PDF, HTML) |

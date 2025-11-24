@@ -1,13 +1,20 @@
 # 📖 FibroDiário Freemium - Especificação de Uso
 
 **Data:** 24 de novembro de 2025  
-**Versão:** 1.0.0
+**Versão:** 1.1.0  
+**Atualização:** Regra de relatórios ajustada (mês vigente para Free tier)
 
 ---
 
 ## 🎯 Visão Geral
 
 Este documento detalha como os usuários interagem com o sistema freemium do FibroDiário, desde o onboarding até o upgrade e gestão de assinatura.
+
+### ⚡ Limitações Free Tier
+- **Histórico:** 30 dias
+- **Médicos:** Máximo 3
+- **Relatórios:** 1 por mês do **período vigente (mês atual)**
+- **Intervalos:** ❌ Indisponível (recurso Premium)
 
 ---
 

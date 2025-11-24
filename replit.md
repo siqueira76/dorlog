@@ -7,6 +7,16 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
+### Freemium Report Generation Rules Enhancement
+- **Free Tier Restrictions**: Users can only generate reports from **current month** (mês vigente)
+- **Period Selection**: Disabled month selection dropdown for Free users (auto-selects current month)
+- **Interval Mode**: Blocked for Free tier with upgrade modal prompt
+- **Visual Indicators**: Added amber warning banner, Lock icons, and "Apenas mês atual" badge
+- **Premium Features**: Premium/Trial users can select from last 12 months + interval mode
+- **Documentation Updated**: FREEMIUM_SYSTEM.md and USAGE_SPEC.md reflect new rules
+
+## Recent Changes (November 23, 2025)
+
 ### Home Carousel Visual Enhancement
 - **Balanced Background Implementation**: Enhanced affiliate product carousel with subtle background blur effect
 - **Larger Product Images**: Increased from 28×28 to 32×32 (8rem) for better visibility
