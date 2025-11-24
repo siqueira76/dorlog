@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase';
 import { useEffect, useState, useCallback } from 'react';
 import { format, isToday, isYesterday, differenceInHours, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { RecentReportsSection } from '@/components/RecentReportsSection';
 
 // Interfaces para as atividades recentes
 interface QuizActivity {
@@ -332,6 +333,9 @@ export default function Home() {
           </Card>
         )}
       </div>
+
+      {/* Recent Reports Section */}
+      <RecentReportsSection />
     </div>
   );
 }
