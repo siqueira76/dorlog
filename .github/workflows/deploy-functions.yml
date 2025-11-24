@@ -39,7 +39,8 @@ jobs:
       - name: Deploy to Firebase
         run: |
           cd functions
-          npx firebase-tools deploy --only functions --force --non-interactive
+          # Deploy apenas functions específicas (exclui scheduled functions que precisam de permissão especial)
+          npx firebase-tools deploy --only functions:generateReportBackground,functions:nlpAnalyze,functions:nlpHealth --force --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /home/runner/gcloud-service-key.json
 
