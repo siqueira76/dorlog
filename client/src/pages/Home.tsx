@@ -1,8 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from '@/components/ui/carousel';
-import { AlertTriangle, Pill, AlertCircle, CheckCircle, Sunrise, Moon, BookOpen, Activity, ExternalLink } from 'lucide-react';
+import { AlertTriangle, Pill, AlertCircle, CheckCircle, Sunrise, Moon, BookOpen, Activity } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -38,82 +37,9 @@ interface MedicationActivity {
 
 type Activity = QuizActivity | MedicationActivity;
 
-// Interface para produtos afiliados
-interface AffiliateProduct {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  url: string;
-}
-
-// Produtos afiliados para o carrossel
-const affiliateProducts: AffiliateProduct[] = [
-  {
-    id: '1',
-    title: 'Monitor de Pressão Digital',
-    description: 'Monitoramento preciso da pressão arterial em casa',
-    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/monitor-pressao-digital'
-  },
-  {
-    id: '2', 
-    title: 'Termômetro Infravermelho',
-    description: 'Medição rápida e precisa da temperatura corporal',
-    image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/termometro-infravermelho'
-  },
-  {
-    id: '3',
-    title: 'Organizador de Medicamentos',
-    description: 'Organize seus remédios por dias da semana',
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/organizador-medicamentos-semanal'
-  },
-  {
-    id: '4',
-    title: 'Balança Digital Inteligente',
-    description: 'Controle seu peso com precisão e histórico',
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop&auto=format',
-    url: 'https://amazon.com.br/balanca-digital-inteligente'
-  }
-];
-
 export default function Home() {
   const { currentUser, firebaseUser } = useAuth();
   const [, setLocation] = useLocation();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [carouselApi, setCarouselApi] = useState<any>(null);
-
-  // Auto-play do carrossel (respeitando preferência de movimento reduzido)
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const [isAutoPlaying, setIsAutoPlaying] = useState(!prefersReducedMotion);
-
-  // Setup do auto-play
-  useEffect(() => {
-    if (!carouselApi || !isAutoPlaying || prefersReducedMotion) return;
-
-    const interval = setInterval(() => {
-      const nextIndex = (currentSlide + 1) % affiliateProducts.length;
-      carouselApi.scrollTo(nextIndex);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [carouselApi, isAutoPlaying, currentSlide, prefersReducedMotion]);
-
-  // Listener para mudanças de slide
-  useEffect(() => {
-    if (!carouselApi) return;
-
-    const onSelect = () => {
-      setCurrentSlide(carouselApi.selectedScrollSnap());
-    };
-
-    carouselApi.on('select', onSelect);
-    onSelect();
-
-    return () => carouselApi.off('select', onSelect);
-  }, [carouselApi]);
 
   // Função para formatar o tempo relativo
   const formatRelativeTime = (date: Date): string => {
@@ -256,103 +182,6 @@ export default function Home() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
-      
-      {/* Carrossel de Produtos Afiliados */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 rounded-2xl p-6 mb-6 relative overflow-hidden">
-        <Carousel
-          setApi={setCarouselApi}
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-          onMouseEnter={() => setIsAutoPlaying(false)}
-          onMouseLeave={() => setIsAutoPlaying(true)}
-        >
-          <CarouselContent>
-            {affiliateProducts.map((product) => (
-              <CarouselItem key={product.id}>
-                <a
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block group cursor-pointer"
-                  data-testid={`link-product-${product.id}`}
-                >
-                  <div className="relative">
-                    {/* Background blur sutil da imagem */}
-                    <div 
-                      className="absolute inset-0 opacity-10 blur-3xl scale-110"
-                      style={{ 
-                        backgroundImage: `url(${product.image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                      aria-hidden="true"
-                    />
-                    
-                    {/* Conteúdo principal */}
-                    <div className="relative flex items-center gap-6">
-                      <div className="w-32 h-32 rounded-2xl overflow-hidden bg-white/10 flex-shrink-0 shadow-2xl ring-2 ring-white/20">
-                        <img
-                          src={product.image}
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-primary-foreground mb-1.5 truncate group-hover:text-primary-foreground/90 transition-colors drop-shadow-sm">
-                          {product.title}
-                        </h3>
-                        <p className="text-sm text-primary-foreground/80 line-clamp-2 mb-4 drop-shadow-sm">
-                          {product.description}
-                        </p>
-                        <div className="inline-flex items-center gap-2 bg-white/25 hover:bg-white/35 px-4 py-2 rounded-full text-xs font-semibold text-primary-foreground transition-all duration-300 shadow-lg group-hover:shadow-xl group-hover:scale-105">
-                          <span>Ver produto</span>
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          
-          {/* Setas de navegação */}
-          <CarouselPrevious 
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 border-white/30 text-white hover:text-white" 
-            data-testid="button-carousel-prev"
-          />
-          <CarouselNext 
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 border-white/30 text-white hover:text-white"
-            data-testid="button-carousel-next"
-          />
-        </Carousel>
-        
-        {/* Indicadores (dots) */}
-        <div className="flex justify-center gap-2 mt-4">
-          {affiliateProducts.map((_, index) => (
-            <button
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentSlide 
-                  ? 'bg-primary-foreground' 
-                  : 'bg-primary-foreground/40 hover:bg-primary-foreground/60'
-              }`}
-              onClick={() => {
-                carouselApi?.scrollTo(index);
-                setIsAutoPlaying(false);
-                setTimeout(() => setIsAutoPlaying(true), 3000);
-              }}
-              data-testid={`indicator-${index}`}
-              aria-label={`Ir para produto ${index + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* Quick Actions */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-5">

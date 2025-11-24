@@ -7,6 +7,14 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 
 ## Recent Changes (November 24, 2025)
 
+### Google Play Store Compliance - Affiliate Carousel Removal
+- **Complete Removal**: Eliminated affiliate product carousel from Home page to ensure Google Play Store compliance
+- **Policy Risk Mitigation**: Removed HIGH-CRITICAL risk of rejection due to spam/monetization disclosure violations
+- **Clean UX**: Home page now directly shows Quick Actions (4 gradient cards: Registrar Crise, Tomar Remédio, Diário Manhã, Diário Noite)
+- **Health App Standards**: Aligned with strict Google scrutiny for medical/health applications
+- **No Functionality Loss**: Core fibromyalgia tracking features remain 100% intact
+- **Code Cleanup**: Removed unused Carousel components, ExternalLink icon, auto-play states, and affiliate product data
+
 ### Freemium Report Generation Rules Enhancement
 - **Free Tier Restrictions**: Users can only generate reports from **current month** (mês vigente)
 - **Period Selection**: Disabled month selection dropdown for Free users (auto-selects current month)
@@ -15,15 +23,12 @@ FibroDiário is a Progressive Web App (PWA) designed for fibromyalgia patients t
 - **Premium Features**: Premium/Trial users can select from last 12 months + interval mode
 - **Documentation Updated**: FREEMIUM_SYSTEM.md and USAGE_SPEC.md reflect new rules
 
-## Recent Changes (November 23, 2025)
-
-### Home Carousel Visual Enhancement
-- **Balanced Background Implementation**: Enhanced affiliate product carousel with subtle background blur effect
-- **Larger Product Images**: Increased from 28×28 to 32×32 (8rem) for better visibility
-- **Premium Styling**: Added shadow-2xl, ring effect, and improved hover animations (scale-110, duration-500)
-- **Background Blur**: Subtle 10% opacity blur-3xl background hint of product image
-- **Accessibility Maintained**: Text remains fully legible with drop-shadow and proper contrast
-- **Enhanced CTA Button**: Improved "Ver produto" button with better shadow and scale animation
+### Google Play Store CTAs Migration
+- **All Premium CTAs Updated**: Header, DrawerNavigation, and Profile now link to Google Play Store (com.fibrodiario.app)
+- **Consistent Freemium Messaging**: "Gratuito | Premium" badge pattern with Crown icon across all screens
+- **Stripe References Removed**: Eliminated outdated Stripe checkout links
+- **Pricing Updated**: R$ 19,90/month (from R$ 9,99) reflecting Google Play Billing model
+- **Reports.tsx Unblocked**: "Gerar Relatório Mensal" button enabled for all users (Free tier can generate 1/month)
 
 ### In-App Medication Reminder System with Audio Alerts
 - **Alert Sound System**: Implemented Web Audio API-based notification sounds (two-tone beep) that play when medication reminders trigger
