@@ -102,24 +102,30 @@ export default function DrawerNavigation({ isOpen, onClose, onNavigate }: Drawer
                       Premium
                     </div>
                   ) : (
-                    <Button
-                      onClick={() => window.open(import.meta.env.VITE_STRIPE_CHECKOUT_URL || 'https://checkout.stripe.com/pay/cs_test_premium_dorlog', '_blank')}
-                      variant="outline"
-                      size="sm"
-                      className="group relative mt-2 bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 hover:from-orange-100 hover:via-amber-100 hover:to-yellow-100 border border-orange-200/60 hover:border-orange-300 text-orange-800 hover:text-orange-900 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
+                    <a 
+                      href="https://play.google.com/store/apps/details?id=com.fibrodiario.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                          <span className="text-xs font-semibold tracking-tight">Gratuito</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="group relative bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 hover:from-orange-100 hover:via-amber-100 hover:to-yellow-100 border border-orange-200/60 hover:border-orange-300 text-orange-800 hover:text-orange-900 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-semibold tracking-tight">Gratuito</span>
+                          </div>
+                          <div className="w-px h-4 bg-orange-300"></div>
+                          <div className="flex items-center gap-1">
+                            <Crown className="h-3.5 w-3.5 text-amber-600 group-hover:text-amber-700 transition-colors" />
+                            <span className="text-xs font-bold tracking-wide">Premium</span>
+                          </div>
                         </div>
-                        <div className="w-px h-4 bg-orange-300"></div>
-                        <div className="flex items-center gap-1">
-                          <Crown className="h-3.5 w-3.5 text-amber-600 group-hover:text-amber-700 transition-colors" />
-                          <span className="text-xs font-bold tracking-wide">Upgrade</span>
-                        </div>
-                      </div>
-                    </Button>
+                      </Button>
+                    </a>
                   )}
                 </div>
               )}

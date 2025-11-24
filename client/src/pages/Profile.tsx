@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ExternalLink, Bell, BellOff } from 'lucide-react';
+import { ExternalLink, Bell, BellOff, Crown } from 'lucide-react';
 import { NotificationPermissionDialog } from '@/components/NotificationPermissionDialog';
 import { getNotificationPermission } from '@/lib/fcmUtils';
 
@@ -208,31 +208,35 @@ export default function Profile() {
                       📦 Plano Gratuito
                     </Badge>
                     <h5 className="text-xl font-bold text-gray-800 mt-3">
-                      Potencialize sua experiência!
+                      Você já pode usar o app!
                     </h5>
                     <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
-                      Desbloqueie relatórios avançados, sincronização automática, 
-                      lembretes inteligentes e backup em nuvem.
+                      Com o Premium: relatórios ilimitados dos últimos 12 meses, 
+                      sincronização automática e muito mais.
                     </p>
                   </div>
 
                   <div className="space-y-3 pt-2">
-                    <Button
-                      onClick={() => window.open(import.meta.env.VITE_STRIPE_CHECKOUT_URL || 'https://checkout.stripe.com/pay/cs_test_premium_dorlog', '_blank')}
-                      size="lg"
-                      className="w-full bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white font-bold text-base py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl shadow-lg"
+                    <a 
+                      href="https://play.google.com/store/apps/details?id=com.fibrodiario.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full"
                     >
-                      <div className="flex items-center justify-center gap-3">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        Upgrade para Premium
-                      </div>
-                    </Button>
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 hover:from-purple-700 hover:via-blue-700 hover:to-indigo-700 text-white font-bold text-base py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl shadow-lg"
+                      >
+                        <div className="flex items-center justify-center gap-3">
+                          <Crown className="w-5 h-5" />
+                          Assinar Premium
+                        </div>
+                      </Button>
+                    </a>
                     
                     <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
                       <span className="bg-white px-3 py-1 rounded-full border border-gray-200">
-                        💳 A partir de R$ 9,99/mês
+                        💳 R$ 19,90/mês
                       </span>
                       <span className="bg-white px-3 py-1 rounded-full border border-gray-200">
                         ✨ Cancele quando quiser
