@@ -13,12 +13,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 // Firebase configuration
 // Note: This config is safe to expose as it's a client-side configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBqo8lZJZv0z_5vJYk0xP6jZN5zQ7Zx9ZY",
+  apiKey: "AIzaSyB0jOcON4chsTw-_f5Z8TXdK8ryuzoQsZ0",
   authDomain: "dorlog-fibro-diario.firebaseapp.com",
   projectId: "dorlog-fibro-diario",
   storageBucket: "dorlog-fibro-diario.firebasestorage.app",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  messagingSenderId: "1005551706966",
+  appId: "1:1005551706966:web:f75e761d5a57767fc1ecf7"
 };
 
 // Initialize Firebase in service worker
