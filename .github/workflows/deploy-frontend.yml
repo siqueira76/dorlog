@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'client/**'
+      - 'public/**'
       - 'vite.config.ts'
       - 'tailwind.config.ts'
       - 'package.json'
