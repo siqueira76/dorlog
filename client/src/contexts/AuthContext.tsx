@@ -1,9 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   updateProfile,
   updatePassword,
@@ -28,6 +30,7 @@ interface AuthContextType {
   loading: boolean;
   showGoogleTermsDialog: boolean;
   pendingGoogleUser: FirebaseUser | null;
+  isGoogleLoginPending: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
@@ -46,12 +49,32 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helper function to detect if device is mobile
+function isMobileDevice(): boolean {
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  
+  // Check for mobile user agents
+  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i;
+  
+  // Also check screen width as fallback
+  const isSmallScreen = window.innerWidth <= 768;
+  
+  // Check if running as PWA (standalone mode)
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                (window.navigator as any).standalone === true;
+  
+  return mobileRegex.test(userAgent.toLowerCase()) || isSmallScreen || isPWA;
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showGoogleTermsDialog, setShowGoogleTermsDialog] = useState(false);
   const [pendingGoogleUser, setPendingGoogleUser] = useState<FirebaseUser | null>(null);
+  const redirectHandledRef = useRef(false);
+  const googleLoginPendingRef = useRef(false);
+  const [isGoogleLoginPending, setIsGoogleLoginPending] = useState(false);
   const { toast } = useToast();
 
   // Create or update user document in Firestore with controlled error handling and subscription check
@@ -552,26 +575,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Login with Google - Check if user exists, create if new
-  const loginWithGoogle = async () => {
+  // Process Google sign-in result (shared logic for popup and redirect)
+  const processGoogleSignInResult = async (user: FirebaseUser) => {
     try {
-      console.log('🔄 Iniciando login com Google...');
-      const result = await signInWithPopup(auth, googleProvider);
-      
       // Wait for authentication token to be available
-      await result.user.getIdToken();
+      await user.getIdToken();
       
       // Small delay to ensure Firebase Auth is fully initialized
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Try to get/create user document but don't block login if it fails
-      const userDoc = await createUserDocument(result.user, undefined, false);
+      const userDoc = await createUserDocument(user, undefined, false);
       
       if (userDoc) {
         // Check if user needs to accept terms (new user or hasn't accepted yet)
         if (!userDoc.termsAccepted) {
           console.log('📋 Usuário precisa aceitar termos, mostrando dialog...');
-          setPendingGoogleUser(result.user);
+          setPendingGoogleUser(user);
           setCurrentUser(userDoc);
           setShowGoogleTermsDialog(true);
           return; // Don't show success toast yet
@@ -580,7 +600,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setCurrentUser(userDoc);
         
         // Try to register FCM token if permission is granted (non-blocking)
-        tryRegisterFCMToken(result.user.uid).catch(err => 
+        tryRegisterFCMToken(user.uid).catch(err => 
           console.error('⚠️ Erro ao registrar FCM token (não crítico):', err)
         );
         
@@ -591,9 +611,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         // Use fallback for Google login
         const fallbackUser: User = {
-          id: result.user.uid,
-          name: result.user.displayName || '',
-          email: result.user.email || '',
+          id: user.uid,
+          name: user.displayName || '',
+          email: user.email || '',
           provider: 'google',
         };
         setCurrentUser(fallbackUser);
@@ -603,20 +623,91 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
     } catch (error: any) {
+      console.error('❌ Erro ao processar resultado do login Google:', error);
+      throw error;
+    }
+  };
+
+  // Login with Google - Check if user exists, create if new
+  // Uses signInWithRedirect for mobile devices (more compatible)
+  // Uses signInWithPopup for desktop (faster UX)
+  const loginWithGoogle = async () => {
+    // Prevent double submissions while redirect is in progress
+    if (googleLoginPendingRef.current || isGoogleLoginPending) {
+      console.log('⏳ Login Google já em andamento, ignorando...');
+      return;
+    }
+    
+    try {
+      const isMobile = isMobileDevice();
+      console.log('🔄 Iniciando login com Google...', { isMobile });
+      
+      if (isMobile) {
+        // Use redirect for mobile devices (popups often blocked)
+        console.log('📱 Usando signInWithRedirect para dispositivo móvel');
+        
+        // Set pending state BEFORE redirect to prevent double-clicks
+        // Use both ref (for immediate check) and state (for UI update)
+        googleLoginPendingRef.current = true;
+        setIsGoogleLoginPending(true);
+        
+        // signInWithRedirect will navigate away from the page
+        // The result will be handled by the useEffect when user returns
+        // Note: We don't await this - it triggers a browser redirect
+        signInWithRedirect(auth, googleProvider).catch((err) => {
+          console.error('❌ Erro ao iniciar redirect:', err);
+          googleLoginPendingRef.current = false;
+          setIsGoogleLoginPending(false);
+        });
+        
+        // Return a promise that never resolves (page will redirect)
+        // This keeps the caller in a pending state until redirect happens
+        return new Promise<void>(() => {});
+      }
+      
+      // Use popup for desktop (faster UX)
+      console.log('🖥️ Usando signInWithPopup para desktop');
+      googleLoginPendingRef.current = true;
+      setIsGoogleLoginPending(true);
+      
+      const result = await signInWithPopup(auth, googleProvider);
+      await processGoogleSignInResult(result.user);
+      
+      googleLoginPendingRef.current = false;
+      setIsGoogleLoginPending(false);
+      
+    } catch (error: any) {
+      googleLoginPendingRef.current = false;
+      setIsGoogleLoginPending(false);
+      console.error('❌ Erro no login com Google:', error);
+      
       let errorMessage = "Erro no login com Google. Tente novamente.";
       
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "Login cancelado. Tente novamente.";
       } else if (error.code === 'auth/popup-blocked') {
-        errorMessage = "Popup bloqueado pelo navegador. Permita popups para este site.";
+        // If popup blocked, try redirect as fallback
+        console.log('⚠️ Popup bloqueado, tentando redirect...');
+        googleLoginPendingRef.current = true;
+        setIsGoogleLoginPending(true);
+        signInWithRedirect(auth, googleProvider).catch((err) => {
+          console.error('❌ Erro ao iniciar redirect fallback:', err);
+          googleLoginPendingRef.current = false;
+          setIsGoogleLoginPending(false);
+        });
+        // Return a promise that never resolves (page will redirect)
+        return new Promise<void>(() => {});
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         errorMessage = "Esta conta já existe com outro método de login.";
       } else if (error.code === 'auth/operation-not-allowed') {
         errorMessage = "Login com Google não está configurado.";
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // User clicked the button multiple times, ignore
+        return;
       }
       
       toast({
-        title: "❌ Erro no login",
+        title: "Erro no login",
         description: errorMessage,
         variant: "destructive",
       });
@@ -773,6 +864,52 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Handle redirect result from signInWithRedirect (for mobile Google login)
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      // Prevent handling redirect multiple times
+      if (redirectHandledRef.current) return;
+      
+      try {
+        console.log('🔍 Verificando resultado de redirect do Google...');
+        const result = await getRedirectResult(auth);
+        
+        if (result && result.user) {
+          redirectHandledRef.current = true;
+          googleLoginPendingRef.current = false; // Reset pending state (ref)
+          setIsGoogleLoginPending(false); // Reset pending state (state for UI)
+          console.log('✅ Resultado de redirect encontrado, processando usuário:', result.user.email);
+          await processGoogleSignInResult(result.user);
+        } else {
+          console.log('ℹ️ Nenhum resultado de redirect pendente');
+          // Reset pending state if no result (user cancelled or error)
+          googleLoginPendingRef.current = false;
+          setIsGoogleLoginPending(false);
+        }
+      } catch (error: any) {
+        console.error('❌ Erro ao processar redirect do Google:', error);
+        googleLoginPendingRef.current = false; // Reset on error (ref)
+        setIsGoogleLoginPending(false); // Reset on error (state for UI)
+        
+        let errorMessage = "Erro no login com Google. Tente novamente.";
+        
+        if (error.code === 'auth/account-exists-with-different-credential') {
+          errorMessage = "Esta conta já existe com outro método de login.";
+        } else if (error.code === 'auth/credential-already-in-use') {
+          errorMessage = "Esta credencial já está sendo usada por outra conta.";
+        }
+        
+        toast({
+          title: "Erro no login",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    };
+    
+    handleRedirectResult();
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setFirebaseUser(firebaseUser);
@@ -873,6 +1010,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     showGoogleTermsDialog,
     pendingGoogleUser,
+    isGoogleLoginPending,
     login,
     register,
     loginWithGoogle,

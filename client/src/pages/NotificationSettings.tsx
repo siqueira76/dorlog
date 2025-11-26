@@ -3,17 +3,26 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { playNotificationSound, playQuietBeep, isAudioEnabled } from '@/utils/notificationSound';
-import { Volume2, VolumeX, Bell } from 'lucide-react';
+import { Volume2, VolumeX, Bell, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { forceRefreshFCMToken, checkNotificationPermission } from '@/services/fcmService';
+import { isFCMSupported } from '@/lib/fcmUtils';
 
 export default function NotificationSettings() {
   const [audioSupported, setAudioSupported] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fcmSupported, setFcmSupported] = useState(true);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const { toast } = useToast();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     setAudioSupported(isAudioEnabled());
+    setFcmSupported(isFCMSupported());
+    setNotificationPermission(checkNotificationPermission());
     
     // Carregar preferência salva
     const savedPref = localStorage.getItem('medicationSoundEnabled');
@@ -21,6 +30,47 @@ export default function NotificationSettings() {
       setSoundEnabled(savedPref === 'true');
     }
   }, []);
+
+  const handleForceRefreshToken = async () => {
+    if (!currentUser?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para reativar notificações.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsRefreshing(true);
+    
+    try {
+      console.log('🔄 Iniciando renovação forçada de FCM token...');
+      const result = await forceRefreshFCMToken(currentUser.id);
+      
+      if (result.success) {
+        toast({
+          title: 'Notificações reativadas',
+          description: 'Seu dispositivo foi registrado novamente para receber notificações.',
+        });
+        setNotificationPermission('granted');
+      } else {
+        toast({
+          title: 'Erro ao reativar',
+          description: result.error || 'Não foi possível reativar as notificações. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao reativar notificações:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro desconhecido ao reativar notificações.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleToggleSound = (enabled: boolean) => {
     setSoundEnabled(enabled);
@@ -157,9 +207,81 @@ export default function NotificationSettings() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <RefreshCw className="w-5 h-5" />
+            Notificações Push
+          </CardTitle>
+          <CardDescription>
+            Receba lembretes de medicamentos e questionários mesmo com o app fechado
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Status:</span>
+            {!fcmSupported ? (
+              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                <XCircle className="w-4 h-4 text-destructive" />
+                Navegador não suportado
+              </span>
+            ) : notificationPermission === 'granted' ? (
+              <span className="flex items-center gap-1 text-sm text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                Ativadas
+              </span>
+            ) : notificationPermission === 'denied' ? (
+              <span className="flex items-center gap-1 text-sm text-destructive">
+                <XCircle className="w-4 h-4" />
+                Bloqueadas
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Bell className="w-4 h-4" />
+                Não configuradas
+              </span>
+            )}
+          </div>
+
+          {notificationPermission === 'denied' && (
+            <p className="text-sm text-muted-foreground">
+              As notificações foram bloqueadas. Para reativar, acesse as configurações do seu navegador 
+              e permita notificações para este site.
+            </p>
+          )}
+
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-medium mb-2">Problemas com notificações?</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Se você não está recebendo notificações, clique no botão abaixo para reconfigurar 
+              seu dispositivo.
+            </p>
+            <Button
+              onClick={handleForceRefreshToken}
+              disabled={isRefreshing || !fcmSupported || notificationPermission === 'denied'}
+              variant="outline"
+              className="w-full sm:w-auto"
+              data-testid="button-refresh-fcm-token"
+            >
+              {isRefreshing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Reconfigurando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reativar Notificações
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="bg-muted/50">
         <CardHeader>
-          <CardTitle className="text-base">💡 Dica</CardTitle>
+          <CardTitle className="text-base">Dica</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           Para garantir que você nunca perca um lembrete, mantenha a aba do FibroDiário aberta
