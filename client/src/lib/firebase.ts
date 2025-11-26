@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { 
+  initializeAuth, 
+  indexedDBLocalPersistence, 
+  browserLocalPersistence,
+  browserPopupRedirectResolver,
+  GoogleAuthProvider 
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging, isSupported as isMessagingSupported, Messaging } from "firebase/messaging";
@@ -17,8 +23,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services
-export const auth = getAuth(app);
+// Initialize Firebase Auth with robust persistence for mobile redirects
+// indexedDBLocalPersistence is more reliable than localStorage on iOS Safari and Android PWA
+// This prevents auth state loss during cross-origin redirects (Google OAuth)
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
+
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
