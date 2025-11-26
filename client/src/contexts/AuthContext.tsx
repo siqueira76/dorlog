@@ -629,8 +629,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Login with Google - Check if user exists, create if new
-  // Uses signInWithPopup for all devices (popup works on mobile when triggered by user action)
-  // Falls back to redirect only if popup is blocked
+  // Uses signInWithRedirect for mobile (popup is NOT supported on iOS Safari, Android PWA, in-app browsers)
+  // Uses signInWithPopup for desktop (faster and more reliable)
   const loginWithGoogle = async () => {
     // Prevent double submissions while login is in progress
     if (googleLoginPendingRef.current || isGoogleLoginPending) {
@@ -642,22 +642,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const isMobile = isMobileDevice();
       console.log('🔄 Iniciando login com Google...', { isMobile });
       
-      // Always try popup first (works on mobile when triggered by user tap)
-      // Popup is more reliable than redirect because it doesn't require 
-      // third-party cookies and avoids authDomain/redirect_uri issues
-      console.log('🔐 Usando signInWithPopup (funciona em mobile quando iniciado por toque do usuário)');
       googleLoginPendingRef.current = true;
       setIsGoogleLoginPending(true);
       
-      const result = await signInWithPopup(auth, googleProvider);
-      await processGoogleSignInResult(result.user);
-      
-      googleLoginPendingRef.current = false;
-      setIsGoogleLoginPending(false);
+      if (isMobile) {
+        // MOBILE: Use redirect flow
+        // Popup does NOT work on iOS Safari, Android standalone PWAs, or in-app browsers
+        // Firebase throws auth/popup-blocked or auth/operation-not-supported-in-this-environment
+        console.log('📱 Mobile detectado - usando signInWithRedirect');
+        
+        // Store flag to indicate we're expecting a redirect result
+        sessionStorage.setItem('google_login_pending', 'true');
+        
+        // Redirect will navigate away from the page
+        // Result will be handled by handleRedirectResult on page load
+        await signInWithRedirect(auth, googleProvider);
+        
+        // Note: Code after signInWithRedirect won't execute because page navigates away
+      } else {
+        // DESKTOP: Use popup flow (faster, no page navigation)
+        console.log('🖥️ Desktop detectado - usando signInWithPopup');
+        
+        const result = await signInWithPopup(auth, googleProvider);
+        await processGoogleSignInResult(result.user);
+        
+        googleLoginPendingRef.current = false;
+        setIsGoogleLoginPending(false);
+      }
       
     } catch (error: any) {
       googleLoginPendingRef.current = false;
       setIsGoogleLoginPending(false);
+      sessionStorage.removeItem('google_login_pending');
       console.error('❌ Erro no login com Google:', error);
       
       let errorMessage = "Erro no login com Google. Tente novamente.";
@@ -665,7 +681,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "Login cancelado. Tente novamente.";
       } else if (error.code === 'auth/popup-blocked') {
-        // If popup blocked, show message to allow popups
         errorMessage = "Popup bloqueado. Por favor, permita popups para este site e tente novamente.";
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         errorMessage = "Esta conta já existe com outro método de login.";
@@ -674,6 +689,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (error.code === 'auth/cancelled-popup-request') {
         // User clicked the button multiple times, ignore
         return;
+      } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
+        // This shouldn't happen now that we use redirect on mobile
+        errorMessage = "Este navegador não suporta login com Google. Tente outro navegador.";
       }
       
       toast({
@@ -841,8 +859,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (redirectHandledRef.current) return;
       
       try {
-        console.log('🔍 Verificando resultado de redirect do Google...');
+        // Check if we were expecting a redirect result
+        const wasRedirectPending = sessionStorage.getItem('google_login_pending') === 'true';
+        console.log('🔍 Verificando resultado de redirect do Google...', { wasRedirectPending });
+        
         const result = await getRedirectResult(auth);
+        
+        // Clean up session storage flag
+        sessionStorage.removeItem('google_login_pending');
         
         if (result && result.user) {
           redirectHandledRef.current = true;
@@ -857,6 +881,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsGoogleLoginPending(false);
         }
       } catch (error: any) {
+        // Clean up session storage flag on error
+        sessionStorage.removeItem('google_login_pending');
+        
         console.error('❌ Erro ao processar redirect do Google:', error);
         googleLoginPendingRef.current = false; // Reset on error (ref)
         setIsGoogleLoginPending(false); // Reset on error (state for UI)
@@ -867,6 +894,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           errorMessage = "Esta conta já existe com outro método de login.";
         } else if (error.code === 'auth/credential-already-in-use') {
           errorMessage = "Esta credencial já está sendo usada por outra conta.";
+        } else if (error.code === 'auth/redirect-cancelled-by-user') {
+          errorMessage = "Login cancelado.";
+        } else if (error.code === 'auth/redirect-operation-pending') {
+          errorMessage = "Outra operação de login está em andamento.";
         }
         
         toast({
