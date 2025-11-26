@@ -154,7 +154,7 @@ export default function DrawerNavigation({ isOpen, onClose, onNavigate }: Drawer
           </button>
           
           <button
-            onClick={() => handleNavigate('/settings')}
+            onClick={() => handleNavigate('/notification-settings')}
             className="flex items-center w-full px-6 py-3 text-foreground hover:bg-accent transition-colors"
             data-testid="link-settings"
           >

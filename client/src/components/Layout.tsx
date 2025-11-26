@@ -14,7 +14,7 @@ const pageTitle: Record<string, string> = {
   '/medications': 'Medicamentos',
   '/reports': 'Relatórios',
   '/profile': 'Meu Perfil',
-  '/settings': 'Configurações',
+  '/notification-settings': 'Configurações',
 };
 
 export default function Layout({ children }: LayoutProps) {
