@@ -629,10 +629,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Login with Google - Check if user exists, create if new
-  // Uses signInWithRedirect for mobile devices (more compatible)
-  // Uses signInWithPopup for desktop (faster UX)
+  // Uses signInWithPopup for all devices (popup works on mobile when triggered by user action)
+  // Falls back to redirect only if popup is blocked
   const loginWithGoogle = async () => {
-    // Prevent double submissions while redirect is in progress
+    // Prevent double submissions while login is in progress
     if (googleLoginPendingRef.current || isGoogleLoginPending) {
       console.log('⏳ Login Google já em andamento, ignorando...');
       return;
@@ -642,31 +642,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const isMobile = isMobileDevice();
       console.log('🔄 Iniciando login com Google...', { isMobile });
       
-      if (isMobile) {
-        // Use redirect for mobile devices (popups often blocked)
-        console.log('📱 Usando signInWithRedirect para dispositivo móvel');
-        
-        // Set pending state BEFORE redirect to prevent double-clicks
-        // Use both ref (for immediate check) and state (for UI update)
-        googleLoginPendingRef.current = true;
-        setIsGoogleLoginPending(true);
-        
-        // signInWithRedirect will navigate away from the page
-        // The result will be handled by the useEffect when user returns
-        // Note: We don't await this - it triggers a browser redirect
-        signInWithRedirect(auth, googleProvider).catch((err) => {
-          console.error('❌ Erro ao iniciar redirect:', err);
-          googleLoginPendingRef.current = false;
-          setIsGoogleLoginPending(false);
-        });
-        
-        // Return a promise that never resolves (page will redirect)
-        // This keeps the caller in a pending state until redirect happens
-        return new Promise<void>(() => {});
-      }
-      
-      // Use popup for desktop (faster UX)
-      console.log('🖥️ Usando signInWithPopup para desktop');
+      // Always try popup first (works on mobile when triggered by user tap)
+      // Popup is more reliable than redirect because it doesn't require 
+      // third-party cookies and avoids authDomain/redirect_uri issues
+      console.log('🔐 Usando signInWithPopup (funciona em mobile quando iniciado por toque do usuário)');
       googleLoginPendingRef.current = true;
       setIsGoogleLoginPending(true);
       
@@ -686,17 +665,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "Login cancelado. Tente novamente.";
       } else if (error.code === 'auth/popup-blocked') {
-        // If popup blocked, try redirect as fallback
-        console.log('⚠️ Popup bloqueado, tentando redirect...');
-        googleLoginPendingRef.current = true;
-        setIsGoogleLoginPending(true);
-        signInWithRedirect(auth, googleProvider).catch((err) => {
-          console.error('❌ Erro ao iniciar redirect fallback:', err);
-          googleLoginPendingRef.current = false;
-          setIsGoogleLoginPending(false);
-        });
-        // Return a promise that never resolves (page will redirect)
-        return new Promise<void>(() => {});
+        // If popup blocked, show message to allow popups
+        errorMessage = "Popup bloqueado. Por favor, permita popups para este site e tente novamente.";
       } else if (error.code === 'auth/account-exists-with-different-credential') {
         errorMessage = "Esta conta já existe com outro método de login.";
       } else if (error.code === 'auth/operation-not-allowed') {
